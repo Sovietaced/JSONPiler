@@ -1,0 +1,5 @@
+name:  JSONPiler
+description:  A compiler written in Dart
+
+dependencies:
+  polymer: any
