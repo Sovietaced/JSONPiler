@@ -4,6 +4,7 @@ packages
 *.ipr
 *.iws
 .idea/
+*.dart.js
 *.js_
 *.js.deps
 *.js.map
