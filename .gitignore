@@ -5,6 +5,7 @@ packages
 *.iws
 .idea/
 *.dart.js
+*.precompiled.js
 *.js_
 *.js.deps
 *.js.map
