@@ -1,4 +1,5 @@
 import 'dart:html';
+import 'lexer.dart';
 
 void main() {
   // Hide on load
@@ -6,7 +7,8 @@ void main() {
   
   // Listener
   querySelector("#compile")
-    ..onClick.listen(unhide);
+    ..onClick.listen(unhide)
+    ..onClick.listen(lex);
 }
 
 void unhide(MouseEvent event) {
