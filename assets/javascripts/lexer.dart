@@ -1,5 +1,6 @@
 /* lexer.dart  */
 import 'dart:html';
+import 'package:poppy/trie.dart';
 
     void lex(MouseEvent event)
     {   
@@ -11,6 +12,9 @@ import 'dart:html';
       
       // Split source by whitespace
       source = source.split(new RegExp(r'\s+'));
+      
+      Trie <String> reserved = new SimpleTrie();
+      
       print(source);
     }
 

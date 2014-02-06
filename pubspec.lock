@@ -57,6 +57,10 @@ packages:
     description: polymer_expressions
     source: hosted
     version: "0.9.1"
+  poppy:
+    description: poppy
+    source: hosted
+    version: "0.1.14"
   shadow_dom:
     description: shadow_dom
     source: hosted

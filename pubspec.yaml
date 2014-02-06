@@ -3,3 +3,4 @@ description:  A compiler written in Dart
 
 dependencies:
   polymer: any
+  poppy: any
