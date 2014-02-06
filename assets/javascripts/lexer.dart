@@ -7,7 +7,10 @@ import 'dart:html';
       // Trim the leading and trailing spaces.
       source = source.trim();
       // Strip all whitespace
-      source = source.replaceAll(new RegExp(r'\s+'), '\n');
+      //source = source.replaceAll(new RegExp(r'\s+'), '\n');
+      
+      // Split source by whitespace
+      source = source.split(new RegExp(r'\s+'));
       print(source);
     }
 
