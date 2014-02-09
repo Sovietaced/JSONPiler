@@ -1,5 +1,5 @@
 import 'dart:html';
-import 'lexer.dart';
+import 'compiler/lexer.dart';
 
 void main() {
   // Hide on load

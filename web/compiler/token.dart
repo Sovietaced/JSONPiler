@@ -1,5 +1,5 @@
 
-import 'lib/enum.dart'; // Enum lib
+import '../../lib/enum.dart'; // Enum lib
 
 class Token {
   Type type;
