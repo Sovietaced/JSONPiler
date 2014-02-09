@@ -11,6 +11,7 @@ class Token {
  
 }
 
+// Enum class that represents a token type
 class Type extends Enum<String> {
   
   const Type(String val) : super(val);
