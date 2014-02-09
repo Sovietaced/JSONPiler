@@ -2,7 +2,7 @@
 import '../../lib/enum.dart'; // Enum lib
 
 class Token {
-  Type type;
+  TokenType type;
   var value;
   num position;
   String symbol;
@@ -12,32 +12,37 @@ class Token {
 }
 
 // Enum class that represents a token type
-class Type extends Enum<String> {
+class TokenType extends Enum<String> {
   
-  const Type(String val) : super(val);
+  const TokenType(String val) : super(val);
+  
   // "Symbols"
-  static const EOF_SIGN = const Type("EOF_SIGN");
-  static const OPEN_BRACE = const Type("OPEN_BRACE");
-  static const CLOSE_BRACE = const Type("CLOSE_BRACE");
-  static const OPEN_PAREN = const Type("OPEN_PAREN");
-  static const CLOSE_PAREN = const Type("CLOSE_PAREN");
-  static const EQUALS = const Type("EQUALS");
-  static const OP = const Type("OP");
-  static const QUOTE = const Type("QUOTE");
-  static const DOUBLE_EQUALS = const Type("DOUBLE_EQUALS");
+  static const EOF_SIGN = const TokenType("EOF_SIGN");
+  static const OPEN_BRACE = const TokenType("OPEN_BRACE");
+  static const CLOSE_BRACE = const TokenType("CLOSE_BRACE");
+  static const OPEN_PAREN = const TokenType("OPEN_PAREN");
+  static const CLOSE_PAREN = const TokenType("CLOSE_PAREN");
+  static const EQUALS = const TokenType("EQUALS");
+  static const OP = const TokenType("OP");
+  static const QUOTE = const TokenType("QUOTE");
+  static const DOUBLE_EQUALS = const TokenType("DOUBLE_EQUALS");
   
   // Reserved words
-  static const TYPE = const Type("TYPE");
-  static const PRINT = const Type("PRINT");
-  static const WHILE = const Type("WHILE");
-  static const IF = const Type("IF");
+  static const TYPE = const TokenType("TYPE");
+  static const PRINT = const TokenType("PRINT");
+  static const WHILE = const TokenType("WHILE");
+  static const IF = const TokenType("IF");
   
   // Values
-  static const DIGIT = const Type("DIGIT");
-  static const CHAR = const Type("CHAR");
-  static const BOOLEAN = const Type("BOOLEAN");
-  static const SPACE = const Type("SPACE");
-  static const ID = const Type("ID");
+  static const DIGIT = const TokenType("DIGIT");
+  static const CHAR = const TokenType("CHAR");
+  static const BOOLEAN = const TokenType("BOOLEAN");
+  static const SPACE = const TokenType("SPACE");
+  static const ID = const TokenType("ID");
   
-  static const EPSILON = const Type("EPSILON"); // User cannot enter this, the parser does it.
+  static const EPSILON = const TokenType("EPSILON"); // User cannot enter this, the parser does it.
+  
+  String toString(){
+    return "TokenType=" + this.value;
+  }
 }
