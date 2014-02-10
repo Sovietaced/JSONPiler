@@ -27,11 +27,12 @@ class Lexer{
     // Split source by new line
     var lines = this.source.split("\n");
     
+    // Named loop so that we can break out of it from inner loop
     loop:
     for(String l in lines){
       
-      // Keep track of line number
-      int numLine = lines.indexOf(l);
+      // Keep track of line number (Increment by 1 for humans)
+      int numLine = lines.indexOf(l) + 1;
       
       // Trim leading and trailing whitespace
       l = l.trim();
@@ -41,13 +42,15 @@ class Lexer{
       
       // Analyze each lexeme
       for (Match m in matches){
+        // Extract lexeme from Regex match 
         String lexeme = m.group(0);
         
+        // END
         if( lexeme == '\$'){
-          // Program End
           this.tokens.add(new Token(TokenType.END, "\$", numLine));
             break loop;
         }
+        // STRINGS
         else if(stringPattern.hasMatch(lexeme)){
           
           // Begin quote
@@ -64,17 +67,27 @@ class Lexer{
           // Trailing quote
           this.tokens.add(new Token(TokenType.QUOTE, "\"", numLine));
         }
+        // NUMBERS
         else if(numberPattern.hasMatch(lexeme)){
             this.tokens.add(new Token(TokenType.DIGIT, lexeme, numLine));
         }
+        // IDs
         else if(idPattern.hasMatch(lexeme)){
-          this.tokens.add(new Token(TokenType.ID, lexeme, numLine));
+          if(TokenType.RESERVED.containsKey(lexeme)){
+            this.tokens.add(new Token(TokenType.RESERVED[lexeme], lexeme, numLine));
+          }
+          else {
+            this.tokens.add(new Token(TokenType.ID, lexeme, numLine));
+          }
         } 
+        // SYMBOLS
         else{
           if(TokenType.SYMBOLS.containsKey(lexeme)){
             this.tokens.add(new Token(TokenType.SYMBOLS[lexeme], lexeme, numLine));
           }
+          else{
           log.warning("Count not identify : " + lexeme);
+          }
         }
       }
       // If we end up here we have not found an ending symbol

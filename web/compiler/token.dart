@@ -4,13 +4,13 @@ import '../../lib/enum.dart'; // Enum lib
 class Token {
   TokenType type;
   var value;
-  num position;
+  num line;
   String symbol;
 
-  Token(this.type, this.value, this.position);
+  Token(this.type, this.value, this.line);
  
   String toString(){
-    return "Token type=" + this.type.value + " value=" + this.value + " position=" + this.position.toString();
+    return "Token type=" + this.type.value + " value=" + this.value + " line=" + this.line.toString();
   }
 }
 
@@ -22,6 +22,13 @@ class TokenType extends Enum<String> {
                   "(" : TokenType.OPEN_PAREN,
                   ")" : TokenType.CLOSE_PAREN,
                   "=" : TokenType.EQUALS };
+  
+  static final RESERVED = { "int" : TokenType.TYPE,
+                           "string" : TokenType.TYPE,
+                           "boolean" : TokenType.TYPE,
+                           "print" : TokenType.PRINT,
+                           "while" : TokenType.WHILE,
+                           "if" : TokenType.IF };
   
   const TokenType(String value) : super(value);
   
