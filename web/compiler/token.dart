@@ -21,7 +21,10 @@ class TokenType extends Enum<String> {
                   "}" : TokenType.CLOSE_BRACE,
                   "(" : TokenType.OPEN_PAREN,
                   ")" : TokenType.CLOSE_PAREN,
-                  "=" : TokenType.EQUALS };
+                  "=" : TokenType.EQUALS,
+                  "==" : TokenType.DOUBLE_EQUALS,
+                  "!" : TokenType.OP,
+                  "+" : TokenType.OP };
   
   static final RESERVED = { "int" : TokenType.TYPE,
                            "string" : TokenType.TYPE,

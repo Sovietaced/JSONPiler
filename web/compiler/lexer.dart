@@ -1,10 +1,10 @@
 /* lexer.dart  */
-import 'package:poppy/trie.dart';
 import 'token.dart';
 import 'package:logging/logging.dart';
 
 class Lexer{
   
+  // Logging
   final Logger log = new Logger('Lexer');
   
   String source;
@@ -15,6 +15,7 @@ class Lexer{
     this.tokens = new List<Token>();
   }
   
+  // Run lexical analysis against Lexer instance source code
   analyze() {
     
     // Patterns
@@ -47,9 +48,10 @@ class Lexer{
         
         // END
         if( lexeme == '\$'){
-          this.tokens.add(new Token(TokenType.END, "\$", numLine));
+            this.tokens.add(new Token(TokenType.END, "\$", numLine));
             break loop;
         }
+        
         // STRINGS
         else if(stringPattern.hasMatch(lexeme)){
           
@@ -67,10 +69,12 @@ class Lexer{
           // Trailing quote
           this.tokens.add(new Token(TokenType.QUOTE, "\"", numLine));
         }
+        
         // NUMBERS
         else if(numberPattern.hasMatch(lexeme)){
             this.tokens.add(new Token(TokenType.DIGIT, lexeme, numLine));
         }
+        
         // IDs
         else if(idPattern.hasMatch(lexeme)){
           if(TokenType.RESERVED.containsKey(lexeme)){
@@ -80,7 +84,8 @@ class Lexer{
             this.tokens.add(new Token(TokenType.ID, lexeme, numLine));
           }
         } 
-        // SYMBOLS
+        
+        // SYMBOLS/OTHERS
         else{
           if(TokenType.SYMBOLS.containsKey(lexeme)){
             this.tokens.add(new Token(TokenType.SYMBOLS[lexeme], lexeme, numLine));
@@ -91,9 +96,11 @@ class Lexer{
         }
       }
       // If we end up here we have not found an ending symbol
-      log.warning("Code missing \$ symbol!");
+      log.warning("Code missing \$ symbol! Inserting for you.");
+      this.tokens.add(new Token(TokenType.END, "\$", lines.length + 1));
     }
     
+    // DUMP
     for(Token t in this.tokens){
       print(t.toString());
     }
