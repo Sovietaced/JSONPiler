@@ -9,12 +9,15 @@ class Token {
 
   Token(this.type, this.value, this.position);
  
+  String toString(){
+    return "Token type=" + this.type.value + " value=" + this.value;
+  }
 }
 
 // Enum class that represents a token type
 class TokenType extends Enum<String> {
   
-  const TokenType(String val) : super(val);
+  const TokenType(String value) : super(value);
   
   // "Symbols"
   static const EOF_SIGN = const TokenType("EOF_SIGN");
@@ -42,7 +45,4 @@ class TokenType extends Enum<String> {
   
   static const EPSILON = const TokenType("EPSILON"); // User cannot enter this, the parser does it.
   
-  String toString(){
-    return "TokenType=" + this.value;
-  }
 }

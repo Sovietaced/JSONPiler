@@ -1,8 +1,12 @@
 /* lexer.dart  */
 import 'package:poppy/trie.dart';
 import 'token.dart';
+import 'package:logging/logging.dart';
 
 class Lexer{
+  
+  final Logger log = new Logger('Lexer');
+  
   String source;
   List<Token> tokens;
  
@@ -16,7 +20,7 @@ class Lexer{
     RegExp splitPattern = new RegExp(r'([a-z]+)|(\d+)|("[^"]*")|(==)|(\S)');
     RegExp numberPattern = new RegExp(r'\d+');
     RegExp charPattern = new RegExp(r'[a-z]');
-    RegExp stringPattern = new RegExp(r'"[^"]*"');
+    RegExp stringPattern = new RegExp(r'[^"]*"');
     RegExp idPattern = new RegExp(r'[a-z]+');
     
     // Split source by new line
@@ -43,19 +47,29 @@ class Lexer{
             break loop;
         }
         else if(numberPattern.hasMatch(lexeme)){
-            Token token = new Token(TokenType.DIGIT, lexeme, numLine);
-            this.tokens.add(token);
-            print(lexeme);
-            print(token.type);
+            this.tokens.add(new Token(TokenType.DIGIT, lexeme, numLine));
+        }
+        else if(stringPattern.hasMatch(lexeme)){
+          
+          // Begin quote
+          this.tokens.add(new Token(TokenType.QUOTE, "\"", numLine));
+          
+          String str_lexeme = lexeme.replaceAll("\"", "");
+          
+          // String characters
+          for(var code in str_lexeme.codeUnits){
+            String char = new String.fromCharCode(code);
+            this.tokens.add(new Token(TokenType.CHAR, char, numLine));
+          }
+          
+          // Trailing quote
+          this.tokens.add(new Token(TokenType.QUOTE, "\"", numLine));
         }
         else if(charPattern.hasMatch(lexeme)){
           Token token = new Token(TokenType.CHAR, lexeme, numLine);
           this.tokens.add(token);
           print(lexeme);
           print(token.type);
-        }
-        else if(stringPattern.hasMatch(lexeme)){
-          // Not sure yet
         }
         else if(idPattern.hasMatch(lexeme)){
           Token token = new Token(TokenType.ID, lexeme, numLine);
@@ -64,15 +78,17 @@ class Lexer{
           print(token.type);
         } 
         else{
-          print("Count not identify : " + lexeme);
+          log.warning("Count not identify : " + lexeme);
         }
       }
-    
+      // If we end up here we have not found an ending symbol
+      log.warning("Code missing \$ symbol!");
     }
     
-    Trie <String> reserved = new SimpleTrie();
+    for(Token t in this.tokens){
+      print(t.toString());
+    }
     
-    print(source);
   }
 }
 
