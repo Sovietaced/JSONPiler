@@ -10,17 +10,23 @@ class Token {
   Token(this.type, this.value, this.position);
  
   String toString(){
-    return "Token type=" + this.type.value + " value=" + this.value;
+    return "Token type=" + this.type.value + " value=" + this.value + " position=" + this.position.toString();
   }
 }
 
 // Enum class that represents a token type
 class TokenType extends Enum<String> {
   
+  static final SYMBOLS = { "{" : TokenType.OPEN_BRACE,
+                  "}" : TokenType.CLOSE_BRACE,
+                  "(" : TokenType.OPEN_PAREN,
+                  ")" : TokenType.CLOSE_PAREN,
+                  "=" : TokenType.EQUALS };
+  
   const TokenType(String value) : super(value);
   
   // "Symbols"
-  static const EOF_SIGN = const TokenType("EOF_SIGN");
+  static const END = const TokenType("END");
   static const OPEN_BRACE = const TokenType("OPEN_BRACE");
   static const CLOSE_BRACE = const TokenType("CLOSE_BRACE");
   static const OPEN_PAREN = const TokenType("OPEN_PAREN");

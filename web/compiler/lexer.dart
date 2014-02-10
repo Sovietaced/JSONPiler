@@ -9,6 +9,7 @@ class Lexer{
   
   String source;
   List<Token> tokens;
+                  
  
   Lexer(this.source){
     this.tokens = new List<Token>();
@@ -43,11 +44,9 @@ class Lexer{
         String lexeme = m.group(0);
         
         if( lexeme == '\$'){
-            print("End of program");
+          // Program End
+          this.tokens.add(new Token(TokenType.END, "\$", numLine));
             break loop;
-        }
-        else if(numberPattern.hasMatch(lexeme)){
-            this.tokens.add(new Token(TokenType.DIGIT, lexeme, numLine));
         }
         else if(stringPattern.hasMatch(lexeme)){
           
@@ -65,19 +64,16 @@ class Lexer{
           // Trailing quote
           this.tokens.add(new Token(TokenType.QUOTE, "\"", numLine));
         }
-        else if(charPattern.hasMatch(lexeme)){
-          Token token = new Token(TokenType.CHAR, lexeme, numLine);
-          this.tokens.add(token);
-          print(lexeme);
-          print(token.type);
+        else if(numberPattern.hasMatch(lexeme)){
+            this.tokens.add(new Token(TokenType.DIGIT, lexeme, numLine));
         }
         else if(idPattern.hasMatch(lexeme)){
-          Token token = new Token(TokenType.ID, lexeme, numLine);
-          this.tokens.add(token);
-          print(lexeme);
-          print(token.type);
+          this.tokens.add(new Token(TokenType.ID, lexeme, numLine));
         } 
         else{
+          if(TokenType.SYMBOLS.containsKey(lexeme)){
+            this.tokens.add(new Token(TokenType.SYMBOLS[lexeme], lexeme, numLine));
+          }
           log.warning("Count not identify : " + lexeme);
         }
       }
@@ -90,5 +86,6 @@ class Lexer{
     }
     
   }
+  
 }
 
