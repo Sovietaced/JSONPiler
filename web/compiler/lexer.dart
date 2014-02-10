@@ -5,18 +5,13 @@ import 'package:logging/logging.dart';
 class Lexer{
   
   // Logging
-  final Logger log = new Logger('Lexer');
-  
-  String source;
-  List<Token> tokens;
-                  
- 
-  Lexer(this.source){
-    this.tokens = new List<Token>();
-  }
+  static Logger log = new Logger('Lexer');
   
   // Run lexical analysis against Lexer instance source code
-  analyze() {
+  static analyze(String source) {
+    
+    // Tokens
+    List<Token> tokens = new List<Token>();
     
     // Patterns
     RegExp splitPattern = new RegExp(r'([a-z]+)|(\d+)|("[^"]*")|(==)|(\S)');
@@ -26,7 +21,7 @@ class Lexer{
     RegExp idPattern = new RegExp(r'[a-z]+');
     
     // Split source by new line
-    var lines = this.source.split("\n");
+    var lines = source.split("\n");
     
     // Named loop so that we can break out of it from inner loop
     loop:
@@ -48,7 +43,7 @@ class Lexer{
         
         // END
         if( lexeme == '\$'){
-            this.tokens.add(new Token(TokenType.END, "\$", numLine));
+            tokens.add(new Token(TokenType.END, "\$", numLine));
             break loop;
         }
         
@@ -56,39 +51,39 @@ class Lexer{
         else if(stringPattern.hasMatch(lexeme)){
           
           // Begin quote
-          this.tokens.add(new Token(TokenType.QUOTE, "\"", numLine));
+          tokens.add(new Token(TokenType.QUOTE, "\"", numLine));
           
           String str_lexeme = lexeme.replaceAll("\"", "");
           
           // String characters
           for(var code in str_lexeme.codeUnits){
             String char = new String.fromCharCode(code);
-            this.tokens.add(new Token(TokenType.CHAR, char, numLine));
+            tokens.add(new Token(TokenType.CHAR, char, numLine));
           }
           
           // Trailing quote
-          this.tokens.add(new Token(TokenType.QUOTE, "\"", numLine));
+          tokens.add(new Token(TokenType.QUOTE, "\"", numLine));
         }
         
         // NUMBERS
         else if(numberPattern.hasMatch(lexeme)){
-            this.tokens.add(new Token(TokenType.DIGIT, lexeme, numLine));
+            tokens.add(new Token(TokenType.DIGIT, lexeme, numLine));
         }
         
         // IDs
         else if(idPattern.hasMatch(lexeme)){
           if(TokenType.RESERVED.containsKey(lexeme)){
-            this.tokens.add(new Token(TokenType.RESERVED[lexeme], lexeme, numLine));
+            tokens.add(new Token(TokenType.RESERVED[lexeme], lexeme, numLine));
           }
           else {
-            this.tokens.add(new Token(TokenType.ID, lexeme, numLine));
+            tokens.add(new Token(TokenType.ID, lexeme, numLine));
           }
         } 
         
         // SYMBOLS/OTHERS
         else{
           if(TokenType.SYMBOLS.containsKey(lexeme)){
-            this.tokens.add(new Token(TokenType.SYMBOLS[lexeme], lexeme, numLine));
+            tokens.add(new Token(TokenType.SYMBOLS[lexeme], lexeme, numLine));
           }
           else{
           log.warning("Count not identify : " + lexeme);
@@ -97,14 +92,14 @@ class Lexer{
       }
       // If we end up here we have not found an ending symbol
       log.warning("Code missing \$ symbol! Inserting for you.");
-      this.tokens.add(new Token(TokenType.END, "\$", lines.length + 1));
+      tokens.add(new Token(TokenType.END, "\$", lines.length + 1));
     }
     
     // DUMP
-    for(Token t in this.tokens){
+    for(Token t in tokens){
       print(t.toString());
     }
-    
+    return tokens;
   }
   
 }

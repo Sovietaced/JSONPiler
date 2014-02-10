@@ -1,5 +1,5 @@
 import 'dart:html';
-import 'compiler/lexer.dart';
+import 'compiler/compiler.dart';
 import 'package:logging/logging.dart';
 
 void main() {
@@ -25,6 +25,6 @@ void unhide(MouseEvent event) {
 
 void compile(MouseEvent event) {
   var source = (querySelector("#input-code") as TextAreaElement).value;
-  Lexer lexer = new Lexer(source);
-  lexer.analyze();
+  Compiler compiler = new Compiler(source);
+  compiler.run();
 }
