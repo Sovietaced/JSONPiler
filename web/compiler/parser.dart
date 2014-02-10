@@ -1,10 +1,9 @@
 /* parser.dart  */
-import 'lexer.dart';
+import 'token.dart';
 
 class Parser{
   
-  
-  Parser(){
+  analyse(List<Token> tokens){
     
   }
 }
