@@ -1,4 +1,5 @@
-/* lexer.dart  */
+/* lexer.dart  
+ * */
 import 'token.dart';
 import 'package:logging/logging.dart';
 
