@@ -14,6 +14,7 @@ class Parser{
   
   List<Token> tokens;
   num index = 0;
+  num scope = 0;
   
   Parser(this.tokens);
   
@@ -29,56 +30,10 @@ class Parser{
     }
   }
   
-  /* This gets the next token and increments the index.
-   * Named pop to imply mutating behavior.
-   */
-  Token popNextToken(){
-    if(index < this.tokens.length - 1){
-      return this.tokens[++index];
-    }
-    else{
-      return null;
-    }
-  }
-  
-  Token peekNextToken(){
-    if(index < this.tokens.length - 1){
-      return this.tokens[index + 1];
-    }
-    else{
-      return null;
-    }
-  }
-  
-  Token getToken(){
-    if(index < this.tokens.length){
-      return this.tokens[index];
-    }
-    else{
-      return null;
-    }
-  }
-  
-  void expect(TokenType type){
-    Token next = popNextToken();  
-    
-    if(next.type != type){
-      log.severe("Unexpected symbol " + next.value + ", expected " + type.value);
-    }
-  }
-  
-  /* Determines if the next token is the type of token
-   * that we're looking for. Used for determing the next statement. 
-   */
-  bool isNextToken(TokenType type){
-    Token next = peekNextToken();  
-    if(next.type != type){
-      return false;
-    }
-    return true;
-  }
-  
   void block(){
+    // Entering a block denotes new scope
+    scope++;
+    
     Token token = getToken();
     
     if(token.type == TokenType.OPEN_BRACE){
@@ -87,6 +42,8 @@ class Parser{
     else{
       log.severe("Program must begin with a block");
     }
+    // Exiting a block denotes new scope
+    scope--;
   }
   void statement(){
     Token token = popNextToken();
@@ -176,4 +133,56 @@ class Parser{
     // Closing Quote
     expect(TokenType.QUOTE);
   }
+  
+  /* TOKEN HELPERS */
+   
+  /* This gets the next token and increments the index.
+   * Named pop to imply mutating behavior.
+   */
+  Token popNextToken(){
+    if(index < this.tokens.length - 1){
+      return this.tokens[++index];
+    }
+    else{
+      return null;
+    }
+  }
+  
+  Token peekNextToken(){
+    if(index < this.tokens.length - 1){
+      return this.tokens[index + 1];
+    }
+    else{
+      return null;
+    }
+  }
+  
+  Token getToken(){
+    if(index < this.tokens.length){
+      return this.tokens[index];
+    }
+    else{
+      return null;
+    }
+  }
+  
+  void expect(TokenType type){
+    Token next = popNextToken();  
+    
+    if(next.type != type){
+      log.severe("Unexpected symbol " + next.value + ", expected " + type.value);
+    }
+  }
+  
+  /* Determines if the next token is the type of token
+   * that we're looking for. Used for determing the next statement. 
+   */
+  bool isNextToken(TokenType type){
+    Token next = peekNextToken();  
+    if(next.type != type){
+      return false;
+    }
+    return true;
+  }
+  
 }
