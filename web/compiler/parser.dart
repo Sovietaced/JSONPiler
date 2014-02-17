@@ -6,6 +6,7 @@
 
 import 'token.dart';
 import 'symbol.dart';
+import 'exceptions.dart';
 import 'package:logging/logging.dart';
 
 class Parser{
@@ -192,7 +193,7 @@ class Parser{
     Token next = popNextToken();  
     
     if(next.type != type){
-      log.severe("Unexpected symbol " + next.value + ", expected " + type.value);
+      throw new SyntaxError("Expected type " + type.value + ", found type " + next.type.value);
     }
     if(ID != null){
       checkSymbolType(next, ID);
