@@ -5,6 +5,7 @@
  * */
 
 import 'token.dart';
+import 'symbol.dart';
 import 'package:logging/logging.dart';
 
 class Parser{
@@ -13,6 +14,8 @@ class Parser{
   static Logger log = new Logger('Parser');
   
   List<Token> tokens;
+  // Simple for now
+  List<Symbol> symbols = new List<Symbol>();
   num index = 0;
   num scope = 0;
   
@@ -53,11 +56,13 @@ class Parser{
         printStatement();
       }
       else if(token.type == TokenType.TYPE){
-        variableDeclaration();
+        variableDeclaration(token);
       }
       else if(token.type == TokenType.ID){
-        log.info(token.toString());
-        assignmentStatement();
+        assignmentStatement(token);
+      }
+      else if(token.type == TokenType.IF){
+        ifStatement();
       }
       
       // Change sentinel value
@@ -73,65 +78,82 @@ class Parser{
     expect(TokenType.CLOSE_PAREN);
   }
   
-  void assignmentStatement(){
+  /* Handles the assignment statement.
+   * The token passed is the left hand side of the assignment.
+   * this is done for type checking.
+   */
+  void assignmentStatement(Token token){
     log.info("Parsing assignment statement");
+    // First make sure the left hand side is a valid reference
+    checkSymbol(token.value);
+    // Equals assignment
     expect(TokenType.EQUALS);
+    // Check right hand side
+    expression(token.value);
+  }
+  
+  void ifStatement(){
+    log.info("Parsing if statement");
+    expect(TokenType.OPEN_PAREN);
     expression();
+    expect(TokenType.CLOSE_PAREN);
   }
   
   /* VARIABLE DECLARATIONS */
-  void variableDeclaration(){
+  void variableDeclaration(Token typeToken){
     log.info("Parsing variable declaration");
     expect(TokenType.ID);
+    
+    // Get the ID token
+    Token token = getToken();
+
+    // Generate the symbol with both the ID and type from both tokens
+    Symbol symbol = new Symbol(token.value, this.scope, token.line, typeToken.value);
+    // Add this new symbol to our list of symbols
+    this.symbols.add(symbol);
   }
   
   /* TYPE EXPRESSIONS */
   
-  void expression(){
+  void expression([ID = null]){
     
+    log.info(ID);
     if(isNextToken(TokenType.DIGIT)){
-      intExpression();
+      intExpression(ID);
     }
     else if(isNextToken(TokenType.BOOLEAN)){
-      booleanExpression();
+      booleanExpression(ID);
     }
     // Otherwise it must be a string
-    else{
-      stringExpression();
+    else if(isNextToken(TokenType.QUOTE)){
+      stringExpression(ID);
     }
   }
   
-   void intExpression(){   
-    expect(TokenType.DIGIT);
+   void intExpression([ID = null]){   
+    expect(TokenType.DIGIT, ID);
    }
     
-    void booleanExpression(){
-      
-      // We have to experct a boolean value or a boolean expression here...
-      if(peekNextToken() != null && peekNextToken().type == TokenType.BOOLEAN){
-        expect(TokenType.BOOLEAN);
-      }
-      else{
-        log.severe("TODO : Handle boolean expression");
-      }
+    void booleanExpression([ID = null]){
+      expect(TokenType.BOOLEAN, ID);
     }
   
   
-  void stringExpression(){
+  void stringExpression([ID = null]){
     
     // Opening Quote
-    expect(TokenType.QUOTE);
+    expect(TokenType.QUOTE, ID);
     
     // Validate at least one character exists
-    expect(TokenType.CHAR);
+    expect(TokenType.CHAR, ID);
   
     // Iterate over the rest of the string
     while(peekNextToken() != null && peekNextToken().type == TokenType.CHAR){
-      expect(TokenType.CHAR);
+      expect(TokenType.CHAR, ID);
     }
     
     // Closing Quote
-    expect(TokenType.QUOTE);
+    expect(TokenType.QUOTE, ID);
   }
   
   /* TOKEN HELPERS */
@@ -166,13 +188,45 @@ class Parser{
     }
   }
   
-  void expect(TokenType type){
+  void expect(TokenType type, [ID = null]){
     Token next = popNextToken();  
     
     if(next.type != type){
       log.severe("Unexpected symbol " + next.value + ", expected " + type.value);
     }
+    if(ID != null){
+      checkSymbolType(next, ID);
+    }
   }
+  
+  void checkSymbolType(Token token, String ID){
+    // Get the symbol
+    Symbol symbol = findSymbol(ID);
+    if( (symbol.type == "int" && token.type != TokenType.DIGIT) ||
+        (symbol.type == "string" && token.type != TokenType.CHAR && token.type != TokenType.QUOTE) ||
+        (symbol.type == "boolean" && token.type != TokenType.BOOLEAN)
+        ){
+      log.severe("Type mismatch. Attempted to assign value of type " + token.type.value + " to " + symbol.type + " $ID");
+    }
+  }
+  
+  void checkSymbol(String symbolID){
+    for(Symbol symbol in this.symbols){
+      if(symbol.id == symbolID){
+        return;
+      }
+    }
+    log.severe("Identifier " + symbolID + "not found.");
+  }
+  
+  Symbol findSymbol(String symbolID){
+    for(Symbol symbol in this.symbols){
+      if(symbol.id == symbolID){
+        return symbol;
+      }
+    }
+  }
+  
   
   /* Determines if the next token is the type of token
    * that we're looking for. Used for determing the next statement. 

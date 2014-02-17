@@ -1,12 +1,11 @@
 /* symbol.dart  */
-import 'token.dart';
 
 class Symbol{
   
+  String id;
   num scope;
   num line;
-  String id;
-  TokenType type;
+  String type;
   
-  Symbol(this.scope, this.line, this.id, this.type);
+  Symbol(this.id, this.scope, this.line, this.type);
 }
