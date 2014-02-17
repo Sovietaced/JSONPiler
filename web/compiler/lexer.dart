@@ -71,7 +71,7 @@ class Lexer{
             tokens.add(new Token(TokenType.DIGIT, lexeme, numLine));
         }
         
-        // IDs
+        // RESERVED WORDS / IDs
         else if(idPattern.hasMatch(lexeme)){
           if(TokenType.RESERVED.containsKey(lexeme)){
             tokens.add(new Token(TokenType.RESERVED[lexeme], lexeme, numLine));

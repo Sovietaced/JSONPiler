@@ -31,7 +31,9 @@ class TokenType extends Enum<String> {
                            "boolean" : TokenType.TYPE,
                            "print" : TokenType.PRINT,
                            "while" : TokenType.WHILE,
-                           "if" : TokenType.IF };
+                           "if" : TokenType.IF,
+                           "false" : TokenType.BOOLEAN,
+                           "true" : TokenType.BOOLEAN};
   
   const TokenType(String value) : super(value);
   
