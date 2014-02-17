@@ -22,7 +22,6 @@ class Parser{
     log.info("Parser analyzing...");
     if(!tokens.isEmpty){
        if(tokens.first.type == TokenType.OPEN_BRACE){
-         index++;
          statement();
        }
        else{
@@ -37,20 +36,37 @@ class Parser{
   
   Token getNextToken(){
     if(index < this.tokens.length - 1){
-      return this.tokens[index+1];
+      return this.tokens[++index];
     }
     else{
       return null;
     }
   }
   
-  bool expect(TokenType token){
-    Token next = getNextToken();  
-    if(next != token){
-      log.severe("Unexpected symbol " + next.toString() + ", expected " + token.toString());
-      return false;
+  Token peekNextToken(){
+    if(index < this.tokens.length - 1){
+      return this.tokens[index + 1];
     }
-    return true;
+    else{
+      return null;
+    }
+  }
+  
+  Token getToken(){
+    if(index < this.tokens.length){
+      return this.tokens[index];
+    }
+    else{
+      return null;
+    }
+  }
+  
+  void expect(TokenType type){
+    Token next = getNextToken();  
+    
+    if(next.type != type){
+      log.severe("Unexpected symbol " + next.value + ", expected " + type.value);
+    }
   }
   
   /* Determines if the next token is the type of token
@@ -74,10 +90,34 @@ class Parser{
   
   void statement(){
     Token token = getNextToken();
-    
+
     if(token.type == TokenType.PRINT){
-      print("We have a print token");
+      printStatement();
+    }    
+  }
+  
+  /* STATEMENTS */
+  void printStatement(){
+    log.info("Parsing print statement");
+    expect(TokenType.OPEN_PAREN);
+    stringExpr();  
+    expect(TokenType.CLOSE_PAREN);
+  }
+  
+  void stringExpr(){
+    
+    // Opening Quote
+    expect(TokenType.QUOTE);
+    
+    // Validate at least one character exists
+    expect(TokenType.CHAR);
+  
+    // Iterate over the rest of the string
+    while(peekNextToken() != null && peekNextToken().type == TokenType.CHAR){
+      expect(TokenType.CHAR);
     }
     
+    // Closing Quote
+    expect(TokenType.QUOTE);
   }
 }
