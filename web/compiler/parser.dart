@@ -95,7 +95,7 @@ class Parser{
     expect(TokenType.EQUALS);
     
     if(isNextToken(TokenType.DIGIT)){
-      expect(TokenType.DIGIT, ID);
+      intExpression(ID);   
     }
     // Assignment can be for boolval or boolean expression
     else if(isNextToken(TokenType.BOOLEAN)){
@@ -106,27 +106,11 @@ class Parser{
     }
     // Otherwise it must be a string
     else if(isNextToken(TokenType.QUOTE)){
-      stringAssignment(ID);
+      stringExpression(ID);
     }
     else if(isNextToken(TokenType.ID)){
       expect(TokenType.ID, ID);
     }
-  }
-  
-  void stringAssignment(ID){
-    // Opening Quote
-    expect(TokenType.QUOTE, ID);
-    
-    // Validate at least one character exists
-    expect(TokenType.CHAR, ID);
-  
-    // Iterate over the rest of the string
-    while(peekNextToken() != null && (peekNextToken().type == TokenType.CHAR || peekNextToken().type == TokenType.SPACE)){
-      expectOneOf([TokenType.CHAR, TokenType.SPACE]);
-    }
-    
-    // Closing Quote
-    expect(TokenType.QUOTE, ID);
   }
   
   /* IF STATEMENT */
@@ -161,7 +145,7 @@ class Parser{
   
   void expression([ID = null]){
     if(isNextToken(TokenType.DIGIT)){
-      expect(TokenType.DIGIT, ID);
+      intExpression(ID);
     }
     else if(isNextToken(TokenType.BOOLEAN)){
       expect(TokenType.BOOLEAN, ID);
@@ -178,6 +162,22 @@ class Parser{
     }
     else{
       print("idk");
+    }
+  }
+  
+  void intExpression([ID = null]){
+    // Check for type int
+    expect(TokenType.DIGIT, ID);
+    
+    // Handle int operations aka +
+    if(isNextToken(TokenType.INT_OP)){
+      Token leftHand = getToken();
+      expect(TokenType.INT_OP);
+      expect(TokenType.DIGIT);
+      Token rightHand = getToken();
+      
+      // Make sure both sides of the operand are of type int
+      checkTypes(leftHand, rightHand);
     }
   }
   

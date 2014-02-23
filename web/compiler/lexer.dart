@@ -92,7 +92,7 @@ class Lexer{
             tokens.add(new Token(TokenType.SYMBOLS[lexeme], lexeme, numLine));
           }
           else{
-          log.warning("Count not identify : " + lexeme);
+          log.warning("Count not identify : " + lexeme );
           }
         }
       }
