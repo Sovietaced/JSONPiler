@@ -41,7 +41,7 @@ class Parser{
     Token token = popNextToken();
     
     if(token.type == TokenType.OPEN_BRACE){
-      statement();
+      parseStatements();
     }
     else{
       throw new SyntaxError("Program must begin with a block");
@@ -49,7 +49,7 @@ class Parser{
     // Exiting a block denotes new scope
     scope--;
   }
-  void statement(){
+  void parseStatements(){
     Token token = popNextToken();
     
     while(token.type != TokenType.CLOSE_BRACE){
@@ -65,7 +65,10 @@ class Parser{
       else if(token.type == TokenType.IF){
         ifStatement();
       }
-      
+      else if(token.type == TokenType.WHILE){
+        whileStatement();
+      }
+  
       // Change sentinel value
       token = popNextToken();
     }
@@ -141,7 +144,18 @@ class Parser{
   /* IF STATEMENT */
   void ifStatement(){
     log.info("Parsing if statement");
-    booleanExpression();
+    expect(TokenType.OPEN_PAREN);
+    condition();
+    expect(TokenType.CLOSE_PAREN);
+    block();
+  }
+  
+  /* WHILE STATEMENT */
+  void whileStatement(){
+    log.info("Parsing while statement");
+    expect(TokenType.OPEN_PAREN);
+    condition();
+    expect(TokenType.CLOSE_PAREN);
     block();
   }
   
@@ -165,7 +179,7 @@ class Parser{
     if(isNextToken(TokenType.DIGIT)){
       intExpression(ID);
     }
-    else if(isNextToken(TokenType.BOOLEAN) || (isNextToken(TokenType.OPEN_PAREN))){
+    else if(isNextToken(TokenType.BOOLEAN)){
       booleanExpression(ID);
     }
     // Otherwise it must be a string
@@ -185,15 +199,7 @@ class Parser{
    }
     
     void booleanExpression([ID = null]){
-      log.info("Parsing a boolean expression");
-      if(isNextToken(TokenType.BOOLEAN)){
-        expect(TokenType.BOOLEAN, ID);
-      }
-      else if(isNextToken(TokenType.OPEN_PAREN)){
-        expect(TokenType.OPEN_PAREN);
-        condition();
-        expect(TokenType.CLOSE_PAREN);
-      }
+      expect(TokenType.BOOLEAN, ID);
     }
   
   void stringExpression([ID = null]){
