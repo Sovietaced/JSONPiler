@@ -175,7 +175,8 @@ class Parser{
     if(isNextToken(TokenType.INT_OP)){
       Token leftHand = getToken();
       expect(TokenType.INT_OP);
-      expect(TokenType.DIGIT);
+      // Right hand side can be an int or symbol
+      expectOneOf([TokenType.DIGIT, TokenType.ID]);
       Token rightHand = getToken();
       
       // Make sure both sides of the operand are of type int

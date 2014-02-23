@@ -106,7 +106,7 @@ class Lexer{
     
     // DUMP
     for(Token t in tokens){
-      print(t.toString());
+      log.info(t.toString());
     }
     return tokens;
   } 
