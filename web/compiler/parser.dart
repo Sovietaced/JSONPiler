@@ -17,7 +17,7 @@ class Parser{
   List<Token> tokens;
   // Simple for now
   List<Symbol> symbols = new List<Symbol>();
-  num index = 0;
+  num index = -1;
   num scope = 0;
   
   Parser(this.tokens);
@@ -38,13 +38,13 @@ class Parser{
     // Entering a block denotes new scope
     scope++;
     
-    Token token = getToken();
+    Token token = popNextToken();
     
     if(token.type == TokenType.OPEN_BRACE){
       statement();
     }
     else{
-      log.severe("Program must begin with a block");
+      throw new SyntaxError("Program must begin with a block");
     }
     // Exiting a block denotes new scope
     scope--;
@@ -142,7 +142,7 @@ class Parser{
   void ifStatement(){
     log.info("Parsing if statement");
     booleanExpression();
-    //block();
+    block();
   }
   
   /* VARIABLE DECLARATIONS */
