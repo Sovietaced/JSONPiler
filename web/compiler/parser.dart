@@ -102,9 +102,7 @@ class Parser{
       expect(TokenType.BOOLEAN, ID);
     }
     else if(isNextToken(TokenType.OPEN_PAREN)){
-      expect(TokenType.OPEN_PAREN);
-      condition();
-      expect(TokenType.CLOSE_PAREN);
+      condition(ID);
     }
     // Otherwise it must be a string
     else if(isNextToken(TokenType.QUOTE)){
@@ -201,7 +199,11 @@ class Parser{
   }
   
   // Parses Conditionals and does type checking
-  void condition(){
+  void condition([ID = null]){
+    // In case this condition is being assigned
+    if(ID != null){
+      checkSymbolTypeAgainstTokenType(TokenType.BOOLEAN, ID);
+    }
     
     expect(TokenType.OPEN_PAREN);
     
@@ -264,26 +266,24 @@ class Parser{
       throw new TypeError("Expected type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString());
     }
     if(ID != null){
-      checkSymbolType(next, ID);
+      checkSymbolTypeAgainstToken(next, ID);
     }
   }
   
-  // Checks to see if the next token is one of those passed in the list
-  void expectOneOf(List<TokenType> types, [ID = null]){
-    Token next = popNextToken();  
+  void checkSymbolTypeAgainstTokenType(TokenType type, String ID){
+    // Get the symbol
+    Symbol symbol = findSymbol(ID);
     
-    for(TokenType type in types){
-      if(next.type != type){
-        throw new TypeError("Expected type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString());
-      }
-      if(ID != null){
-        checkSymbolType(next, ID);
-      }
+    if((symbol.type == "int" && type != TokenType.DIGIT) ||
+        (symbol.type == "string" && type != TokenType.CHAR && type != TokenType.QUOTE) ||
+        (symbol.type == "boolean" && type != TokenType.BOOLEAN)
+        ){
+      throw new TypeError("Attempted to assign value of type " + type.value + " to symbol $ID of type " + symbol.type);
     }
   }
   
   // Does type checking
-  void checkSymbolType(Token token, String ID){
+  void checkSymbolTypeAgainstToken(Token token, String ID){
     // Get the symbol
     Symbol leftHand = findSymbol(ID);
     
@@ -300,11 +300,8 @@ class Parser{
       }
     }
     // For handling normal variables
-    else if( (leftHand.type == "int" && token.type != TokenType.DIGIT) ||
-        (leftHand.type == "string" && token.type != TokenType.CHAR && token.type != TokenType.QUOTE) ||
-        (leftHand.type == "boolean" && token.type != TokenType.BOOLEAN)
-        ){
-      throw new TypeError("Attempted to assign value of type " + token.type.value + " to symbol $ID of type " + leftHand.type);
+    else {
+      checkSymbolTypeAgainstTokenType(token.type, ID);
     }
   }
   
@@ -339,13 +336,13 @@ class Parser{
         }
       }
       else{
-        checkSymbolType(rightHand, left.id);
+        checkSymbolTypeAgainstToken(rightHand, left.id);
       }
     }
     else if(rightHand.type == TokenType.ID){
       Symbol right = findSymbol(rightHand.value);
         
-      checkSymbolType(leftHand, right.id);
+      checkSymbolTypeAgainstToken(leftHand, right.id);
     }
     else{
       if(leftHand.type != rightHand.type){
@@ -354,7 +351,6 @@ class Parser{
       }
     }
   }
-  
   
   /* Determines if the next token is the type of token
    * that we're looking for. Used for determing the next statement. 
@@ -366,5 +362,4 @@ class Parser{
     }
     return true;
   }
-  
 }
