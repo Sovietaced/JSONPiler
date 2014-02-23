@@ -4,3 +4,10 @@ class SyntaxError implements Exception {
   
   String toString() => "Syntax Error: $message";
 }
+
+class TypeError implements Exception {
+  String message = "";
+  TypeError(this.message);
+  
+  String toString() => "Type Error: $message";
+}

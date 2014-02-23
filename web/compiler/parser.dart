@@ -79,25 +79,67 @@ class Parser{
     expect(TokenType.CLOSE_PAREN);
   }
   
-  /* Handles the assignment statement.
-   * The token passed is the left hand side of the assignment.
-   * this is done for type checking.
-   */
   void assignmentStatement(Token token){
     log.info("Parsing assignment statement");
-    // First make sure the left hand side is a valid reference
-    checkSymbol(token.value);
+    
+    String ID = token.value;
+    
+    // First make sure the left hand side is a valid reference to a symbol
+    checkSymbol(ID);
+    
     // Equals assignment
     expect(TokenType.EQUALS);
-    // Check right hand side
-    expression(token.value);
+    
+    if(isNextToken(TokenType.DIGIT)){
+      intAssignment(ID);
+    }
+    // Assignment can be for boolval or boolean expression
+    else if(isNextToken(TokenType.BOOLEAN)){
+      booleanAssignment(ID);
+    }
+    else if(isNextToken(TokenType.OPEN_PAREN)){
+      booleanExpression(ID);
+    }
+    // Otherwise it must be a string
+    else if(isNextToken(TokenType.QUOTE)){
+      stringAssignment(ID);
+    }
+    else if(isNextToken(TokenType.ID)){
+      idAssignment(ID);
+    }
+  }
+  
+  void intAssignment(ID){
+    expect(TokenType.DIGIT, ID);
+  }
+  
+  void booleanAssignment(ID){
+    expect(TokenType.BOOLEAN, ID);
+  }
+  
+  void stringAssignment(ID){
+    // Opening Quote
+    expect(TokenType.QUOTE, ID);
+    
+    // Validate at least one character exists
+    expect(TokenType.CHAR, ID);
+  
+    // Iterate over the rest of the string
+    while(peekNextToken() != null && peekNextToken().type == TokenType.CHAR){
+      expect(TokenType.CHAR, ID);
+    }
+    
+    // Closing Quote
+    expect(TokenType.QUOTE, ID);
+  }
+  
+  void idAssignment(ID){
+    expect(TokenType.ID, ID);
   }
   
   void ifStatement(){
     log.info("Parsing if statement");
-    expect(TokenType.OPEN_PAREN);
     expression();
-    expect(TokenType.CLOSE_PAREN);
   }
   
   /* VARIABLE DECLARATIONS */
@@ -122,7 +164,7 @@ class Parser{
     if(isNextToken(TokenType.DIGIT)){
       intExpression(ID);
     }
-    else if(isNextToken(TokenType.BOOLEAN)){
+    else if(isNextToken(TokenType.BOOLEAN) || (isNextToken(TokenType.OPEN_PAREN))){
       booleanExpression(ID);
     }
     // Otherwise it must be a string
@@ -136,6 +178,7 @@ class Parser{
    }
     
     void booleanExpression([ID = null]){
+      expect(TokenType.OPEN_PAREN);
       expect(TokenType.BOOLEAN, ID);
     }
   
@@ -171,6 +214,7 @@ class Parser{
     }
   }
   
+  // Looks at the next token without incrementing the current token pointer
   Token peekNextToken(){
     if(index < this.tokens.length - 1){
       return this.tokens[index + 1];
@@ -180,6 +224,7 @@ class Parser{
     }
   }
   
+  // Gets the current token
   Token getToken(){
     if(index < this.tokens.length){
       return this.tokens[index];
@@ -189,25 +234,41 @@ class Parser{
     }
   }
   
+  // Checks to see if the next token is what it should be
   void expect(TokenType type, [ID = null]){
     Token next = popNextToken();  
     
     if(next.type != type){
-      throw new SyntaxError("Expected type " + type.value + ", found type " + next.type.value);
+      throw new TypeError("Expected type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString());
     }
     if(ID != null){
       checkSymbolType(next, ID);
     }
   }
   
+  // Does type checking
   void checkSymbolType(Token token, String ID){
     // Get the symbol
-    Symbol symbol = findSymbol(ID);
-    if( (symbol.type == "int" && token.type != TokenType.DIGIT) ||
-        (symbol.type == "string" && token.type != TokenType.CHAR && token.type != TokenType.QUOTE) ||
-        (symbol.type == "boolean" && token.type != TokenType.BOOLEAN)
+    Symbol leftHand = findSymbol(ID);
+    
+    // For handling symbols
+    if(token.type == TokenType.ID){
+      Symbol rightHand = findSymbol(token.value);
+      if(rightHand != null){
+        if(rightHand.type != leftHand.type){
+          throw new TypeError("Attempted to assign value of type " + rightHand.type + " to symbol $ID of type " + leftHand.type);
+        }
+      }
+      else{
+        throw new SyntaxError("Undefined value " + token.value);
+      }
+    }
+    // For handling normal variables
+    else if( (leftHand.type == "int" && token.type != TokenType.DIGIT) ||
+        (leftHand.type == "string" && token.type != TokenType.CHAR && token.type != TokenType.QUOTE) ||
+        (leftHand.type == "boolean" && token.type != TokenType.BOOLEAN)
         ){
-      log.severe("Type mismatch. Attempted to assign value of type " + token.type.value + " to " + symbol.type + " $ID");
+      throw new TypeError("Attempted to assign value of type " + token.type.value + " to symbol $ID of type " + symbol.type);
     }
   }
   
