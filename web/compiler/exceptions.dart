@@ -1,3 +1,9 @@
+/* exceptions.dart
+ * Jason Parraga <Sovietaced@gmail.com>  
+ * 
+ * Here lie exceptions thrown by my compiler
+ * */
+
 class SyntaxError implements Exception {
   String message = "";
   SyntaxError(this.message);

@@ -1,4 +1,7 @@
-/* lexer.dart  
+/* lexer.dart
+ * Jason Parraga <Sovietaced@gmail.com>  
+ * 
+ * Static compiler lexer class. Performs lexical analysis on a source string
  * */
 import 'token.dart';
 import 'package:logging/logging.dart';

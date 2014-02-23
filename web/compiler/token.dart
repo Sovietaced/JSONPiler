@@ -1,3 +1,8 @@
+/* token.dart
+ * Jason Parraga <Sovietaced@gmail.com>  
+ * 
+ * Compiler token class. Also an enum class for the different static token types.
+ * */
 
 import '../../lib/enum.dart'; // Enum lib
 
@@ -23,7 +28,7 @@ class TokenType extends Enum<String> {
                   ")" : TokenType.CLOSE_PAREN,
                   "=" : TokenType.EQUALS,
                   "==" : TokenType.BOOL_OP,
-                  "!" : TokenType.BOOL_OP,
+                  "!=" : TokenType.BOOL_OP,
                   "+" : TokenType.INT_OP };
   
   static final RESERVED = { "int" : TokenType.TYPE,
@@ -37,7 +42,7 @@ class TokenType extends Enum<String> {
   
   const TokenType(String value) : super(value);
   
-  // "Symbols"
+  // Symbols
   static const END = const TokenType("END");
   static const OPEN_BRACE = const TokenType("OPEN_BRACE");
   static const CLOSE_BRACE = const TokenType("CLOSE_BRACE");

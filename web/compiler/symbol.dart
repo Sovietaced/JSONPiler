@@ -1,5 +1,8 @@
-/* symbol.dart  */
-
+/* symbol.dart
+ * Jason Parraga <Sovietaced@gmail.com>  
+ * 
+ * Compiler symbol class
+ * */
 class Symbol{
   
   String id;

@@ -41,15 +41,15 @@ class Parser{
     Token token = popNextToken();
     
     if(token.type == TokenType.OPEN_BRACE){
-      parseStatements();
+      statementList();
     }
     else{
-      throw new SyntaxError("Program must begin with a block");
+      throw new SyntaxError("Program must begin with a block denoted by an Open Bracket symbol");
     }
     // Exiting a block denotes new scope
     scope--;
   }
-  void parseStatements(){
+  void statementList(){
     Token token = popNextToken();
     
     while(token.type != TokenType.CLOSE_BRACE){
@@ -192,7 +192,7 @@ class Parser{
     expect(TokenType.CHAR, ID);
   
     // Iterate over the rest of the string
-    while(peekNextToken() != null && (peekNextToken().type == TokenType.CHAR || peekNextToken().type == TokenType.SPACE)){
+    while(peekNextToken() != null && (isNextToken(TokenType.CHAR) || isNextToken(TokenType.SPACE))){
       expectOneOf([TokenType.CHAR, TokenType.SPACE]);
     }
     
