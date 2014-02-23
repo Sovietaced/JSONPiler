@@ -95,30 +95,24 @@ class Parser{
     expect(TokenType.EQUALS);
     
     if(isNextToken(TokenType.DIGIT)){
-      intAssignment(ID);
+      expect(TokenType.DIGIT, ID);
     }
     // Assignment can be for boolval or boolean expression
     else if(isNextToken(TokenType.BOOLEAN)){
-      booleanAssignment(ID);
+      expect(TokenType.BOOLEAN, ID);
     }
     else if(isNextToken(TokenType.OPEN_PAREN)){
-      booleanExpression(ID);
+      expect(TokenType.OPEN_PAREN);
+      condition();
+      expect(TokenType.CLOSE_PAREN);
     }
     // Otherwise it must be a string
     else if(isNextToken(TokenType.QUOTE)){
       stringAssignment(ID);
     }
     else if(isNextToken(TokenType.ID)){
-      idAssignment(ID);
+      expect(TokenType.ID, ID);
     }
-  }
-  
-  void intAssignment(ID){
-    expect(TokenType.DIGIT, ID);
-  }
-  
-  void booleanAssignment(ID){
-    expect(TokenType.BOOLEAN, ID);
   }
   
   void stringAssignment(ID){
@@ -137,25 +131,17 @@ class Parser{
     expect(TokenType.QUOTE, ID);
   }
   
-  void idAssignment(ID){
-    expect(TokenType.ID, ID);
-  }
-  
   /* IF STATEMENT */
   void ifStatement(){
     log.info("Parsing if statement");
-    expect(TokenType.OPEN_PAREN);
     condition();
-    expect(TokenType.CLOSE_PAREN);
     block();
   }
   
   /* WHILE STATEMENT */
   void whileStatement(){
     log.info("Parsing while statement");
-    expect(TokenType.OPEN_PAREN);
     condition();
-    expect(TokenType.CLOSE_PAREN);
     block();
   }
   
@@ -177,30 +163,25 @@ class Parser{
   
   void expression([ID = null]){
     if(isNextToken(TokenType.DIGIT)){
-      intExpression(ID);
+      expect(TokenType.DIGIT, ID);
     }
     else if(isNextToken(TokenType.BOOLEAN)){
-      booleanExpression(ID);
+      expect(TokenType.BOOLEAN, ID);
+    }
+    else if(isNextToken(TokenType.OPEN_PAREN)){
+     condition();
     }
     // Otherwise it must be a string
     else if(isNextToken(TokenType.QUOTE)){
       stringExpression(ID);
     }
     else if(isNextToken(TokenType.ID)){
-      idExpression(ID);
+      expect(TokenType.ID, ID);
     }
     else{
       print("idk");
     }
   }
-  
-   void intExpression([ID = null]){   
-    expect(TokenType.DIGIT, ID);
-   }
-    
-    void booleanExpression([ID = null]){
-      expect(TokenType.BOOLEAN, ID);
-    }
   
   void stringExpression([ID = null]){
     
@@ -219,22 +200,23 @@ class Parser{
     expect(TokenType.QUOTE, ID);
   }
   
-  void idExpression([ID = null]){
-    expect(TokenType.ID, ID);
-  }
-  
   // Parses Conditionals and does type checking
   void condition(){
+    
+    expect(TokenType.OPEN_PAREN);
+    
     // Left Hand
     expression();
     Token leftHand = getToken();
-    print(leftHand.toString());
-    
+
+    // Boolean expression
     expect(TokenType.BOOL_OP);
     
+    // Right Hand
     expression();
     Token rightHand = getToken();
-    print(rightHand.toString());
+    
+    expect(TokenType.CLOSE_PAREN);
     
     // Check type of two tokens
     checkTypes(leftHand, rightHand);
