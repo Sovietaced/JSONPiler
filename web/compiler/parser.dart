@@ -121,8 +121,8 @@ class Parser{
     expect(TokenType.CHAR, ID);
   
     // Iterate over the rest of the string
-    while(peekNextToken() != null && peekNextToken().type == TokenType.CHAR){
-      expect(TokenType.CHAR, ID);
+    while(peekNextToken() != null && (peekNextToken().type == TokenType.CHAR || peekNextToken().type == TokenType.SPACE)){
+      expectOneOf([TokenType.CHAR, TokenType.SPACE]);
     }
     
     // Closing Quote
@@ -190,8 +190,8 @@ class Parser{
     expect(TokenType.CHAR, ID);
   
     // Iterate over the rest of the string
-    while(peekNextToken() != null && peekNextToken().type == TokenType.CHAR){
-      expect(TokenType.CHAR, ID);
+    while(peekNextToken() != null && (peekNextToken().type == TokenType.CHAR || peekNextToken().type == TokenType.SPACE)){
+      expectOneOf([TokenType.CHAR, TokenType.SPACE]);
     }
     
     // Closing Quote
@@ -268,6 +268,19 @@ class Parser{
     if(ID != null){
       checkSymbolTypeAgainstToken(next, ID);
     }
+  }
+  
+// Checks to see if the next token is what it should be
+  void expectOneOf(List<TokenType> types){
+    Token next = popNextToken();  
+    
+    for(TokenType type in types){
+      if(next.type == type){
+        return;
+      }
+    }
+    // In case not found
+    throw new TypeError("Expected one of type " + types.toString() + ", found type " + next.type.value + " on line " + next.line.toString());
   }
   
   void checkSymbolTypeAgainstTokenType(TokenType type, String ID){

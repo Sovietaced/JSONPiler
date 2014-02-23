@@ -59,7 +59,12 @@ class Lexer{
           // String characters
           for(var code in str_lexeme.codeUnits){
             String char = new String.fromCharCode(code);
-            tokens.add(new Token(TokenType.CHAR, char, numLine));
+            if(char == ' '){
+              tokens.add(new Token(TokenType.SPACE, char, numLine));
+            }
+            else{
+              tokens.add(new Token(TokenType.CHAR, char, numLine));
+            }
           }
           
           // Trailing quote
@@ -101,7 +106,5 @@ class Lexer{
       print(t.toString());
     }
     return tokens;
-  }
-  
+  } 
 }
-
