@@ -128,6 +128,8 @@ class Parser{
   }
   
   /* VARIABLE DECLARATIONS */
+  
+  // Checks for an ID type token, creates the symbol, and adds it to the symbol table
   void variableDeclaration(Token typeToken){
     log.info("Parsing variable declaration");
     expect(TokenType.ID);
