@@ -22,9 +22,9 @@ class TokenType extends Enum<String> {
                   "(" : TokenType.OPEN_PAREN,
                   ")" : TokenType.CLOSE_PAREN,
                   "=" : TokenType.EQUALS,
-                  "==" : TokenType.DOUBLE_EQUALS,
-                  "!" : TokenType.OP,
-                  "+" : TokenType.OP };
+                  "==" : TokenType.BOOL_OP,
+                  "!" : TokenType.BOOL_OP,
+                  "+" : TokenType.INT_OP };
   
   static final RESERVED = { "int" : TokenType.TYPE,
                            "string" : TokenType.TYPE,
@@ -44,9 +44,9 @@ class TokenType extends Enum<String> {
   static const OPEN_PAREN = const TokenType("OPEN_PAREN");
   static const CLOSE_PAREN = const TokenType("CLOSE_PAREN");
   static const EQUALS = const TokenType("EQUALS");
-  static const OP = const TokenType("OP");
   static const QUOTE = const TokenType("QUOTE");
-  static const DOUBLE_EQUALS = const TokenType("DOUBLE_EQUALS");
+  static const BOOL_OP = const TokenType("BOOL_OP");
+  static const INT_OP = const TokenType("INT_OP");
   
   // Reserved words
   static const TYPE = const TokenType("TYPE");

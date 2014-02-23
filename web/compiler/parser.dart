@@ -79,6 +79,7 @@ class Parser{
     expect(TokenType.CLOSE_PAREN);
   }
   
+  /* ASSIGNMENT STATEMENTS */
   void assignmentStatement(Token token){
     log.info("Parsing assignment statement");
     
@@ -137,9 +138,11 @@ class Parser{
     expect(TokenType.ID, ID);
   }
   
+  /* IF STATEMENT */
   void ifStatement(){
     log.info("Parsing if statement");
-    expression();
+    booleanExpression();
+    //block();
   }
   
   /* VARIABLE DECLARATIONS */
@@ -159,8 +162,6 @@ class Parser{
   /* TYPE EXPRESSIONS */
   
   void expression([ID = null]){
-    
-    log.info(ID);
     if(isNextToken(TokenType.DIGIT)){
       intExpression(ID);
     }
@@ -171,6 +172,12 @@ class Parser{
     else if(isNextToken(TokenType.QUOTE)){
       stringExpression(ID);
     }
+    else if(isNextToken(TokenType.ID)){
+      idExpression(ID);
+    }
+    else{
+      print("idk");
+    }
   }
   
    void intExpression([ID = null]){   
@@ -178,10 +185,16 @@ class Parser{
    }
     
     void booleanExpression([ID = null]){
-      expect(TokenType.OPEN_PAREN);
-      expect(TokenType.BOOLEAN, ID);
+      log.info("Parsing a boolean expression");
+      if(isNextToken(TokenType.BOOLEAN)){
+        expect(TokenType.BOOLEAN, ID);
+      }
+      else if(isNextToken(TokenType.OPEN_PAREN)){
+        expect(TokenType.OPEN_PAREN);
+        condition();
+        expect(TokenType.CLOSE_PAREN);
+      }
     }
-  
   
   void stringExpression([ID = null]){
     
@@ -198,6 +211,27 @@ class Parser{
     
     // Closing Quote
     expect(TokenType.QUOTE, ID);
+  }
+  
+  void idExpression([ID = null]){
+    expect(TokenType.ID, ID);
+  }
+  
+  // Parses Conditionals and does type checking
+  void condition(){
+    // Left Hand
+    expression();
+    Token leftHand = getToken();
+    print(leftHand.toString());
+    
+    expect(TokenType.BOOL_OP);
+    
+    expression();
+    Token rightHand = getToken();
+    print(rightHand.toString());
+    
+    // Check type of two tokens
+    checkTypes(leftHand, rightHand);
   }
   
   /* TOKEN HELPERS */
@@ -246,6 +280,20 @@ class Parser{
     }
   }
   
+  // Checks to see if the next token is one of those passed in the list
+  void expectOneOf(List<TokenType> types, [ID = null]){
+    Token next = popNextToken();  
+    
+    for(TokenType type in types){
+      if(next.type != type){
+        throw new TypeError("Expected type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString());
+      }
+      if(ID != null){
+        checkSymbolType(next, ID);
+      }
+    }
+  }
+  
   // Does type checking
   void checkSymbolType(Token token, String ID){
     // Get the symbol
@@ -268,7 +316,7 @@ class Parser{
         (leftHand.type == "string" && token.type != TokenType.CHAR && token.type != TokenType.QUOTE) ||
         (leftHand.type == "boolean" && token.type != TokenType.BOOLEAN)
         ){
-      throw new TypeError("Attempted to assign value of type " + token.type.value + " to symbol $ID of type " + symbol.type);
+      throw new TypeError("Attempted to assign value of type " + token.type.value + " to symbol $ID of type " + leftHand.type);
     }
   }
   
@@ -285,6 +333,36 @@ class Parser{
     for(Symbol symbol in this.symbols){
       if(symbol.id == symbolID){
         return symbol;
+      }
+    }
+    throw new SyntaxError("Identifier " + symbolID + " undefined");
+  }
+  
+  void checkTypes(Token leftHand, Token rightHand){
+    if(leftHand.type == TokenType.ID){
+      Symbol left = findSymbol(leftHand.value);
+      
+      if(rightHand.type == TokenType.ID){
+        Symbol right = findSymbol(rightHand.value);
+        
+        if(left.type != right.type){
+          throw new TypeError("Symbol " + left.id + " of type " + left.type + " on line " + left.line.toString() + 
+              " differs from symbol " + right.id + " of type " + right.type + " on line " + right.line.toString());
+        }
+      }
+      else{
+        checkSymbolType(rightHand, left.id);
+      }
+    }
+    else if(rightHand.type == TokenType.ID){
+      Symbol right = findSymbol(rightHand.value);
+        
+      checkSymbolType(leftHand, right.id);
+    }
+    else{
+      if(leftHand.type != rightHand.type){
+        throw new TypeError("Value \"" + leftHand.value + "\" of type " + leftHand.type.value + " on line " + leftHand.line.toString() + 
+            " differs from value \"" + rightHand.value + "\" of type " + rightHand.type.value + " on line " + rightHand.line.toString());
       }
     }
   }
