@@ -284,7 +284,7 @@ class Parser{
     Token next = popNextToken();  
     
     if(next.type != type){
-      ExceptionUtil.logAndThrow(new CompilerTypeError("Expected type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString()), log);
+      ExceptionUtil.logAndThrow(new CompilerSyntaxError("Expected type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString()), log);
     }
     if(ID != null){
       checkCompilerSymbolTypeAgainstToken(next, ID);
