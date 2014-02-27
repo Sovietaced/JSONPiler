@@ -202,9 +202,6 @@ class Parser{
     
     // Opening Quote
     expect(TokenType.QUOTE, ID);
-    
-    // Validate at least one character exists
-    expect(TokenType.CHAR, ID);
   
     // Iterate over the rest of the string
     while(peekNextToken() != null && (isNextToken(TokenType.CHAR) || isNextToken(TokenType.SPACE))){
@@ -222,23 +219,30 @@ class Parser{
       checkSymbolTypeAgainstTokenType(TokenType.BOOLEAN, ID);
     }
     
-    expect(TokenType.OPEN_PAREN);
-    
-    // Left Hand
-    expression();
-    Token leftHand = getToken();
-
-    // Boolean expression
-    expect(TokenType.BOOL_OP);
-    
-    // Right Hand
-    expression();
-    Token rightHand = getToken();
-    
-    expect(TokenType.CLOSE_PAREN);
-    
-    // Check type of two tokens
-    checkTypes(leftHand, rightHand);
+    // Handles conditionals within parenthesis
+    if(peekNextToken().type == TokenType.OPEN_PAREN){
+      expect(TokenType.OPEN_PAREN);
+      
+      // Left Hand
+      expression();
+      Token leftHand = getToken();
+  
+      // Boolean expression
+      expect(TokenType.BOOL_OP);
+      
+      // Right Hand
+      expression();
+      Token rightHand = getToken();
+      
+      expect(TokenType.CLOSE_PAREN);
+      
+      // Check type of two tokens
+      checkTypes(leftHand, rightHand);
+    }
+    // Handles simple conditionals without parenthesis (true/false)
+    else{
+      expect(TokenType.BOOLEAN);
+    }
   }
   
   /* TOKEN HELPERS */
