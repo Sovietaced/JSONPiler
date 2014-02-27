@@ -1,13 +1,13 @@
 <!DOCTYPE HTML>
 <html>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-		<title>JSONPiler</title>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <title>JSONPiler</title>
 
-		<link rel="stylesheet" href="assets/stylesheets/bootstrap.min.css" type="text/css" media="screen" />
-	</head>
+    <link rel="stylesheet" href="assets/stylesheets/bootstrap.min.css" type="text/css" media="screen" />
+  </head>
 
-	<body>
+  <body>
 <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
@@ -28,34 +28,53 @@
     </div>
     <div class="container" style="margin-top: 60px;">
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-4">
                    <div id="input">
-			         	<h2 style="float: left;">Input</h2>
-			         	<h2 id="compile" style="float: right;"><a href="#">Compile</a></h2>
-			             <textarea id="input-code"
-			                       cols="130"
-			                       rows="10"
+                      <h2 style="float: left;">Input</h2>
+                      <h2 id="compile" style="float: right;"><a href="#">Compile</a></h2>
+                         <textarea id="input-code"
+                                   cols="40"
+                                   rows="24"
+      
+                         ></textarea>
+                   </div>
+              </div>
+              <div class="col-md-4">
+              <h2>Log</h2>
+               <textarea readonly id="log"
+                                   cols="40"
+                                   rows="24"
+      
+                         ></textarea>
+              </div>
+              <div class="col-md-4">
+                 <div>
+                <h2>Symbol Table</h2>
+                   <textarea readonly id="symbol-table"
+                         cols="40"
+                             rows="24"
 
-			             ></textarea>
-			        </div>
+                   ></textarea>
+              </div>
             </div>
-            <div class="col-md-12">
+            </div>
+            <div class="row">
+            <div class="col-md-4">
                  <div id="output">
-			         	<h2>Output</h2>
-			             <textarea id="input-code"
-			             		   cols="130"
-			                       rows="10"
+                <h2>Output</h2>
+                   <textarea id="output-code"
+                         cols="40"
+                             rows="10"
 
-			             ></textarea>
-			        </div>
+                   ></textarea>
+              </div>
             </div>
         </div>
     </div>
-		
-	</body>
-	 <script type="text/javascript" src="assets/javascripts/lib/jquery.js"></script>
-	 <script type="text/javascript" src="assets/javascripts/lib/bootstrap.min.js"></script>
-   <script type="application/dart" src="assets/javascripts/custom.dart"></script>
-	 <script type="text/javascript" src="assets/javascripts/lib/dart.js"></script>
-
+    
+  </body>
+   <script type="text/javascript" src="assets/javascripts/jquery.js"></script>
+   <script type="text/javascript" src="assets/javascripts/bootstrap.min.js"></script>
+   <script type="application/dart" src="web/main.dart"></script>
+   <script src="packages/browser/dart.js"></script>
 </html>
