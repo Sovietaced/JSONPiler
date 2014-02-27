@@ -3,6 +3,7 @@
  * 
  * Compiler token class. Also an enum class for the different static token types.
  * */
+library Token;
 
 import '../../lib/enum.dart'; // Enum lib
 

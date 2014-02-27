@@ -4,16 +4,18 @@
  * Compiler symbol class
  * */
 
+library Symbol;
+
 import 'dart:html';
 
-class Symbol{
+class CompilerSymbol{
   
   String id;
   num scope;
   num line;
   String type;
   
-  Symbol(this.id, this.scope, this.line, this.type){
+  CompilerSymbol(this.id, this.scope, this.line, this.type){
     querySelector("#symbol-table").appendText(this.toString());
   }
   

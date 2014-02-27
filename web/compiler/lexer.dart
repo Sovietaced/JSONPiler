@@ -3,9 +3,12 @@
  * 
  * Static compiler lexer class. Performs lexical analysis on a source string
  * */
-import 'token.dart';
-import 'package:logging/logging.dart';
+
+library Lexer;
+
 import '../util/logger_util.dart';
+import 'package:logging/logging.dart';
+import 'token.dart';
 
 
 class Lexer{

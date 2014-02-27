@@ -1,3 +1,5 @@
+library LoggerUtil;
+
 import 'dart:html';
 import 'package:logging/logging.dart';
 
