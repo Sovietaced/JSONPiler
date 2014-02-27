@@ -15,7 +15,7 @@ class Token {
   Token(this.type, this.value, this.line);
  
   String toString(){
-    return "Token type=${this.type.value} value=${this.value} line=${this.line.toString()}";
+    return "Token type=${this.type.value} value=${this.value} line=${this.line.toString()} \n";
   }
 }
 

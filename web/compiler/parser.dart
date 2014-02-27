@@ -26,8 +26,8 @@ class Parser{
   /* This is the main method for the Parser where all the magic happens */
   analyse(){
     log.info("Parser starting analysis...");
-    if(!tokens.isEmpty){
-       block();
+    if(!tokens.isEmpty){    
+       startBlock();
        log.info("Parser finished analysis...");
     }
     else{
@@ -35,10 +35,7 @@ class Parser{
     }
   }
   
-  void block(){
-    // Entering a block denotes new scope
-    scope++;
-    
+  void startBlock(){
     Token token = popNextToken();
     
     if(token.type == TokenType.OPEN_BRACE){
@@ -48,6 +45,16 @@ class Parser{
       log.severe("Program must begin with a block denoted by an Open Bracket symbol");
       throw new SyntaxError("Program must begin with a block denoted by an Open Bracket symbol");
     }
+  }
+  
+  void block(){
+    // Entering a block denotes new scope
+    scope++;
+    
+    Token token = popNextToken();
+    
+    statementList();
+
     // Exiting a block denotes new scope
     scope--;
   }
@@ -55,10 +62,7 @@ class Parser{
     Token token = popNextToken();
     
     while(token.type != TokenType.CLOSE_BRACE){
-      if(token.type == TokenType.PRINT){
-        printStatement();
-      }
-      else if(token.type == TokenType.TYPE){
+      if(token.type == TokenType.TYPE){
         variableDeclaration(token);
       }
       else if(token.type == TokenType.ID){
@@ -70,6 +74,14 @@ class Parser{
       else if(token.type == TokenType.WHILE){
         whileStatement();
       }
+      else if(token.type == TokenType.PRINT){
+        printStatement();
+      }
+      else if(token.type == TokenType.OPEN_BRACE){
+        // We decriment index because normally we parse the block as part of another statement instead of an arbitrary block 
+        index--;
+        block();
+      }
   
       // Change sentinel value
       token = popNextToken();
@@ -80,7 +92,7 @@ class Parser{
   void printStatement(){
     log.info("Parsing print statement");
     expect(TokenType.OPEN_PAREN);
-    stringExpression();  
+    expression();  
     expect(TokenType.CLOSE_PAREN);
   }
   

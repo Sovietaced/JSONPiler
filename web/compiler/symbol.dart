@@ -18,6 +18,6 @@ class Symbol{
   }
   
   String toString(){
-    return "Symbol: name=${this.id} scope=${this.scope} line=${this.line} type=${this.type}";
+    return "Symbol: name=${this.id} scope=${this.scope} line=${this.line} type=${this.type} \n";
   }
 }
