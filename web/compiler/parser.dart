@@ -43,7 +43,7 @@ class Parser{
       statementList();
     }
     else{
-      ExceptionUtil.logAndThrow(new SyntaxError("Program must begin with a block denoted by an Open Bracket symbol"), log);
+      ExceptionUtil.logAndThrow(new CompilerSyntaxError("Program must begin with a block denoted by an Open Bracket symbol"), log);
     }
   }
   
@@ -284,7 +284,7 @@ class Parser{
     Token next = popNextToken();  
     
     if(next.type != type){
-      ExceptionUtil.logAndThrow(new TypeError("Expected type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString()), log);
+      ExceptionUtil.logAndThrow(new CompilerTypeError("Expected type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString()), log);
     }
     if(ID != null){
       checkCompilerSymbolTypeAgainstToken(next, ID);
@@ -301,7 +301,7 @@ class Parser{
       }
     }
     // In case not found
-    ExceptionUtil.logAndThrow(new TypeError("Expected one of type " + types.toString() + ", found type " + next.type.value + " on line " + next.line.toString()), log);
+    ExceptionUtil.logAndThrow(new CompilerTypeError("Expected one of type " + types.toString() + ", found type " + next.type.value + " on line " + next.line.toString()), log);
   }
   
   void checkCompilerSymbolTypeAgainstTokenType(TokenType type, String ID){
@@ -312,7 +312,7 @@ class Parser{
         (symbol.type == "string" && type != TokenType.CHAR && type != TokenType.QUOTE) ||
         (symbol.type == "boolean" && type != TokenType.BOOLEAN)
         ){
-      ExceptionUtil.logAndThrow(new TypeError("Attempted to assign value of type " + type.value + " to symbol $ID of type " + symbol.type), log);
+      ExceptionUtil.logAndThrow(new CompilerTypeError("Attempted to assign value of type ${type.value} to symbol $ID of type ${symbol.type}"), log);
     }
   }
   
@@ -326,11 +326,11 @@ class Parser{
       CompilerSymbol rightHand = findCompilerSymbol(token.value);
       if(rightHand != null){
         if(rightHand.type != leftHand.type){
-          ExceptionUtil.logAndThrow(new TypeError("Attempted to assign value of type " + rightHand.type + " to symbol $ID of type " + leftHand.type), log);
+          ExceptionUtil.logAndThrow(new CompilerTypeError("Attempted to assign value of type ${rightHand.type} to symbol $ID of type ${leftHand.type} on line ${rightHand.line.toString()}"), log);
         }
       }
       else{
-        ExceptionUtil.logAndThrow(new SyntaxError("Undefined value " + token.value), log);
+        ExceptionUtil.logAndThrow(new CompilerSyntaxError("Undefined value " + token.value), log);
       }
     }
     // For handling normal variables
@@ -354,7 +354,7 @@ class Parser{
         return symbol;
       }
     }
-    ExceptionUtil.logAndThrow(new SyntaxError("Identifier " + symbolID + " undefined on ${getToken().line.toString()}"), log);
+    ExceptionUtil.logAndThrow(new CompilerSyntaxError("Identifier " + symbolID + " undefined on ${getToken().line.toString()}"), log);
   }
   
   void checkTypes(Token leftHand, Token rightHand){
@@ -365,7 +365,7 @@ class Parser{
         CompilerSymbol right = findCompilerSymbol(rightHand.value);
         
         if(left.type != right.type){
-          ExceptionUtil.logAndThrow(new TypeError("CompilerSymbol " + left.id + " of type " + left.type + " on line " + left.line.toString() + 
+          ExceptionUtil.logAndThrow(new CompilerTypeError("CompilerSymbol " + left.id + " of type " + left.type + " on line " + left.line.toString() + 
               " differs from symbol " + right.id + " of type " + right.type + " on line " + right.line.toString()), log);
         }
       }
@@ -380,7 +380,7 @@ class Parser{
     }
     else{
       if(leftHand.type != rightHand.type){
-        ExceptionUtil.logAndThrow(new TypeError("Value \"" + leftHand.value + "\" of type " + leftHand.type.value + " on line " + leftHand.line.toString() + 
+        ExceptionUtil.logAndThrow(new CompilerTypeError("Value \"" + leftHand.value + "\" of type " + leftHand.type.value + " on line " + leftHand.line.toString() + 
             " differs from value \"" + rightHand.value + "\" of type " + rightHand.type.value + " on line " + rightHand.line.toString()),log);
       }
     }

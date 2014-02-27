@@ -26,7 +26,7 @@ class Lexer{
     List<Token> tokens = new List<Token>();
     
     // Patterns
-    RegExp splitPattern = new RegExp(r'([a-z]+)|(\d+)|("[^"]*")|(==)|(\S)');
+    RegExp splitPattern = new RegExp(r'([a-z]+)|(\d+)|("[^"]*")|(!=)|(==)|(\S)');
     RegExp numberPattern = new RegExp(r'\d+');
     RegExp charPattern = new RegExp(r'[a-z]');
     RegExp stringPattern = new RegExp(r'[^"]*"');
