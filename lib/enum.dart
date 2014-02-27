@@ -17,6 +17,9 @@
  * assert (Meter.HIGH, 100);
  * assert (Meter.HIGH is Meter);
  */
+
+library Enum;
+
 abstract class Enum<T> {
 
   final T _value;

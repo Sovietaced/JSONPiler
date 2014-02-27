@@ -3,9 +3,12 @@
  * 
  * Static compiler lexer class. Performs lexical analysis on a source string
  * */
-import 'token.dart';
-import 'package:logging/logging.dart';
+
+library Lexer;
+
 import '../util/logger_util.dart';
+import 'package:logging/logging.dart';
+import 'token.dart';
 
 
 class Lexer{
@@ -23,7 +26,7 @@ class Lexer{
     List<Token> tokens = new List<Token>();
     
     // Patterns
-    RegExp splitPattern = new RegExp(r'([a-z]+)|(\d+)|("[^"]*")|(==)|(\S)');
+    RegExp splitPattern = new RegExp(r'([a-z]+)|(\d+)|("[^"]*")|(!=)|(==)|(\S)');
     RegExp numberPattern = new RegExp(r'\d+');
     RegExp charPattern = new RegExp(r'[a-z]');
     RegExp stringPattern = new RegExp(r'[^"]*"');

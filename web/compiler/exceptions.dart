@@ -4,16 +4,16 @@
  * Here lie exceptions thrown by my compiler
  * */
 
-class SyntaxError implements Exception {
+class CompilerSyntaxError implements Exception {
   String message = "";
-  SyntaxError(this.message);
+  CompilerSyntaxError(this.message);
   
   String toString() => "Syntax Error: $message";
 }
 
-class TypeError implements Exception {
+class CompilerTypeError implements Exception {
   String message = "";
-  TypeError(this.message);
+  CompilerTypeError(this.message);
   
   String toString() => "Type Error: $message";
 }
