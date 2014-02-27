@@ -324,6 +324,135 @@ var $$ = {};
   }
 })
 ([
+["Enum", "../lib/enum.dart", , B, {
+  "": "",
+  Enum0: {
+    "": "Object;",
+    get$value: function(_) {
+      return this._Enum$_value;
+    }
+  }
+}],
+["ExceptionUtil", "util/exception_util.dart", , M, {
+  "": "",
+  ExceptionUtil_logAndThrow: function(e, log) {
+    log.log$4(C.Level_SEVERE_1000, e.toString$0(e), null, null);
+    throw H.wrapException(e);
+  }
+}],
+["Lexer", "compiler/lexer.dart", , L, {
+  "": "",
+  Lexer_analyze: function(source) {
+    var tokens, splitPattern, t1, t2, t3, lines, t4, terminated, l, numLine, t5, t6, lexeme, t7, charCodes, $char, t;
+    tokens = H.setRuntimeTypeInfo([], [D.Token]);
+    splitPattern = new H.JSSyntaxRegExp(H.JSSyntaxRegExp_makeNative("([a-z]+)|(\\d+)|(\"[^\"]*\")|(!=)|(==)|(\\S)", false, true, false), null, null);
+    t1 = H.JSSyntaxRegExp_makeNative("\\d+", false, true, false);
+    H.JSSyntaxRegExp_makeNative("[a-z]", false, true, false);
+    t2 = H.JSSyntaxRegExp_makeNative("[^\"]*\"", false, true, false);
+    t3 = H.JSSyntaxRegExp_makeNative("[a-z]+", false, true, false);
+    lines = source.split("\n");
+    $loop$0:
+      for (t4 = new H.ListIterator(lines, lines.length, 0, null); terminated = false, t4.moveNext$0();) {
+        l = t4._current;
+        numLine = H.Lists_indexOf(lines, l, 0, lines.length) + 1;
+        l = J.trim$0$s(l);
+        for (t5 = new H._AllMatchesIterator(splitPattern, l, null); t5.moveNext$0();) {
+          t6 = t5.__js_helper$_current._match;
+          if (0 >= t6.length)
+            return H.ioore(t6, 0);
+          lexeme = t6[0];
+          t6 = J.getInterceptor(lexeme);
+          if (t6.$eq(lexeme, "$")) {
+            tokens.push(new D.Token(C.TokenType_END, "$", numLine, null));
+            terminated = true;
+            break $loop$0;
+          } else {
+            t7 = typeof lexeme !== "string";
+            if (t7)
+              H.throwExpression(new P.ArgumentError(lexeme));
+            if (t2.test(lexeme)) {
+              tokens.push(new D.Token(C.TokenType_QUOTE, "\"", numLine, null));
+              for (t6 = new J._CodeUnits(t6.replaceAll$2(lexeme, "\"", "")), t6 = t6.get$iterator(t6); t6.moveNext$0();) {
+                charCodes = P.List_List$filled(1, t6._current, J.JSInt);
+                $char = H.Primitives_stringFromCharCodes(charCodes);
+                if ($char === " ")
+                  tokens.push(new D.Token(C.TokenType_SPACE, $char, numLine, null));
+                else
+                  tokens.push(new D.Token(C.TokenType_CHAR, $char, numLine, null));
+              }
+              tokens.push(new D.Token(C.TokenType_QUOTE, "\"", numLine, null));
+            } else {
+              if (t7)
+                H.throwExpression(new P.ArgumentError(lexeme));
+              if (t1.test(lexeme))
+                tokens.push(new D.Token(C.TokenType_DIGIT, lexeme, numLine, null));
+              else {
+                if (t7)
+                  H.throwExpression(new P.ArgumentError(lexeme));
+                if (t3.test(lexeme)) {
+                  t6 = $.get$TokenType_RESERVED();
+                  if (t6.containsKey$1(lexeme))
+                    tokens.push(new D.Token(t6.$index(t6, lexeme), lexeme, numLine, null));
+                  else
+                    tokens.push(new D.Token(C.TokenType_ID, lexeme, numLine, null));
+                } else {
+                  t6 = $.get$TokenType_SYMBOLS();
+                  if (t6.containsKey$1(lexeme))
+                    tokens.push(new D.Token(t6.$index(t6, lexeme), lexeme, numLine, null));
+                  else
+                    $.get$Lexer_log().log$4(C.Level_WARNING_900, C.JSString_methods.$add("Count not identify : ", lexeme), null, null);
+                }
+              }
+            }
+          }
+        }
+      }
+    if (!terminated) {
+      $.get$Lexer_log().log$4(C.Level_WARNING_900, "Code missing $ symbol! Inserting for you.", null, null);
+      tokens.push(new D.Token(C.TokenType_END, "$", lines.length + 1, null));
+    }
+    for (t1 = new H.ListIterator(tokens, tokens.length, 0, null); t1.moveNext$0();) {
+      t = t1._current;
+      $.get$Lexer_log().log$4(C.Level_INFO_800, J.toString$0(t), null, null);
+    }
+    return tokens;
+  }
+}],
+["LoggerUtil", "util/logger_util.dart", , K, {
+  "": "",
+  LoggerUtil_createLogger: function($name) {
+    var log = N.Logger_Logger($name);
+    log.get$onRecord().listen$1(K.LoggerUtil_printLogRecord$closure());
+    return log;
+  },
+  LoggerUtil_printLogRecord: [function(r) {
+    var line = H.S(r.get$level()) + ": " + H.S(r.get$time()) + ": " + H.S(r.message) + "\n";
+    if (!J.contains$1$asx(document.querySelector("#log").textContent, line))
+      J.insertAdjacentText$2$x(document.querySelector("#log"), "beforeend", line);
+  }, "call$1", "LoggerUtil_printLogRecord$closure", 2, 0, 0]
+}],
+["Symbol", "compiler/symbol.dart", , T, {
+  "": "",
+  CompilerSymbol: {
+    "": "Object;id>,scope,line<,type>",
+    toString$0: function(_) {
+      return "Symbol: name=" + H.S(this.id) + " scope=" + this.scope + " line=" + this.line + " type=" + H.S(this.type) + " \n";
+    }
+  }
+}],
+["Token", "compiler/token.dart", , D, {
+  "": "",
+  Token: {
+    "": "Object;type,value>,line,symbol",
+    toString$0: function(_) {
+      return "Token type=" + H.S(J.get$value$x(this.type)) + " value=" + H.S(this.value) + " line=" + C.JSInt_methods.toString$0(this.line) + " \n";
+    }
+  },
+  TokenType: {
+    "": "Enum0;_Enum$_value",
+    static: {"": "TokenType_SYMBOLS,TokenType_RESERVED,TokenType_END0,TokenType_OPEN_BRACE0,TokenType_CLOSE_BRACE0,TokenType_OPEN_PAREN0,TokenType_CLOSE_PAREN0,TokenType_EQUALS0,TokenType_QUOTE0,TokenType_BOOL_OP0,TokenType_INT_OP0,TokenType_TYPE0,TokenType_PRINT0,TokenType_WHILE0,TokenType_IF0,TokenType_DIGIT0,TokenType_CHAR0,TokenType_BOOLEAN0,TokenType_SPACE0,TokenType_ID0,TokenType_EPSILON"}
+  }
+}],
 ["_foreign_helper", "dart:_foreign_helper", , H, {
   "": "",
   JS_CONST: {
@@ -1031,7 +1160,7 @@ var $$ = {};
     }
   },
   _EventLoop__runHelper_next: {
-    "": "Closure:0;this_0",
+    "": "Closure:1;this_0",
     call$0: function() {
       if (!this.this_0.runIteration$0())
         return;
@@ -1209,7 +1338,7 @@ var $$ = {};
       t1.close$0(t1);
       t1 = this.__isolate_helper$_controller;
       t1.close$0(t1);
-    }, "call$0", "get$close", 0, 0, 0],
+    }, "call$0", "get$close", 0, 0, 1],
     ReceivePortImpl$fromRawReceivePort$1: function(_rawPort) {
       var t1 = P.StreamController_StreamController(this.get$close(this), null, null, null, true, null);
       this.__isolate_helper$_controller = t1;
@@ -1521,14 +1650,14 @@ var $$ = {};
       }}
   },
   TimerImpl_internalCallback: {
-    "": "Closure:0;this_0,callback_1",
+    "": "Closure:1;this_0,callback_1",
     call$0: function() {
       this.this_0._handle = null;
       this.callback_1.call$0();
     }
   },
   TimerImpl_internalCallback0: {
-    "": "Closure:0;this_2,callback_3",
+    "": "Closure:1;this_2,callback_3",
     call$0: function() {
       this.this_2._handle = null;
       var t1 = init.globalState.topEventLoop;
@@ -3057,7 +3186,7 @@ var $$ = {};
 
     }
     $._callbacksAreEnqueued = false;
-  }, "call$0", "_asyncRunCallback$closure", 0, 0, 0],
+  }, "call$0", "_asyncRunCallback$closure", 0, 0, 1],
   _scheduleAsyncCallback: function(callback) {
     $.get$_asyncCallbacks()._add$1(callback);
     if (!$._callbacksAreEnqueued) {
@@ -3099,17 +3228,17 @@ var $$ = {};
 
   },
   _nullDataHandler: [function(value) {
-  }, "call$1", "_nullDataHandler$closure", 2, 0, 1],
+  }, "call$1", "_nullDataHandler$closure", 2, 0, 2],
   _nullErrorHandler: [function(error, stackTrace) {
     var t1 = $.Zone__current;
     t1.toString;
     P._rootHandleUncaughtError(t1, null, t1, error, stackTrace);
   }, function(error) {
     return P._nullErrorHandler(error, null);
-  }, null, "call$2", "call$1", "_nullErrorHandler$closure", 2, 2, 2, 3],
+  }, null, "call$2", "call$1", "_nullErrorHandler$closure", 2, 2, 3, 4],
   _nullDoneHandler: [function() {
     return;
-  }, "call$0", "_nullDoneHandler$closure", 0, 0, 0],
+  }, "call$0", "_nullDoneHandler$closure", 0, 0, 1],
   _runUserCode: function(userCode, onSuccess, onError) {
     var e, s, exception, t1;
     try {
@@ -3206,10 +3335,10 @@ var $$ = {};
     },
     _onPause$0: [function() {
       return;
-    }, "call$0", "get$_onPause", 0, 0, 0],
+    }, "call$0", "get$_onPause", 0, 0, 1],
     _onResume$0: [function() {
       return;
-    }, "call$0", "get$_onResume", 0, 0, 0],
+    }, "call$0", "get$_onResume", 0, 0, 1],
     $as_ControllerSubscription: null,
     static: {"": "_BroadcastSubscription__STATE_EVENT_ID,_BroadcastSubscription__STATE_FIRING,_BroadcastSubscription__STATE_REMOVE_AFTER_FIRING"}
   },
@@ -3441,7 +3570,7 @@ var $$ = {};
       P._Future__propagateToListeners(this, listeners);
     }, function(error) {
       return this._completeError$2(error, null);
-    }, "_completeError$1", "call$2", "call$1", "get$_completeError", 2, 2, 2, 3],
+    }, "_completeError$1", "call$2", "call$1", "get$_completeError", 2, 2, 3, 4],
     _asyncComplete$1: function(value) {
       var t1;
       if (this._state !== 0)
@@ -3890,7 +4019,7 @@ var $$ = {};
     }
   },
   _StreamController__recordCancel_complete: {
-    "": "Closure:0;this_0",
+    "": "Closure:1;this_0",
     call$0: function() {
       var t1 = this.this_0._doneFuture;
       if (t1 != null && t1._state === 0)
@@ -3960,10 +4089,10 @@ var $$ = {};
     },
     _onPause$0: [function() {
       this.get$_async$_controller()._recordPause$1(this);
-    }, "call$0", "get$_onPause", 0, 0, 0],
+    }, "call$0", "get$_onPause", 0, 0, 1],
     _onResume$0: [function() {
       this.get$_async$_controller()._recordResume$1(this);
-    }, "call$0", "get$_onResume", 0, 0, 0],
+    }, "call$0", "get$_onResume", 0, 0, 1],
     $as_BufferingStreamSubscription: null
   },
   _EventSink: {
@@ -4071,9 +4200,9 @@ var $$ = {};
         this._addPending$1(C.C__DelayedDone);
     },
     _onPause$0: [function() {
-    }, "call$0", "get$_onPause", 0, 0, 0],
+    }, "call$0", "get$_onPause", 0, 0, 1],
     _onResume$0: [function() {
-    }, "call$0", "get$_onResume", 0, 0, 0],
+    }, "call$0", "get$_onResume", 0, 0, 1],
     _onCancel$0: function() {
     },
     _addPending$1: function($event) {
@@ -4164,7 +4293,7 @@ var $$ = {};
     static: {"": "_BufferingStreamSubscription__STATE_CANCEL_ON_ERROR,_BufferingStreamSubscription__STATE_CLOSED,_BufferingStreamSubscription__STATE_INPUT_PAUSED,_BufferingStreamSubscription__STATE_CANCELED,_BufferingStreamSubscription__STATE_WAIT_FOR_CANCEL,_BufferingStreamSubscription__STATE_IN_CALLBACK,_BufferingStreamSubscription__STATE_HAS_PENDING,_BufferingStreamSubscription__STATE_PAUSE_COUNT,_BufferingStreamSubscription__STATE_PAUSE_COUNT_SHIFT"}
   },
   _BufferingStreamSubscription__sendDone_sendDone: {
-    "": "Closure:0;this_0",
+    "": "Closure:1;this_0",
     call$0: function() {
       var t1, t2;
       t1 = this.this_0;
@@ -4411,10 +4540,10 @@ var $$ = {};
   },
   _defaultEquals: [function(a, b) {
     return J.$eq(a, b);
-  }, "call$2", "_defaultEquals$closure", 4, 0, 4],
+  }, "call$2", "_defaultEquals$closure", 4, 0, 5],
   _defaultHashCode: [function(a) {
     return J.get$hashCode$(a);
-  }, "call$1", "_defaultHashCode$closure", 2, 0, 5],
+  }, "call$1", "_defaultHashCode$closure", 2, 0, 6],
   HashMap_HashMap: function(equals, hashCode, isValidKey, $K, $V) {
     return H.setRuntimeTypeInfo(new P._HashMap(0, null, null, null, null), [$K, $V]);
   },
@@ -5602,10 +5731,10 @@ var $$ = {};
   },
   identical: [function(a, b) {
     return a == null ? b == null : a === b;
-  }, "call$2", "identical$closure", 4, 0, 6],
+  }, "call$2", "identical$closure", 4, 0, 7],
   identityHashCode: [function(object) {
     return H.objectHashCode(object);
-  }, "call$1", "identityHashCode$closure", 2, 0, 7],
+  }, "call$1", "identityHashCode$closure", 2, 0, 8],
   List_List$filled: function($length, fill, $E) {
     var result, t1, i;
     result = J.JSArray_JSArray$fixed($length, $E);
@@ -5995,7 +6124,7 @@ var $$ = {};
         return t1;
       }}
   },
-  Symbol0: {
+  Symbol: {
     "": "Object;"
   }
 }],
@@ -6504,34 +6633,19 @@ var $$ = {};
     throw "Unable to print message: " + String(string);
   }
 }],
-["", "../lib/enum.dart", , D, {
-  "": "",
-  Enum: {
-    "": "Object;",
-    get$value: function(_) {
-      return this._$enum$_value;
-    }
-  }
-}],
 ["", "compiler/exceptions.dart", , T, {
   "": "",
-  SyntaxError: {
+  CompilerSyntaxError: {
     "": "Object;message",
     toString$0: function(_) {
       return "Syntax Error: " + this.message;
-    },
-    static: {SyntaxError$: function(message) {
-        return new T.SyntaxError(message);
-      }}
+    }
   },
-  TypeError: {
+  CompilerTypeError: {
     "": "Object;message",
     toString$0: function(_) {
       return "Type Error: " + this.message;
-    },
-    static: {TypeError$: function(message) {
-        return new T.TypeError(message);
-      }}
+    }
   }
 }],
 ["html_common", "dart:html_common", , P, {
@@ -6549,97 +6663,6 @@ var $$ = {};
     }
     return t1;
   }
-}],
-["", "compiler/lexer.dart", , A, {
-  "": "",
-  Lexer_analyze: function(source) {
-    var tokens, splitPattern, t1, t2, t3, lines, t4, terminated, l, numLine, t5, t6, lexeme, t7, charCodes, $char, t;
-    tokens = H.setRuntimeTypeInfo([], [L.Token]);
-    splitPattern = new H.JSSyntaxRegExp(H.JSSyntaxRegExp_makeNative("([a-z]+)|(\\d+)|(\"[^\"]*\")|(==)|(\\S)", false, true, false), null, null);
-    t1 = H.JSSyntaxRegExp_makeNative("\\d+", false, true, false);
-    H.JSSyntaxRegExp_makeNative("[a-z]", false, true, false);
-    t2 = H.JSSyntaxRegExp_makeNative("[^\"]*\"", false, true, false);
-    t3 = H.JSSyntaxRegExp_makeNative("[a-z]+", false, true, false);
-    lines = source.split("\n");
-    $loop$0:
-      for (t4 = new H.ListIterator(lines, lines.length, 0, null); terminated = false, t4.moveNext$0();) {
-        l = t4._current;
-        numLine = H.Lists_indexOf(lines, l, 0, lines.length) + 1;
-        l = J.trim$0$s(l);
-        for (t5 = new H._AllMatchesIterator(splitPattern, l, null); t5.moveNext$0();) {
-          t6 = t5.__js_helper$_current._match;
-          if (0 >= t6.length)
-            return H.ioore(t6, 0);
-          lexeme = t6[0];
-          t6 = J.getInterceptor(lexeme);
-          if (t6.$eq(lexeme, "$")) {
-            tokens.push(new L.Token(C.TokenType_END, "$", numLine, null));
-            terminated = true;
-            break $loop$0;
-          } else {
-            t7 = typeof lexeme !== "string";
-            if (t7)
-              H.throwExpression(new P.ArgumentError(lexeme));
-            if (t2.test(lexeme)) {
-              tokens.push(new L.Token(C.TokenType_QUOTE, "\"", numLine, null));
-              for (t6 = new J._CodeUnits(t6.replaceAll$2(lexeme, "\"", "")), t6 = t6.get$iterator(t6); t6.moveNext$0();) {
-                charCodes = P.List_List$filled(1, t6._current, J.JSInt);
-                $char = H.Primitives_stringFromCharCodes(charCodes);
-                if ($char === " ")
-                  tokens.push(new L.Token(C.TokenType_SPACE, $char, numLine, null));
-                else
-                  tokens.push(new L.Token(C.TokenType_CHAR, $char, numLine, null));
-              }
-              tokens.push(new L.Token(C.TokenType_QUOTE, "\"", numLine, null));
-            } else {
-              if (t7)
-                H.throwExpression(new P.ArgumentError(lexeme));
-              if (t1.test(lexeme))
-                tokens.push(new L.Token(C.TokenType_DIGIT, lexeme, numLine, null));
-              else {
-                if (t7)
-                  H.throwExpression(new P.ArgumentError(lexeme));
-                if (t3.test(lexeme)) {
-                  t6 = $.get$TokenType_RESERVED();
-                  if (t6.containsKey$1(lexeme))
-                    tokens.push(new L.Token(t6.$index(t6, lexeme), lexeme, numLine, null));
-                  else
-                    tokens.push(new L.Token(C.TokenType_ID, lexeme, numLine, null));
-                } else {
-                  t6 = $.get$TokenType_SYMBOLS();
-                  if (t6.containsKey$1(lexeme))
-                    tokens.push(new L.Token(t6.$index(t6, lexeme), lexeme, numLine, null));
-                  else
-                    $.get$Lexer_log().log$4(C.Level_WARNING_900, C.JSString_methods.$add("Count not identify : ", lexeme), null, null);
-                }
-              }
-            }
-          }
-        }
-      }
-    if (!terminated) {
-      $.get$Lexer_log().log$4(C.Level_WARNING_900, "Code missing $ symbol! Inserting for you.", null, null);
-      tokens.push(new L.Token(C.TokenType_END, "$", lines.length + 1, null));
-    }
-    for (t1 = new H.ListIterator(tokens, tokens.length, 0, null); t1.moveNext$0();) {
-      t = t1._current;
-      $.get$Lexer_log().log$4(C.Level_INFO_800, J.toString$0(t), null, null);
-    }
-    return tokens;
-  }
-}],
-["", "util/logger_util.dart", , Q, {
-  "": "",
-  LoggerUtil_createLogger: function($name) {
-    var log = N.Logger_Logger($name);
-    log.get$onRecord().listen$1(Q.LoggerUtil_printLogRecord$closure());
-    return log;
-  },
-  LoggerUtil_printLogRecord: [function(r) {
-    var line = H.S(r.get$level()) + ": " + H.S(r.get$time()) + ": " + H.S(r.message) + "\n";
-    if (!J.contains$1$asx(document.querySelector("#log").textContent, line))
-      J.insertAdjacentText$2$x(document.querySelector("#log"), "beforeend", line);
-  }, "call$1", "LoggerUtil_printLogRecord$closure", 2, 0, 8]
 }],
 ["logging", "package:logging/logging.dart", , N, {
   "": "",
@@ -6792,7 +6815,7 @@ var $$ = {};
     H.setRuntimeTypeInfo(new W._EventStreamSubscription(0, t3._target, t3._eventType, W._wrapZone(F.unhide$closure()), t3._useCapture), [H.getTypeArgumentByIndex(t3, 0)])._tryResume$0();
     t2 = H.setRuntimeTypeInfo(new W._ElementEventStreamImpl(t1, t2, false), [null]);
     H.setRuntimeTypeInfo(new W._EventStreamSubscription(0, t2._target, t2._eventType, W._wrapZone(F.compile$closure()), t2._useCapture), [H.getTypeArgumentByIndex(t2, 0)])._tryResume$0();
-  }, "call$0", "main$closure", 0, 0, 0],
+  }, "call$0", "main$closure", 0, 0, 1],
   unhide: [function($event) {
   }, "call$1", "unhide$closure", 2, 0, 9],
   compile: [function($event) {
@@ -6800,19 +6823,17 @@ var $$ = {};
     H.interceptedTypeCast(document.querySelector("#symbol-table"), "$isTextAreaElement").textContent = "";
     H.interceptedTypeCast(document.querySelector("#log"), "$isTextAreaElement").textContent = "";
     source = H.interceptedTypeCast(document.querySelector("#input-code"), "$isTextAreaElement").value;
-    compiler = new X.Compiler(Q.LoggerUtil_createLogger("Compiler"), source, H.setRuntimeTypeInfo([], [L.Token]), null);
-    t1 = A.Lexer_analyze(source);
+    compiler = new X.Compiler(K.LoggerUtil_createLogger("Compiler"), source, H.setRuntimeTypeInfo([], [D.Token]), null);
+    t1 = L.Lexer_analyze(source);
     compiler.tokens = t1;
-    t1 = new G.Parser(t1, H.setRuntimeTypeInfo([], [G.Symbol]), -1, 0);
+    t1 = new G.Parser(t1, H.setRuntimeTypeInfo([], [T.CompilerSymbol]), -1, 0);
     compiler.parser = t1;
     $.get$Parser_log().log$4(C.Level_INFO_800, "Parser starting analysis...", null, null);
     if (t1.tokens.length !== 0) {
       if (J.$eq(t1.popNextToken$0().type, C.TokenType_OPEN_BRACE))
         t1.statementList$0();
-      else {
-        $.get$Parser_log().log$4(C.Level_SEVERE_1000, "Program must begin with a block denoted by an Open Bracket symbol", null, null);
-        H.throwExpression(T.SyntaxError$("Program must begin with a block denoted by an Open Bracket symbol"));
-      }
+      else
+        M.ExceptionUtil_logAndThrow(new T.CompilerSyntaxError("Program must begin with a block denoted by an Open Bracket symbol"), $.get$Parser_log());
       $.get$Parser_log().log$4(C.Level_INFO_800, "Parser finished analysis...", null, null);
     } else
       $.get$Parser_log().log$4(C.Level_WARNING_900, "No tokens to parse, finished.", null, null);
@@ -6830,55 +6851,34 @@ var $$ = {};
   Parser: {
     "": "Object;tokens,symbols,index,scope",
     statementList$0: function() {
-      var token, t1, t2, t3, next, token0, t4, t5, ID;
+      var token, t1, t2, t3, token0, t4, t5, ID;
       token = this.popNextToken$0();
       for (t1 = this.symbols; t2 = token.type, t3 = J.getInterceptor(t2), !t3.$eq(t2, C.TokenType_CLOSE_BRACE);) {
         if (t3.$eq(t2, C.TokenType_TYPE)) {
           $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing variable declaration", null, null);
-          next = this.popNextToken$0();
-          t2 = next.type;
-          t3 = J.getInterceptor(t2);
-          if (!t3.$eq(t2, C.TokenType_ID))
-            H.throwExpression(T.TypeError$(C.JSString_methods.$add("Expected type " + C.TokenType_ID.get$value(C.TokenType_ID) + ", found type ", t3.get$value(t2)) + " on line " + C.JSInt_methods.toString$0(next.line)));
+          this.expect$1(C.TokenType_ID);
           token0 = this.getToken$0();
           t2 = token0.value;
           t3 = this.scope;
           t4 = token0.line;
           t5 = token.value;
           J.insertAdjacentText$2$x(document.querySelector("#symbol-table"), "beforeend", "Symbol: name=" + H.S(t2) + " scope=" + t3 + " line=" + t4 + " type=" + H.S(t5) + " \n");
-          t1.push(new G.Symbol(t2, t3, t4, t5));
+          t1.push(new T.CompilerSymbol(t2, t3, t4, t5));
         } else if (t3.$eq(t2, C.TokenType_ID)) {
           $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing assignment statement", null, null);
           ID = token.value;
-          this.checkSymbol$1(ID);
-          next = this.popNextToken$0();
-          t2 = next.type;
-          t3 = J.getInterceptor(t2);
-          if (!t3.$eq(t2, C.TokenType_EQUALS))
-            H.throwExpression(T.TypeError$(C.JSString_methods.$add("Expected type " + C.TokenType_EQUALS.get$value(C.TokenType_EQUALS) + ", found type ", t3.get$value(t2)) + " on line " + C.JSInt_methods.toString$0(next.line)));
+          this.checkCompilerSymbol$1(ID);
+          this.expect$1(C.TokenType_EQUALS);
           if (this.isNextToken$1(C.TokenType_DIGIT))
             this.intExpression$1(ID);
-          else if (this.isNextToken$1(C.TokenType_BOOLEAN)) {
-            next = this.popNextToken$0();
-            t2 = next.type;
-            t3 = J.getInterceptor(t2);
-            if (!t3.$eq(t2, C.TokenType_BOOLEAN))
-              H.throwExpression(T.TypeError$(C.JSString_methods.$add("Expected type " + C.TokenType_BOOLEAN.get$value(C.TokenType_BOOLEAN) + ", found type ", t3.get$value(t2)) + " on line " + C.JSInt_methods.toString$0(next.line)));
-            if (ID != null)
-              this.checkSymbolTypeAgainstToken$2(next, ID);
-          } else if (this.isNextToken$1(C.TokenType_OPEN_PAREN))
+          else if (this.isNextToken$1(C.TokenType_BOOLEAN))
+            this.expect$2(C.TokenType_BOOLEAN, ID);
+          else if (this.isNextToken$1(C.TokenType_OPEN_PAREN))
             this.condition$1(ID);
           else if (this.isNextToken$1(C.TokenType_QUOTE))
             this.stringExpression$1(ID);
-          else if (this.isNextToken$1(C.TokenType_ID)) {
-            next = this.popNextToken$0();
-            t2 = next.type;
-            t3 = J.getInterceptor(t2);
-            if (!t3.$eq(t2, C.TokenType_ID))
-              H.throwExpression(T.TypeError$(C.JSString_methods.$add("Expected type " + C.TokenType_ID.get$value(C.TokenType_ID) + ", found type ", t3.get$value(t2)) + " on line " + C.JSInt_methods.toString$0(next.line)));
-            if (ID != null)
-              this.checkSymbolTypeAgainstToken$2(next, ID);
-          }
+          else if (this.isNextToken$1(C.TokenType_ID))
+            this.expect$2(C.TokenType_ID, ID);
         } else if (t3.$eq(t2, C.TokenType_IF)) {
           $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing if statement", null, null);
           this.condition$0();
@@ -6895,17 +6895,9 @@ var $$ = {};
           this.scope = this.scope - 1;
         } else if (t3.$eq(t2, C.TokenType_PRINT)) {
           $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing print statement", null, null);
-          next = this.popNextToken$0();
-          t2 = next.type;
-          t3 = J.getInterceptor(t2);
-          if (!t3.$eq(t2, C.TokenType_OPEN_PAREN))
-            H.throwExpression(T.TypeError$(C.JSString_methods.$add("Expected type " + C.TokenType_OPEN_PAREN.get$value(C.TokenType_OPEN_PAREN) + ", found type ", t3.get$value(t2)) + " on line " + C.JSInt_methods.toString$0(next.line)));
+          this.expect$1(C.TokenType_OPEN_PAREN);
           this.expression$0();
-          next = this.popNextToken$0();
-          t2 = next.type;
-          t3 = J.getInterceptor(t2);
-          if (!t3.$eq(t2, C.TokenType_CLOSE_PAREN))
-            H.throwExpression(T.TypeError$(C.JSString_methods.$add("Expected type " + C.TokenType_CLOSE_PAREN.get$value(C.TokenType_CLOSE_PAREN) + ", found type ", t3.get$value(t2)) + " on line " + C.JSInt_methods.toString$0(next.line)));
+          this.expect$1(C.TokenType_CLOSE_PAREN);
         } else if (t3.$eq(t2, C.TokenType_OPEN_BRACE)) {
           this.index = this.index - 1;
           this.scope = this.scope + 1;
@@ -6960,7 +6952,7 @@ var $$ = {};
     condition$1: function(ID) {
       var leftHand, rightHand;
       if (ID != null)
-        this.checkSymbolTypeAgainstTokenType$2(C.TokenType_BOOLEAN, ID);
+        this.checkCompilerSymbolTypeAgainstTokenType$2(C.TokenType_BOOLEAN, ID);
       if (J.$eq(this.peekNextToken$0().type, C.TokenType_OPEN_PAREN)) {
         this.expect$1(C.TokenType_OPEN_PAREN);
         this.expression$0();
@@ -7021,9 +7013,9 @@ var $$ = {};
       t1 = next.type;
       t2 = J.getInterceptor(t1);
       if (!t2.$eq(t1, type))
-        throw H.wrapException(T.TypeError$(C.JSString_methods.$add("Expected type " + type.get$value(type) + ", found type ", t2.get$value(t1)) + " on line " + C.JSInt_methods.toString$0(next.line)));
+        M.ExceptionUtil_logAndThrow(new T.CompilerSyntaxError(C.JSString_methods.$add("Expected type " + type._Enum$_value + ", found type ", t2.get$value(t1)) + " on line " + C.JSInt_methods.toString$0(next.line)), $.get$Parser_log());
       if (ID != null)
-        this.checkSymbolTypeAgainstToken$2(next, ID);
+        this.checkCompilerSymbolTypeAgainstToken$2(next, ID);
     },
     expect$1: function(type) {
       return this.expect$2(type, null);
@@ -7036,11 +7028,11 @@ var $$ = {};
         if (J.$eq(next.type, type))
           return;
       }
-      throw H.wrapException(T.TypeError$(C.JSString_methods.$add("Expected one of type " + C.JSArray_methods.toString$0(types) + ", found type ", J.get$value$x(next.type)) + " on line " + C.JSInt_methods.toString$0(next.line)));
+      M.ExceptionUtil_logAndThrow(new T.CompilerTypeError(C.JSString_methods.$add("Expected one of type " + H.IterableMixinWorkaround_toStringIterable(types, "[", "]") + ", found type ", J.get$value$x(next.type)) + " on line " + C.JSInt_methods.toString$0(next.line)), $.get$Parser_log());
     },
-    checkSymbolTypeAgainstTokenType$2: function(type, ID) {
+    checkCompilerSymbolTypeAgainstTokenType$2: function(type, ID) {
       var symbol, t1, t2;
-      symbol = this.findSymbol$1(ID);
+      symbol = this.findCompilerSymbol$1(ID);
       t1 = J.getInterceptor$x(symbol);
       if (!(J.$eq(t1.get$type(symbol), "int") && !J.$eq(type, C.TokenType_DIGIT))) {
         if (J.$eq(t1.get$type(symbol), "string")) {
@@ -7055,58 +7047,62 @@ var $$ = {};
       } else
         t2 = true;
       if (t2)
-        throw H.wrapException(T.TypeError$(C.JSString_methods.$add(C.JSString_methods.$add("Attempted to assign value of type ", J.get$value$x(type)) + (" to symbol " + H.S(ID) + " of type "), t1.get$type(symbol))));
+        M.ExceptionUtil_logAndThrow(new T.CompilerTypeError("Attempted to assign value of type " + H.S(J.get$value$x(type)) + " to symbol " + H.S(ID) + " of type " + H.S(t1.get$type(symbol))), $.get$Parser_log());
     },
-    checkSymbolTypeAgainstToken$2: function(token, ID) {
+    checkCompilerSymbolTypeAgainstToken$2: function(token, ID) {
       var leftHand, t1, rightHand, t2;
-      leftHand = this.findSymbol$1(ID);
+      leftHand = this.findCompilerSymbol$1(ID);
       t1 = token.type;
       if (J.$eq(t1, C.TokenType_ID)) {
-        rightHand = this.findSymbol$1(token.value);
-        t1 = J.getInterceptor$x(rightHand);
-        t2 = J.getInterceptor$x(leftHand);
-        if (!J.$eq(t1.get$type(rightHand), t2.get$type(leftHand)))
-          throw H.wrapException(T.TypeError$(C.JSString_methods.$add(C.JSString_methods.$add("Attempted to assign value of type ", t1.get$type(rightHand)) + (" to symbol " + H.S(ID) + " of type "), t2.get$type(leftHand))));
+        t1 = token.value;
+        rightHand = this.findCompilerSymbol$1(t1);
+        if (rightHand != null) {
+          t1 = J.getInterceptor$x(rightHand);
+          t2 = J.getInterceptor$x(leftHand);
+          if (!J.$eq(t1.get$type(rightHand), t2.get$type(leftHand)))
+            M.ExceptionUtil_logAndThrow(new T.CompilerTypeError("Attempted to assign value of type " + H.S(t1.get$type(rightHand)) + " to symbol " + H.S(ID) + " of type " + H.S(t2.get$type(leftHand)) + " on line " + C.JSInt_methods.toString$0(rightHand.get$line())), $.get$Parser_log());
+        } else
+          M.ExceptionUtil_logAndThrow(new T.CompilerSyntaxError(C.JSString_methods.$add("Undefined value ", t1)), $.get$Parser_log());
       } else
-        this.checkSymbolTypeAgainstTokenType$2(t1, ID);
+        this.checkCompilerSymbolTypeAgainstTokenType$2(t1, ID);
     },
-    checkSymbol$1: function(symbolID) {
+    checkCompilerSymbol$1: function(symbolID) {
       var t1;
       for (t1 = this.symbols, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();)
         if (J.$eq(J.get$id$x(t1._current), symbolID))
           return;
       $.get$Parser_log().log$4(C.Level_SEVERE_1000, C.JSString_methods.$add("Identifier ", symbolID) + "not found.", null, null);
     },
-    findSymbol$1: function(symbolID) {
+    findCompilerSymbol$1: function(symbolID) {
       var t1, symbol;
       for (t1 = this.symbols, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
         symbol = t1._current;
         if (J.$eq(J.get$id$x(symbol), symbolID))
           return symbol;
       }
-      throw H.wrapException(T.SyntaxError$(C.JSString_methods.$add("Identifier ", symbolID) + " undefined"));
+      M.ExceptionUtil_logAndThrow(new T.CompilerSyntaxError(C.JSString_methods.$add("Identifier ", symbolID) + (" undefined on " + C.JSInt_methods.toString$0(this.getToken$0().line))), $.get$Parser_log());
     },
     checkTypes$2: function(leftHand, rightHand) {
       var t1, t2, left, right, t3, t4;
       t1 = leftHand.type;
       t2 = J.getInterceptor(t1);
       if (t2.$eq(t1, C.TokenType_ID)) {
-        left = this.findSymbol$1(leftHand.value);
+        left = this.findCompilerSymbol$1(leftHand.value);
         if (J.$eq(rightHand.type, C.TokenType_ID)) {
-          right = this.findSymbol$1(rightHand.value);
+          right = this.findCompilerSymbol$1(rightHand.value);
           t1 = J.getInterceptor$x(left);
           t2 = J.getInterceptor$x(right);
           if (!J.$eq(t1.get$type(left), t2.get$type(right)))
-            throw H.wrapException(T.TypeError$(C.JSString_methods.$add(C.JSString_methods.$add(C.JSString_methods.$add(C.JSString_methods.$add("Symbol ", t1.get$id(left)) + " of type ", t1.get$type(left)) + " on line " + C.JSInt_methods.toString$0(left.get$line()) + " differs from symbol ", t2.get$id(right)) + " of type ", t2.get$type(right)) + " on line " + C.JSInt_methods.toString$0(right.get$line())));
+            M.ExceptionUtil_logAndThrow(new T.CompilerTypeError(C.JSString_methods.$add(C.JSString_methods.$add(C.JSString_methods.$add(C.JSString_methods.$add("CompilerSymbol ", t1.get$id(left)) + " of type ", t1.get$type(left)) + " on line " + C.JSInt_methods.toString$0(left.get$line()) + " differs from symbol ", t2.get$id(right)) + " of type ", t2.get$type(right)) + " on line " + C.JSInt_methods.toString$0(right.get$line())), $.get$Parser_log());
         } else
-          this.checkSymbolTypeAgainstToken$2(rightHand, J.get$id$x(left));
+          this.checkCompilerSymbolTypeAgainstToken$2(rightHand, J.get$id$x(left));
       } else {
         t3 = rightHand.type;
         t4 = J.getInterceptor(t3);
         if (t4.$eq(t3, C.TokenType_ID))
-          this.checkSymbolTypeAgainstToken$2(leftHand, J.get$id$x(this.findSymbol$1(rightHand.value)));
+          this.checkCompilerSymbolTypeAgainstToken$2(leftHand, J.get$id$x(this.findCompilerSymbol$1(rightHand.value)));
         else if (!t2.$eq(t1, t3))
-          throw H.wrapException(T.TypeError$(C.JSString_methods.$add(C.JSString_methods.$add(C.JSString_methods.$add(C.JSString_methods.$add("Value \"", leftHand.value) + "\" of type ", t2.get$value(t1)) + " on line " + C.JSInt_methods.toString$0(leftHand.line) + " differs from value \"", rightHand.value) + "\" of type ", t4.get$value(t3)) + " on line " + C.JSInt_methods.toString$0(rightHand.line)));
+          M.ExceptionUtil_logAndThrow(new T.CompilerTypeError(C.JSString_methods.$add(C.JSString_methods.$add(C.JSString_methods.$add(C.JSString_methods.$add("Value \"", leftHand.value) + "\" of type ", t2.get$value(t1)) + " on line " + C.JSInt_methods.toString$0(leftHand.line) + " differs from value \"", rightHand.value) + "\" of type ", t4.get$value(t3)) + " on line " + C.JSInt_methods.toString$0(rightHand.line)), $.get$Parser_log());
       }
     },
     isNextToken$1: function(type) {
@@ -7115,28 +7111,6 @@ var $$ = {};
       return true;
     },
     static: {"": "Parser_log"}
-  }
-}],
-["", "compiler/symbol.dart", , G, {
-  "": "",
-  Symbol: {
-    "": "Object;id>,scope,line<,type>",
-    toString$0: function(_) {
-      return "Symbol: name=" + H.S(this.id) + " scope=" + this.scope + " line=" + this.line + " type=" + H.S(this.type) + " \n";
-    }
-  }
-}],
-["", "compiler/token.dart", , L, {
-  "": "",
-  Token: {
-    "": "Object;type,value>,line,symbol",
-    toString$0: function(_) {
-      return "Token type=" + H.S(J.get$value$x(this.type)) + " value=" + H.S(this.value) + " line=" + C.JSInt_methods.toString$0(this.line) + " \n";
-    }
-  },
-  TokenType: {
-    "": "Enum;_$enum$_value",
-    static: {"": "TokenType_SYMBOLS,TokenType_RESERVED,TokenType_END0,TokenType_OPEN_BRACE0,TokenType_CLOSE_BRACE0,TokenType_OPEN_PAREN0,TokenType_CLOSE_PAREN0,TokenType_EQUALS0,TokenType_QUOTE0,TokenType_BOOL_OP0,TokenType_INT_OP0,TokenType_TYPE0,TokenType_PRINT0,TokenType_WHILE0,TokenType_IF0,TokenType_DIGIT0,TokenType_CHAR0,TokenType_BOOLEAN0,TokenType_SPACE0,TokenType_ID0,TokenType_EPSILON"}
   }
 }],
 ]);
@@ -7157,16 +7131,16 @@ P.Duration.$isObject = true;
 P.Match.$isObject = true;
 W.MouseEvent.$isMouseEvent = true;
 W.MouseEvent.$isObject = true;
-L.Token.$isObject = true;
-G.Symbol.$isObject = true;
+D.Token.$isObject = true;
+T.CompilerSymbol.$isObject = true;
 N.Logger.$isObject = true;
 N.LogRecord.$isLogRecord = true;
 N.LogRecord.$isObject = true;
 H.RawReceivePortImpl.$isObject = true;
 H._IsolateEvent.$isObject = true;
 H._IsolateContext.$isObject = true;
-P.Symbol0.$isSymbol0 = true;
-P.Symbol0.$isObject = true;
+P.Symbol.$isSymbol = true;
+P.Symbol.$isObject = true;
 P.StackTrace.$isStackTrace = true;
 P.StackTrace.$isObject = true;
 P._BufferingStreamSubscription.$is_BufferingStreamSubscription = true;
@@ -7489,24 +7463,24 @@ C.Level_ALL_0 = new N.Level("ALL", 0);
 C.Level_INFO_800 = new N.Level("INFO", 800);
 C.Level_SEVERE_1000 = new N.Level("SEVERE", 1000);
 C.Level_WARNING_900 = new N.Level("WARNING", 900);
-C.TokenType_BOOLEAN = new L.TokenType("BOOLEAN");
-C.TokenType_BOOL_OP = new L.TokenType("BOOL_OP");
-C.TokenType_CHAR = new L.TokenType("CHAR");
-C.TokenType_CLOSE_BRACE = new L.TokenType("CLOSE_BRACE");
-C.TokenType_CLOSE_PAREN = new L.TokenType("CLOSE_PAREN");
-C.TokenType_DIGIT = new L.TokenType("DIGIT");
-C.TokenType_END = new L.TokenType("END");
-C.TokenType_EQUALS = new L.TokenType("EQUALS");
-C.TokenType_ID = new L.TokenType("ID");
-C.TokenType_IF = new L.TokenType("IF");
-C.TokenType_INT_OP = new L.TokenType("INT_OP");
-C.TokenType_OPEN_BRACE = new L.TokenType("OPEN_BRACE");
-C.TokenType_OPEN_PAREN = new L.TokenType("OPEN_PAREN");
-C.TokenType_PRINT = new L.TokenType("PRINT");
-C.TokenType_QUOTE = new L.TokenType("QUOTE");
-C.TokenType_SPACE = new L.TokenType("SPACE");
-C.TokenType_TYPE = new L.TokenType("TYPE");
-C.TokenType_WHILE = new L.TokenType("WHILE");
+C.TokenType_BOOLEAN = new D.TokenType("BOOLEAN");
+C.TokenType_BOOL_OP = new D.TokenType("BOOL_OP");
+C.TokenType_CHAR = new D.TokenType("CHAR");
+C.TokenType_CLOSE_BRACE = new D.TokenType("CLOSE_BRACE");
+C.TokenType_CLOSE_PAREN = new D.TokenType("CLOSE_PAREN");
+C.TokenType_DIGIT = new D.TokenType("DIGIT");
+C.TokenType_END = new D.TokenType("END");
+C.TokenType_EQUALS = new D.TokenType("EQUALS");
+C.TokenType_ID = new D.TokenType("ID");
+C.TokenType_IF = new D.TokenType("IF");
+C.TokenType_INT_OP = new D.TokenType("INT_OP");
+C.TokenType_OPEN_BRACE = new D.TokenType("OPEN_BRACE");
+C.TokenType_OPEN_PAREN = new D.TokenType("OPEN_PAREN");
+C.TokenType_PRINT = new D.TokenType("PRINT");
+C.TokenType_QUOTE = new D.TokenType("QUOTE");
+C.TokenType_SPACE = new D.TokenType("SPACE");
+C.TokenType_TYPE = new D.TokenType("TYPE");
+C.TokenType_WHILE = new D.TokenType("WHILE");
 C.Type_6Vn = H.createRuntimeType('_NativeTypedArray');
 C.Type_Hp8 = H.createRuntimeType('_NativeTypedArrayOfInt');
 C.UnknownJavaScriptObject_methods = J.UnknownJavaScriptObject.prototype;
@@ -7533,6 +7507,15 @@ $.Device__isWebKit = null;
 $.hierarchicalLoggingEnabled = false;
 $._rootLevel = C.Level_INFO_800;
 $.LogRecord__nextNumber = 0;
+Isolate.$lazy($, "log", "Lexer_log", "get$Lexer_log", function() {
+  return K.LoggerUtil_createLogger("Lexer");
+});
+Isolate.$lazy($, "SYMBOLS", "TokenType_SYMBOLS", "get$TokenType_SYMBOLS", function() {
+  return H.fillLiteralMap(["{", C.TokenType_OPEN_BRACE, "}", C.TokenType_CLOSE_BRACE, "(", C.TokenType_OPEN_PAREN, ")", C.TokenType_CLOSE_PAREN, "==", C.TokenType_BOOL_OP, "!=", C.TokenType_BOOL_OP, "+", C.TokenType_INT_OP, "=", C.TokenType_EQUALS], P.LinkedHashMap_LinkedHashMap(null, null, null, null, null));
+});
+Isolate.$lazy($, "RESERVED", "TokenType_RESERVED", "get$TokenType_RESERVED", function() {
+  return H.fillLiteralMap(["int", C.TokenType_TYPE, "string", C.TokenType_TYPE, "boolean", C.TokenType_TYPE, "print", C.TokenType_PRINT, "while", C.TokenType_WHILE, "if", C.TokenType_IF, "false", C.TokenType_BOOLEAN, "true", C.TokenType_BOOLEAN], P.LinkedHashMap_LinkedHashMap(null, null, null, null, null));
+});
 Isolate.$lazy($, "globalThis", "globalThis", "get$globalThis", function() {
   return function() { return this; }();
 });
@@ -7623,26 +7606,18 @@ Isolate.$lazy($, "_toStringVisiting", "_toStringVisiting", "get$_toStringVisitin
 Isolate.$lazy($, "_toStringList", "Maps__toStringList", "get$Maps__toStringList", function() {
   return [];
 });
-Isolate.$lazy($, "log", "Lexer_log", "get$Lexer_log", function() {
-  return Q.LoggerUtil_createLogger("Lexer");
-});
 Isolate.$lazy($, "_loggers", "Logger__loggers", "get$Logger__loggers", function() {
   return H.setRuntimeTypeInfo(H.fillLiteralMap([], P.LinkedHashMap_LinkedHashMap(null, null, null, null, null)), [J.JSString, N.Logger]);
 });
 Isolate.$lazy($, "log", "Parser_log", "get$Parser_log", function() {
-  return Q.LoggerUtil_createLogger("Parser");
-});
-Isolate.$lazy($, "SYMBOLS", "TokenType_SYMBOLS", "get$TokenType_SYMBOLS", function() {
-  return H.fillLiteralMap(["{", C.TokenType_OPEN_BRACE, "}", C.TokenType_CLOSE_BRACE, "(", C.TokenType_OPEN_PAREN, ")", C.TokenType_CLOSE_PAREN, "=", C.TokenType_EQUALS, "==", C.TokenType_BOOL_OP, "!=", C.TokenType_BOOL_OP, "+", C.TokenType_INT_OP], P.LinkedHashMap_LinkedHashMap(null, null, null, null, null));
-});
-Isolate.$lazy($, "RESERVED", "TokenType_RESERVED", "get$TokenType_RESERVED", function() {
-  return H.fillLiteralMap(["int", C.TokenType_TYPE, "string", C.TokenType_TYPE, "boolean", C.TokenType_TYPE, "print", C.TokenType_PRINT, "while", C.TokenType_WHILE, "if", C.TokenType_IF, "false", C.TokenType_BOOLEAN, "true", C.TokenType_BOOLEAN], P.LinkedHashMap_LinkedHashMap(null, null, null, null, null));
+  return K.LoggerUtil_createLogger("Parser");
 });
 // Native classes
 
 init.functionAliases = {};
 ;
-init.metadata = [{func: "void_", void: true},
+init.metadata = [{func: "void__LogRecord", void: true, args: [N.LogRecord]},
+{func: "void_", void: true},
 {func: "void__dynamic", void: true, args: [null]},
 {func: "void__dynamic__StackTrace", void: true, args: [null], opt: [P.StackTrace]},
 ,
@@ -7650,7 +7625,6 @@ init.metadata = [{func: "void_", void: true},
 {func: "int__dynamic", ret: J.JSInt, args: [null]},
 {func: "bool__Object_Object", ret: J.JSBool, args: [P.Object, P.Object]},
 {func: "int__Object", ret: J.JSInt, args: [P.Object]},
-{func: "void__LogRecord", void: true, args: [N.LogRecord]},
 {func: "void__MouseEvent", void: true, args: [W.MouseEvent]},
 {func: "args0"},
 {func: "args2", args: [null, null]},
@@ -7659,7 +7633,7 @@ init.metadata = [{func: "void_", void: true},
 {func: "dynamic__String", args: [J.JSString]},
 {func: "dynamic__dynamic__dynamic", args: [null], opt: [null]},
 {func: "dynamic__dynamic_StackTrace", args: [null, P.StackTrace]},
-{func: "dynamic__Symbol_dynamic", args: [P.Symbol0, null]},
+{func: "dynamic__Symbol_dynamic", args: [P.Symbol, null]},
 {func: "String__int", ret: J.JSString, args: [J.JSInt]},
 {func: "dynamic__LogRecord", args: [N.LogRecord]},
 ];
