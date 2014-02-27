@@ -45,6 +45,7 @@ class Parser{
       statementList();
     }
     else{
+      log.severe("Program must begin with a block denoted by an Open Bracket symbol");
       throw new SyntaxError("Program must begin with a block denoted by an Open Bracket symbol");
     }
     // Exiting a block denotes new scope

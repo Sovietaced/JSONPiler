@@ -16,6 +16,9 @@ class Lexer{
   // Run lexical analysis against Lexer instance source code
   static analyze(String source) {
     
+    // Keeps track if terminated
+    bool terminated = false;
+    
     // Tokens
     List<Token> tokens = new List<Token>();
     
@@ -25,6 +28,7 @@ class Lexer{
     RegExp charPattern = new RegExp(r'[a-z]');
     RegExp stringPattern = new RegExp(r'[^"]*"');
     RegExp idPattern = new RegExp(r'[a-z]+');
+
     
     // Split source by new line
     var lines = source.split("\n");
@@ -50,6 +54,7 @@ class Lexer{
         // END
         if( lexeme == '\$'){
             tokens.add(new Token(TokenType.END, "\$", numLine));
+            terminated = true;
             break loop;
         }
         
@@ -101,7 +106,9 @@ class Lexer{
           }
         }
       }
-      // If we end up here we have not found an ending symbol
+    }
+    
+    if(!terminated){
       log.warning("Code missing \$ symbol! Inserting for you.");
       tokens.add(new Token(TokenType.END, "\$", lines.length + 1));
     }
