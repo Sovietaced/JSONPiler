@@ -8,11 +8,12 @@ import 'token.dart';
 import 'symbol.dart';
 import 'exceptions.dart';
 import 'package:logging/logging.dart';
+import '../util/logger_util.dart';
 
 class Parser{
   
   // Logging
-  static Logger log = new Logger('Parser');
+  static Logger log = LoggerUtil.createLogger('Parser');
   
   List<Token> tokens;
   // Simple for now

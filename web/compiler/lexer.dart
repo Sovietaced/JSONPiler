@@ -5,11 +5,13 @@
  * */
 import 'token.dart';
 import 'package:logging/logging.dart';
+import '../util/logger_util.dart';
+
 
 class Lexer{
   
   // Logging
-  static Logger log = new Logger('Lexer');
+  static Logger log = LoggerUtil.createLogger('Lexer');
   
   // Run lexical analysis against Lexer instance source code
   static analyze(String source) {

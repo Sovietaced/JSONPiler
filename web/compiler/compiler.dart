@@ -3,11 +3,12 @@ import 'lexer.dart';
 import 'parser.dart';
 import 'token.dart';
 import 'package:logging/logging.dart';
+import '../util/logger_util.dart';
 
 class Compiler{
   
   // Logging
-  final Logger log = new Logger('Compiler');
+  final Logger log = LoggerUtil.createLogger('Compiler');
   
   String source;
   List<Token> tokens = new List<Token>();
