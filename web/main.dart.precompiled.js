@@ -400,7 +400,7 @@ var $$ = {};
                   if (t6.containsKey$1(lexeme))
                     tokens.push(new D.Token(t6.$index(t6, lexeme), lexeme, numLine, null));
                   else
-                    $.get$Lexer_log().log$4(C.Level_WARNING_900, C.JSString_methods.$add("Count not identify : ", lexeme), null, null);
+                    $.get$Lexer_log().log$4(C.Level_WARNING_900, "Count not identify : " + H.S(lexeme) + " on line " + numLine, null, null);
                 }
               }
             }
@@ -426,15 +426,26 @@ var $$ = {};
     return log;
   },
   LoggerUtil_printLogRecord: [function(r) {
-    var line = H.S(r.get$level()) + ": " + H.S(r.get$time()) + ": " + H.S(r.message) + "\n";
-    if (!J.contains$1$asx(document.querySelector("#log").textContent, line))
-      J.insertAdjacentText$2$x(document.querySelector("#log"), "beforeend", line);
+    var line, badgeAll, level, t1, badge;
+    line = H.S(r.get$level()) + ": " + H.S(r.get$time()) + ": " + H.S(r.message) + "\n";
+    if (!J.contains$1$asx(document.querySelector("#log-all").textContent, line)) {
+      J.insertAdjacentText$2$x(document.querySelector("#log-all"), "beforeend", line);
+      badgeAll = document.querySelector("#badge-all").textContent;
+      document.querySelector("#badge-all").textContent = J.toString$0(J.$add$ns(P.num_parse(badgeAll, null), 1));
+      level = r.level.name.toLowerCase();
+      t1 = "#log-" + level;
+      J.insertAdjacentText$2$x(document.querySelector(t1), "beforeend", line);
+      t1 = "#badge-" + level;
+      badge = document.querySelector(t1).textContent;
+      t1 = "#badge-" + level;
+      document.querySelector(t1).textContent = J.toString$0(J.$add$ns(P.num_parse(badge, null), 1));
+    }
   }, "call$1", "LoggerUtil_printLogRecord$closure", 2, 0, 0]
 }],
 ["Symbol", "compiler/symbol.dart", , T, {
   "": "",
   CompilerSymbol: {
-    "": "Object;id>,scope,line<,type>",
+    "": "Object;id>,scope,line,type",
     toString$0: function(_) {
       return "Symbol: name=" + H.S(this.id) + " scope=" + this.scope + " line=" + this.line + " type=" + H.S(this.type) + " \n";
     }
@@ -445,7 +456,7 @@ var $$ = {};
   Token: {
     "": "Object;type,value>,line,symbol",
     toString$0: function(_) {
-      return "Token type=" + H.S(J.get$value$x(this.type)) + " value=" + H.S(this.value) + " line=" + C.JSInt_methods.toString$0(this.line) + " \n";
+      return "Token type=" + H.S(J.get$value$x(this.type)) + " value=" + H.S(this.value) + " line=" + C.JSInt_methods.toString$0(this.line);
     }
   },
   TokenType: {
@@ -1027,13 +1038,13 @@ var $$ = {};
     return x == null || typeof x === "string" || typeof x === "number" || typeof x === "boolean";
   },
   startRootIsolate_closure: {
-    "": "Closure:10;entry_0",
+    "": "Closure:12;entry_0",
     call$0: function() {
       this.entry_0.call$1([]);
     }
   },
   startRootIsolate_closure0: {
-    "": "Closure:10;entry_1",
+    "": "Closure:12;entry_1",
     call$0: function() {
       this.entry_1.call$2([], null);
     }
@@ -1160,7 +1171,7 @@ var $$ = {};
     }
   },
   _EventLoop__runHelper_next: {
-    "": "Closure:1;this_0",
+    "": "Closure:2;this_0",
     call$0: function() {
       if (!this.this_0.runIteration$0())
         return;
@@ -1177,7 +1188,7 @@ var $$ = {};
     "": "Object;"
   },
   IsolateNatives__processWorkerMessage_closure: {
-    "": "Closure:10;entryPoint_0,args_1,message_2,isSpawnUri_3,replyTo_4",
+    "": "Closure:12;entryPoint_0,args_1,message_2,isSpawnUri_3,replyTo_4",
     call$0: function() {
       var t1, t2, t3, t4, t5, t6, t7;
       t1 = this.entryPoint_0;
@@ -1252,7 +1263,7 @@ var $$ = {};
     $isSendPort: true
   },
   _NativeJsSendPort_send_closure: {
-    "": "Closure:10;box_0,this_1,shouldSerialize_2",
+    "": "Closure:12;box_0,this_1,shouldSerialize_2",
     call$0: function() {
       var t1, t2;
       t1 = this.this_1._receivePort;
@@ -1338,7 +1349,7 @@ var $$ = {};
       t1.close$0(t1);
       t1 = this.__isolate_helper$_controller;
       t1.close$0(t1);
-    }, "call$0", "get$close", 0, 0, 1],
+    }, "call$0", "get$close", 0, 0, 2],
     ReceivePortImpl$fromRawReceivePort$1: function(_rawPort) {
       var t1 = P.StreamController_StreamController(this.get$close(this), null, null, null, true, null);
       this.__isolate_helper$_controller = t1;
@@ -1496,7 +1507,7 @@ var $$ = {};
     }
   },
   _Copier_visitMap_closure: {
-    "": "Closure:11;box_0,this_1",
+    "": "Closure:13;box_0,this_1",
     call$2: function(key, val) {
       var t1 = this.this_1;
       J.$indexSet$ax(this.box_0.copy_0, t1._dispatch$1(key), t1._dispatch$1(val));
@@ -1650,14 +1661,14 @@ var $$ = {};
       }}
   },
   TimerImpl_internalCallback: {
-    "": "Closure:1;this_0,callback_1",
+    "": "Closure:2;this_0,callback_1",
     call$0: function() {
       this.this_0._handle = null;
       this.callback_1.call$0();
     }
   },
   TimerImpl_internalCallback0: {
-    "": "Closure:1;this_2,callback_3",
+    "": "Closure:2;this_2,callback_3",
     call$0: function() {
       this.this_2._handle = null;
       var t1 = init.globalState.topEventLoop;
@@ -1703,6 +1714,41 @@ var $$ = {};
       object.$identityHash = hash;
     }
     return hash;
+  },
+  Primitives__throwFormatException: [function(string) {
+    throw H.wrapException(P.FormatException$(string));
+  }, "call$1", "Primitives__throwFormatException$closure", 2, 0, 1],
+  Primitives_parseInt: function(source, radix, handleError) {
+    var match, t1;
+    match = /^\s*[+-]?((0x[a-f0-9]+)|(\d+)|([a-z0-9]+))\s*$/i.exec(source);
+    if (match != null) {
+      t1 = match.length;
+      if (2 >= t1)
+        return H.ioore(match, 2);
+      if (match[2] != null)
+        return parseInt(source, 16);
+      if (3 >= t1)
+        return H.ioore(match, 3);
+      if (match[3] != null)
+        return parseInt(source, 10);
+      return handleError.call$1(source);
+    }
+    if (match == null)
+      return handleError.call$1(source);
+    return parseInt(source, 10);
+  },
+  Primitives_parseDouble: function(source, handleError) {
+    var result, trimmed;
+    if (!/^\s*[+-]?(?:Infinity|NaN|(?:\.\d+|\d+(?:\.\d*)?)(?:[eE][+-]?\d+)?)\s*$/.test(source))
+      return handleError.call$1(source);
+    result = parseFloat(source);
+    if (isNaN(result)) {
+      trimmed = C.JSString_methods.trim$0(source);
+      if (trimmed === "NaN" || trimmed === "+NaN" || trimmed === "-NaN")
+        return result;
+      return handleError.call$1(source);
+    }
+    return result;
   },
   Primitives_objectTypeName: function(object) {
     var $name, decompiled;
@@ -2621,7 +2667,7 @@ var $$ = {};
     }
   },
   unwrapException_saveStackTrace: {
-    "": "Closure:12;ex_0",
+    "": "Closure:10;ex_0",
     call$1: function(error) {
       var t1 = J.getInterceptor(error);
       if (typeof error === "object" && error !== null && !!t1.$isError)
@@ -2645,31 +2691,31 @@ var $$ = {};
     }
   },
   invokeClosure_closure: {
-    "": "Closure:10;closure_0",
+    "": "Closure:12;closure_0",
     call$0: function() {
       return this.closure_0.call$0();
     }
   },
   invokeClosure_closure0: {
-    "": "Closure:10;closure_1,arg1_2",
+    "": "Closure:12;closure_1,arg1_2",
     call$0: function() {
       return this.closure_1.call$1(this.arg1_2);
     }
   },
   invokeClosure_closure1: {
-    "": "Closure:10;closure_3,arg1_4,arg2_5",
+    "": "Closure:12;closure_3,arg1_4,arg2_5",
     call$0: function() {
       return this.closure_3.call$2(this.arg1_4, this.arg2_5);
     }
   },
   invokeClosure_closure2: {
-    "": "Closure:10;closure_6,arg1_7,arg2_8,arg3_9",
+    "": "Closure:12;closure_6,arg1_7,arg2_8,arg3_9",
     call$0: function() {
       return this.closure_6.call$3(this.arg1_7, this.arg2_8, this.arg3_9);
     }
   },
   invokeClosure_closure3: {
-    "": "Closure:10;closure_10,arg1_11,arg2_12,arg3_13,arg4_14",
+    "": "Closure:12;closure_10,arg1_11,arg2_12,arg3_13,arg4_14",
     call$0: function() {
       return this.closure_10.call$4(this.arg1_11, this.arg2_12, this.arg3_13, this.arg4_14);
     }
@@ -2881,19 +2927,19 @@ var $$ = {};
     $isTypeImpl: true
   },
   initHooks_closure: {
-    "": "Closure:12;getTag_0",
+    "": "Closure:10;getTag_0",
     call$1: function(o) {
       return this.getTag_0(o);
     }
   },
   initHooks_closure0: {
-    "": "Closure:13;getUnknownTag_1",
+    "": "Closure:14;getUnknownTag_1",
     call$2: function(o, tag) {
       return this.getUnknownTag_1(o, tag);
     }
   },
   initHooks_closure1: {
-    "": "Closure:14;prototypeForTag_2",
+    "": "Closure:1;prototypeForTag_2",
     call$1: function(tag) {
       return this.prototypeForTag_2(tag);
     }
@@ -3186,7 +3232,7 @@ var $$ = {};
 
     }
     $._callbacksAreEnqueued = false;
-  }, "call$0", "_asyncRunCallback$closure", 0, 0, 1],
+  }, "call$0", "_asyncRunCallback$closure", 0, 0, 2],
   _scheduleAsyncCallback: function(callback) {
     $.get$_asyncCallbacks()._add$1(callback);
     if (!$._callbacksAreEnqueued) {
@@ -3228,17 +3274,17 @@ var $$ = {};
 
   },
   _nullDataHandler: [function(value) {
-  }, "call$1", "_nullDataHandler$closure", 2, 0, 2],
+  }, "call$1", "_nullDataHandler$closure", 2, 0, 3],
   _nullErrorHandler: [function(error, stackTrace) {
     var t1 = $.Zone__current;
     t1.toString;
     P._rootHandleUncaughtError(t1, null, t1, error, stackTrace);
   }, function(error) {
     return P._nullErrorHandler(error, null);
-  }, null, "call$2", "call$1", "_nullErrorHandler$closure", 2, 2, 3, 4],
+  }, null, "call$2", "call$1", "_nullErrorHandler$closure", 2, 2, 4, 5],
   _nullDoneHandler: [function() {
     return;
-  }, "call$0", "_nullDoneHandler$closure", 0, 0, 1],
+  }, "call$0", "_nullDoneHandler$closure", 0, 0, 2],
   _runUserCode: function(userCode, onSuccess, onError) {
     var e, s, exception, t1;
     try {
@@ -3335,10 +3381,10 @@ var $$ = {};
     },
     _onPause$0: [function() {
       return;
-    }, "call$0", "get$_onPause", 0, 0, 1],
+    }, "call$0", "get$_onPause", 0, 0, 2],
     _onResume$0: [function() {
       return;
-    }, "call$0", "get$_onResume", 0, 0, 1],
+    }, "call$0", "get$_onResume", 0, 0, 2],
     $as_ControllerSubscription: null,
     static: {"": "_BroadcastSubscription__STATE_EVENT_ID,_BroadcastSubscription__STATE_FIRING,_BroadcastSubscription__STATE_REMOVE_AFTER_FIRING"}
   },
@@ -3570,7 +3616,7 @@ var $$ = {};
       P._Future__propagateToListeners(this, listeners);
     }, function(error) {
       return this._completeError$2(error, null);
-    }, "_completeError$1", "call$2", "call$1", "get$_completeError", 2, 2, 3, 4],
+    }, "_completeError$1", "call$2", "call$1", "get$_completeError", 2, 2, 4, 5],
     _asyncComplete$1: function(value) {
       var t1;
       if (this._state !== 0)
@@ -3704,13 +3750,13 @@ var $$ = {};
       }}
   },
   _Future__addListener_closure: {
-    "": "Closure:10;this_0,listener_1",
+    "": "Closure:12;this_0,listener_1",
     call$0: function() {
       P._Future__propagateToListeners(this.this_0, this.listener_1);
     }
   },
   _Future__chainFutures_closure: {
-    "": "Closure:12;target_0",
+    "": "Closure:10;target_0",
     call$1: function(value) {
       this.target_0._complete$1(value);
     }
@@ -3725,19 +3771,19 @@ var $$ = {};
     }
   },
   _Future__asyncComplete_closure: {
-    "": "Closure:10;this_0,value_1",
+    "": "Closure:12;this_0,value_1",
     call$0: function() {
       this.this_0._complete$1(this.value_1);
     }
   },
   _Future__propagateToListeners_closure: {
-    "": "Closure:10;box_2,listener_3",
+    "": "Closure:12;box_2,listener_3",
     call$0: function() {
       P._Future__propagateToListeners(this.box_2.source_4, this.listener_3);
     }
   },
   _Future__propagateToListeners_closure0: {
-    "": "Closure:10;box_2,box_1,hasError_4,listener_5",
+    "": "Closure:12;box_2,box_1,hasError_4,listener_5",
     call$0: function() {
       var t1, value, asyncError, test, matchesTest, errorCallback, e, s, t2, t3, t4, t5, completeResult, exception;
       t1 = {};
@@ -3810,7 +3856,7 @@ var $$ = {};
     }
   },
   _Future__propagateToListeners__closure: {
-    "": "Closure:12;box_2,listener_6",
+    "": "Closure:10;box_2,listener_6",
     call$1: function(ignored) {
       P._Future__propagateToListeners(this.box_2.source_4, this.listener_6);
     }
@@ -3864,31 +3910,31 @@ var $$ = {};
     }
   },
   Stream_forEach__closure: {
-    "": "Closure:10;action_4,element_5",
+    "": "Closure:12;action_4,element_5",
     call$0: function() {
       return this.action_4.call$1(this.element_5);
     }
   },
   Stream_forEach__closure0: {
-    "": "Closure:12;",
+    "": "Closure:10;",
     call$1: function(_) {
     }
   },
   Stream_forEach_closure0: {
-    "": "Closure:10;future_6",
+    "": "Closure:12;future_6",
     call$0: function() {
       this.future_6._complete$1(null);
     }
   },
   Stream_length_closure: {
-    "": "Closure:12;box_0",
+    "": "Closure:10;box_0",
     call$1: function(_) {
       var t1 = this.box_0;
       t1.count_0 = t1.count_0 + 1;
     }
   },
   Stream_length_closure0: {
-    "": "Closure:10;box_0,future_1",
+    "": "Closure:12;box_0,future_1",
     call$0: function() {
       this.future_1._complete$1(this.box_0.count_0);
     }
@@ -4013,13 +4059,13 @@ var $$ = {};
     }
   },
   _StreamController__subscribe_closure: {
-    "": "Closure:10;this_0",
+    "": "Closure:12;this_0",
     call$0: function() {
       P._runGuarded(this.this_0.get$_onListen());
     }
   },
   _StreamController__recordCancel_complete: {
-    "": "Closure:1;this_0",
+    "": "Closure:2;this_0",
     call$0: function() {
       var t1 = this.this_0._doneFuture;
       if (t1 != null && t1._state === 0)
@@ -4089,10 +4135,10 @@ var $$ = {};
     },
     _onPause$0: [function() {
       this.get$_async$_controller()._recordPause$1(this);
-    }, "call$0", "get$_onPause", 0, 0, 1],
+    }, "call$0", "get$_onPause", 0, 0, 2],
     _onResume$0: [function() {
       this.get$_async$_controller()._recordResume$1(this);
-    }, "call$0", "get$_onResume", 0, 0, 1],
+    }, "call$0", "get$_onResume", 0, 0, 2],
     $as_BufferingStreamSubscription: null
   },
   _EventSink: {
@@ -4200,9 +4246,9 @@ var $$ = {};
         this._addPending$1(C.C__DelayedDone);
     },
     _onPause$0: [function() {
-    }, "call$0", "get$_onPause", 0, 0, 1],
+    }, "call$0", "get$_onPause", 0, 0, 2],
     _onResume$0: [function() {
-    }, "call$0", "get$_onResume", 0, 0, 1],
+    }, "call$0", "get$_onResume", 0, 0, 2],
     _onCancel$0: function() {
     },
     _addPending$1: function($event) {
@@ -4293,7 +4339,7 @@ var $$ = {};
     static: {"": "_BufferingStreamSubscription__STATE_CANCEL_ON_ERROR,_BufferingStreamSubscription__STATE_CLOSED,_BufferingStreamSubscription__STATE_INPUT_PAUSED,_BufferingStreamSubscription__STATE_CANCELED,_BufferingStreamSubscription__STATE_WAIT_FOR_CANCEL,_BufferingStreamSubscription__STATE_IN_CALLBACK,_BufferingStreamSubscription__STATE_HAS_PENDING,_BufferingStreamSubscription__STATE_PAUSE_COUNT,_BufferingStreamSubscription__STATE_PAUSE_COUNT_SHIFT"}
   },
   _BufferingStreamSubscription__sendDone_sendDone: {
-    "": "Closure:1;this_0",
+    "": "Closure:2;this_0",
     call$0: function() {
       var t1, t2;
       t1 = this.this_0;
@@ -4365,7 +4411,7 @@ var $$ = {};
     }
   },
   _PendingEvents_schedule_closure: {
-    "": "Closure:10;this_0,dispatch_1",
+    "": "Closure:12;this_0,dispatch_1",
     call$0: function() {
       var t1, oldState;
       t1 = this.this_0;
@@ -4402,7 +4448,7 @@ var $$ = {};
     }
   },
   _cancelAndError_closure: {
-    "": "Closure:10;future_0,error_1,stackTrace_2",
+    "": "Closure:12;future_0,error_1,stackTrace_2",
     call$0: function() {
       return this.future_0._completeError$2(this.error_1, this.stackTrace_2);
     }
@@ -4460,37 +4506,37 @@ var $$ = {};
     }
   },
   _BaseZone_bindCallback_closure: {
-    "": "Closure:10;this_0,registered_1",
+    "": "Closure:12;this_0,registered_1",
     call$0: function() {
       return this.this_0.runGuarded$1(this.registered_1);
     }
   },
   _BaseZone_bindCallback_closure0: {
-    "": "Closure:10;this_2,registered_3",
+    "": "Closure:12;this_2,registered_3",
     call$0: function() {
       return this.this_2.run$1(this.registered_3);
     }
   },
   _BaseZone_bindUnaryCallback_closure: {
-    "": "Closure:12;this_0,registered_1",
+    "": "Closure:10;this_0,registered_1",
     call$1: function(arg) {
       return this.this_0.runUnaryGuarded$2(this.registered_1, arg);
     }
   },
   _BaseZone_bindUnaryCallback_closure0: {
-    "": "Closure:12;this_2,registered_3",
+    "": "Closure:10;this_2,registered_3",
     call$1: function(arg) {
       return this.this_2.runUnary$2(this.registered_3, arg);
     }
   },
   _rootHandleUncaughtError_closure: {
-    "": "Closure:10;error_0,stackTrace_1",
+    "": "Closure:12;error_0,stackTrace_1",
     call$0: function() {
       P._scheduleAsyncCallback(new P._rootHandleUncaughtError__closure(this.error_0, this.stackTrace_1));
     }
   },
   _rootHandleUncaughtError__closure: {
-    "": "Closure:10;error_2,stackTrace_3",
+    "": "Closure:12;error_2,stackTrace_3",
     call$0: function() {
       var t1, trace, t2;
       t1 = this.error_2;
@@ -4540,10 +4586,10 @@ var $$ = {};
   },
   _defaultEquals: [function(a, b) {
     return J.$eq(a, b);
-  }, "call$2", "_defaultEquals$closure", 4, 0, 5],
+  }, "call$2", "_defaultEquals$closure", 4, 0, 6],
   _defaultHashCode: [function(a) {
     return J.get$hashCode$(a);
-  }, "call$1", "_defaultHashCode$closure", 2, 0, 6],
+  }, "call$1", "_defaultHashCode$closure", 2, 0, 7],
   HashMap_HashMap: function(equals, hashCode, isValidKey, $K, $V) {
     return H.setRuntimeTypeInfo(new P._HashMap(0, null, null, null, null), [$K, $V]);
   },
@@ -4844,7 +4890,7 @@ var $$ = {};
       }}
   },
   _HashMap_values_closure: {
-    "": "Closure:12;this_0",
+    "": "Closure:10;this_0",
     call$1: function(each) {
       var t1 = this.this_0;
       return t1.$index(t1, each);
@@ -5095,7 +5141,7 @@ var $$ = {};
       }}
   },
   _LinkedHashMap_values_closure: {
-    "": "Closure:12;this_0",
+    "": "Closure:10;this_0",
     call$1: function(each) {
       var t1 = this.this_0;
       return t1.$index(t1, each);
@@ -5559,7 +5605,7 @@ var $$ = {};
     $asList: null
   },
   Maps_mapToString_closure: {
-    "": "Closure:11;box_0,result_1",
+    "": "Closure:13;box_0,result_1",
     call$2: function(k, v) {
       var t1 = this.box_0;
       if (!t1.first_0)
@@ -5731,10 +5777,10 @@ var $$ = {};
   },
   identical: [function(a, b) {
     return a == null ? b == null : a === b;
-  }, "call$2", "identical$closure", 4, 0, 7],
+  }, "call$2", "identical$closure", 4, 0, 8],
   identityHashCode: [function(object) {
     return H.objectHashCode(object);
-  }, "call$1", "identityHashCode$closure", 2, 0, 8],
+  }, "call$1", "identityHashCode$closure", 2, 0, 9],
   List_List$filled: function($length, fill, $E) {
     var result, t1, i;
     result = J.JSArray_JSArray$fixed($length, $E);
@@ -5764,6 +5810,20 @@ var $$ = {};
     }
     return fixedList;
   },
+  num_parse: function(input, onError) {
+    var source, result;
+    source = J.trim$0$s(input);
+    result = H.Primitives_parseInt(source, null, P.num__returnNull$closure());
+    if (result != null)
+      return result;
+    result = H.Primitives_parseDouble(source, P.num__returnNull$closure());
+    if (result != null)
+      return result;
+    throw H.wrapException(P.FormatException$(input));
+  },
+  num__returnNull: [function(_) {
+    return;
+  }, "call$1", "num__returnNull$closure", 2, 0, 10],
   print: function(object) {
     var line = H.S(object);
     H.printString(line);
@@ -6019,7 +6079,7 @@ var $$ = {};
   FormatException: {
     "": "Object;message",
     toString$0: function(_) {
-      return "FormatException: " + this.message;
+      return "FormatException: " + H.S(this.message);
     },
     static: {FormatException$: function(message) {
         return new P.FormatException(message);
@@ -6138,17 +6198,17 @@ var $$ = {};
   },
   HtmlElement: {
     "": "Element;",
-    "%": "HTMLAppletElement|HTMLAreaElement|HTMLBRElement|HTMLBaseElement|HTMLBaseFontElement|HTMLBodyElement|HTMLCanvasElement|HTMLContentElement|HTMLDListElement|HTMLDataListElement|HTMLDetailsElement|HTMLDialogElement|HTMLDirectoryElement|HTMLDivElement|HTMLFontElement|HTMLFrameElement|HTMLFrameSetElement|HTMLHRElement|HTMLHeadElement|HTMLHeadingElement|HTMLHtmlElement|HTMLImageElement|HTMLLabelElement|HTMLLegendElement|HTMLMarqueeElement|HTMLMenuElement|HTMLModElement|HTMLOptGroupElement|HTMLParagraphElement|HTMLPreElement|HTMLQuoteElement|HTMLShadowElement|HTMLSpanElement|HTMLTableCaptionElement|HTMLTableCellElement|HTMLTableColElement|HTMLTableDataCellElement|HTMLTableElement|HTMLTableHeaderCellElement|HTMLTableRowElement|HTMLTableSectionElement|HTMLTemplateElement|HTMLTitleElement|HTMLTrackElement|HTMLUListElement|HTMLUnknownElement;HTMLElement"
+    "%": "HTMLAppletElement|HTMLAreaElement|HTMLBRElement|HTMLBaseElement|HTMLBaseFontElement|HTMLBodyElement|HTMLCanvasElement|HTMLContentElement|HTMLDListElement|HTMLDataListElement|HTMLDetailsElement|HTMLDialogElement|HTMLDirectoryElement|HTMLDivElement|HTMLFontElement|HTMLFrameElement|HTMLFrameSetElement|HTMLHRElement|HTMLHeadElement|HTMLHeadingElement|HTMLHtmlElement|HTMLImageElement|HTMLLabelElement|HTMLLegendElement|HTMLLinkElement|HTMLMarqueeElement|HTMLMenuElement|HTMLModElement|HTMLOListElement|HTMLOptGroupElement|HTMLParagraphElement|HTMLPreElement|HTMLQuoteElement|HTMLScriptElement|HTMLShadowElement|HTMLSourceElement|HTMLStyleElement|HTMLTableCaptionElement|HTMLTableCellElement|HTMLTableColElement|HTMLTableDataCellElement|HTMLTableElement|HTMLTableHeaderCellElement|HTMLTableRowElement|HTMLTableSectionElement|HTMLTemplateElement|HTMLTitleElement|HTMLTrackElement|HTMLUListElement|HTMLUnknownElement;HTMLElement"
   },
   AnchorElement: {
-    "": "HtmlElement;type=",
+    "": "HtmlElement;",
     toString$0: function(receiver) {
       return receiver.toString();
     },
     "%": "HTMLAnchorElement"
   },
   ButtonElement: {
-    "": "HtmlElement;name=,type=,value=",
+    "": "HtmlElement;name=,value=",
     "%": "HTMLButtonElement"
   },
   CharacterData: {
@@ -6213,7 +6273,7 @@ var $$ = {};
     "%": ";Element"
   },
   EmbedElement: {
-    "": "HtmlElement;name=,type=",
+    "": "HtmlElement;name=",
     "%": "HTMLEmbedElement"
   },
   ErrorEvent: {
@@ -6235,7 +6295,7 @@ var $$ = {};
     "%": ";EventTarget"
   },
   FieldSetElement: {
-    "": "HtmlElement;name=,type=",
+    "": "HtmlElement;name=",
     "%": "HTMLFieldSetElement"
   },
   FormElement: {
@@ -6247,20 +6307,16 @@ var $$ = {};
     "%": "HTMLIFrameElement"
   },
   InputElement: {
-    "": "HtmlElement;name=,type=,value=",
+    "": "HtmlElement;name=,value=",
     "%": "HTMLInputElement"
   },
   KeygenElement: {
-    "": "HtmlElement;name=,type=",
+    "": "HtmlElement;name=",
     "%": "HTMLKeygenElement"
   },
   LIElement: {
     "": "HtmlElement;value=",
     "%": "HTMLLIElement"
-  },
-  LinkElement: {
-    "": "HtmlElement;type=",
-    "%": "HTMLLinkElement"
   },
   MapElement: {
     "": "HtmlElement;name=",
@@ -6324,12 +6380,8 @@ var $$ = {};
     $isJavaScriptIndexingBehavior: true,
     "%": "NodeList|RadioNodeList"
   },
-  OListElement: {
-    "": "HtmlElement;type=",
-    "%": "HTMLOListElement"
-  },
   ObjectElement: {
-    "": "HtmlElement;name=,type=",
+    "": "HtmlElement;name=",
     "%": "HTMLObjectElement"
   },
   OptionElement: {
@@ -6337,7 +6389,7 @@ var $$ = {};
     "%": "HTMLOptionElement"
   },
   OutputElement: {
-    "": "HtmlElement;name=,type=,value=",
+    "": "HtmlElement;name=,value=",
     "%": "HTMLOutputElement"
   },
   ParamElement: {
@@ -6348,17 +6400,14 @@ var $$ = {};
     "": "HtmlElement;value=",
     "%": "HTMLProgressElement"
   },
-  ScriptElement: {
-    "": "HtmlElement;type=",
-    "%": "HTMLScriptElement"
-  },
   SelectElement: {
-    "": "HtmlElement;length=,name=,type=,value=",
+    "": "HtmlElement;length=,name=,value=",
     "%": "HTMLSelectElement"
   },
-  SourceElement: {
-    "": "HtmlElement;type=",
-    "%": "HTMLSourceElement"
+  SpanElement: {
+    "": "HtmlElement;",
+    $isSpanElement: true,
+    "%": "HTMLSpanElement"
   },
   SpeechRecognitionError: {
     "": "Event;error=",
@@ -6368,12 +6417,8 @@ var $$ = {};
     "": "Event;name=",
     "%": "SpeechSynthesisEvent"
   },
-  StyleElement: {
-    "": "HtmlElement;type=",
-    "%": "HTMLStyleElement"
-  },
   TextAreaElement: {
-    "": "HtmlElement;name=,type=,value=",
+    "": "HtmlElement;name=,value=",
     $isTextAreaElement: true,
     "%": "HTMLTextAreaElement"
   },
@@ -6474,28 +6519,12 @@ var $$ = {};
 }],
 ["dart.dom.svg", "dart:svg", , P, {
   "": "",
-  FEColorMatrixElement: {
-    "": "SvgElement;type=",
-    "%": "SVGFEColorMatrixElement"
-  },
-  FETurbulenceElement: {
-    "": "SvgElement;type=",
-    "%": "SVGFETurbulenceElement"
-  },
-  ScriptElement0: {
-    "": "SvgElement;type=",
-    "%": "SVGScriptElement"
-  },
-  StyleElement0: {
-    "": "SvgElement;type=",
-    "%": "SVGStyleElement"
-  },
   SvgElement: {
     "": "Element;",
     insertAdjacentText$2: function(receiver, where, text) {
       throw H.wrapException(P.UnsupportedError$("Cannot invoke insertAdjacentText on SVG."));
     },
-    "%": "SVGAElement|SVGAltGlyphDefElement|SVGAltGlyphElement|SVGAltGlyphItemElement|SVGAnimateColorElement|SVGAnimateElement|SVGAnimateMotionElement|SVGAnimateTransformElement|SVGAnimationElement|SVGCircleElement|SVGClipPathElement|SVGComponentTransferFunctionElement|SVGCursorElement|SVGDefsElement|SVGDescElement|SVGEllipseElement|SVGFEBlendElement|SVGFEComponentTransferElement|SVGFECompositeElement|SVGFEConvolveMatrixElement|SVGFEDiffuseLightingElement|SVGFEDisplacementMapElement|SVGFEDistantLightElement|SVGFEDropShadowElement|SVGFEFloodElement|SVGFEFuncAElement|SVGFEFuncBElement|SVGFEFuncGElement|SVGFEFuncRElement|SVGFEGaussianBlurElement|SVGFEImageElement|SVGFEMergeElement|SVGFEMergeNodeElement|SVGFEMorphologyElement|SVGFEOffsetElement|SVGFEPointLightElement|SVGFESpecularLightingElement|SVGFESpotLightElement|SVGFETileElement|SVGFilterElement|SVGFontElement|SVGFontFaceElement|SVGFontFaceFormatElement|SVGFontFaceNameElement|SVGFontFaceSrcElement|SVGFontFaceUriElement|SVGForeignObjectElement|SVGGElement|SVGGlyphElement|SVGGlyphRefElement|SVGGradientElement|SVGGraphicsElement|SVGHKernElement|SVGImageElement|SVGLineElement|SVGLinearGradientElement|SVGMPathElement|SVGMarkerElement|SVGMaskElement|SVGMetadataElement|SVGMissingGlyphElement|SVGPathElement|SVGPatternElement|SVGPolygonElement|SVGPolylineElement|SVGRadialGradientElement|SVGRectElement|SVGSVGElement|SVGSetElement|SVGStopElement|SVGSwitchElement|SVGSymbolElement|SVGTSpanElement|SVGTextContentElement|SVGTextElement|SVGTextPathElement|SVGTextPositioningElement|SVGTitleElement|SVGUseElement|SVGVKernElement|SVGViewElement;SVGElement"
+    "%": "SVGAElement|SVGAltGlyphDefElement|SVGAltGlyphElement|SVGAltGlyphItemElement|SVGAnimateColorElement|SVGAnimateElement|SVGAnimateMotionElement|SVGAnimateTransformElement|SVGAnimationElement|SVGCircleElement|SVGClipPathElement|SVGComponentTransferFunctionElement|SVGCursorElement|SVGDefsElement|SVGDescElement|SVGElement|SVGEllipseElement|SVGFEBlendElement|SVGFEColorMatrixElement|SVGFEComponentTransferElement|SVGFECompositeElement|SVGFEConvolveMatrixElement|SVGFEDiffuseLightingElement|SVGFEDisplacementMapElement|SVGFEDistantLightElement|SVGFEDropShadowElement|SVGFEFloodElement|SVGFEFuncAElement|SVGFEFuncBElement|SVGFEFuncGElement|SVGFEFuncRElement|SVGFEGaussianBlurElement|SVGFEImageElement|SVGFEMergeElement|SVGFEMergeNodeElement|SVGFEMorphologyElement|SVGFEOffsetElement|SVGFEPointLightElement|SVGFESpecularLightingElement|SVGFESpotLightElement|SVGFETileElement|SVGFETurbulenceElement|SVGFilterElement|SVGFontElement|SVGFontFaceElement|SVGFontFaceFormatElement|SVGFontFaceNameElement|SVGFontFaceSrcElement|SVGFontFaceUriElement|SVGForeignObjectElement|SVGGElement|SVGGlyphElement|SVGGlyphRefElement|SVGGradientElement|SVGGraphicsElement|SVGHKernElement|SVGImageElement|SVGLineElement|SVGLinearGradientElement|SVGMPathElement|SVGMarkerElement|SVGMaskElement|SVGMetadataElement|SVGMissingGlyphElement|SVGPathElement|SVGPatternElement|SVGPolygonElement|SVGPolylineElement|SVGRadialGradientElement|SVGRectElement|SVGSVGElement|SVGScriptElement|SVGSetElement|SVGStopElement|SVGStyleElement|SVGSwitchElement|SVGSymbolElement|SVGTSpanElement|SVGTextContentElement|SVGTextElement|SVGTextPathElement|SVGTextPositioningElement|SVGTitleElement|SVGUseElement|SVGVKernElement|SVGViewElement"
   }
 }],
 ["dart.pkg.collection.wrappers", "package:collection/wrappers.dart", , Q, {
@@ -6750,7 +6779,7 @@ var $$ = {};
       }}
   },
   Logger_Logger_closure: {
-    "": "Closure:10;name_0",
+    "": "Closure:12;name_0",
     call$0: function() {
       var thisName, dot, $parent, t1, t2;
       thisName = this.name_0;
@@ -6815,29 +6844,28 @@ var $$ = {};
     H.setRuntimeTypeInfo(new W._EventStreamSubscription(0, t3._target, t3._eventType, W._wrapZone(F.unhide$closure()), t3._useCapture), [H.getTypeArgumentByIndex(t3, 0)])._tryResume$0();
     t2 = H.setRuntimeTypeInfo(new W._ElementEventStreamImpl(t1, t2, false), [null]);
     H.setRuntimeTypeInfo(new W._EventStreamSubscription(0, t2._target, t2._eventType, W._wrapZone(F.compile$closure()), t2._useCapture), [H.getTypeArgumentByIndex(t2, 0)])._tryResume$0();
-  }, "call$0", "main$closure", 0, 0, 1],
+  }, "call$0", "main$closure", 0, 0, 2],
   unhide: [function($event) {
-  }, "call$1", "unhide$closure", 2, 0, 9],
+  }, "call$1", "unhide$closure", 2, 0, 11],
   compile: [function($event) {
     var source, compiler, t1;
     H.interceptedTypeCast(document.querySelector("#symbol-table"), "$isTextAreaElement").textContent = "";
-    H.interceptedTypeCast(document.querySelector("#log"), "$isTextAreaElement").textContent = "";
+    H.interceptedTypeCast(document.querySelector("#log-all"), "$isTextAreaElement").textContent = "";
+    H.interceptedTypeCast(document.querySelector("#badge-all"), "$isSpanElement").textContent = "0";
+    H.interceptedTypeCast(document.querySelector("#log-info"), "$isTextAreaElement").textContent = "";
+    H.interceptedTypeCast(document.querySelector("#badge-info"), "$isSpanElement").textContent = "0";
+    H.interceptedTypeCast(document.querySelector("#log-warning"), "$isTextAreaElement").textContent = "";
+    H.interceptedTypeCast(document.querySelector("#badge-warning"), "$isSpanElement").textContent = "0";
+    H.interceptedTypeCast(document.querySelector("#log-severe"), "$isTextAreaElement").textContent = "";
+    H.interceptedTypeCast(document.querySelector("#badge-severe"), "$isSpanElement").textContent = "0";
     source = H.interceptedTypeCast(document.querySelector("#input-code"), "$isTextAreaElement").value;
     compiler = new X.Compiler(K.LoggerUtil_createLogger("Compiler"), source, H.setRuntimeTypeInfo([], [D.Token]), null);
     t1 = L.Lexer_analyze(source);
     compiler.tokens = t1;
     t1 = new G.Parser(t1, H.setRuntimeTypeInfo([], [T.CompilerSymbol]), -1, 0);
     compiler.parser = t1;
-    $.get$Parser_log().log$4(C.Level_INFO_800, "Parser starting analysis...", null, null);
-    if (t1.tokens.length !== 0) {
-      if (J.$eq(t1.popNextToken$0().type, C.TokenType_OPEN_BRACE))
-        t1.statementList$0();
-      else
-        M.ExceptionUtil_logAndThrow(new T.CompilerSyntaxError("Program must begin with a block denoted by an Open Bracket symbol"), $.get$Parser_log());
-      $.get$Parser_log().log$4(C.Level_INFO_800, "Parser finished analysis...", null, null);
-    } else
-      $.get$Parser_log().log$4(C.Level_WARNING_900, "No tokens to parse, finished.", null, null);
-  }, "call$1", "compile$closure", 2, 0, 9],
+    t1.analyse$0();
+  }, "call$1", "compile$closure", 2, 0, 11],
   main_closure: {
     "": "Closure:19;",
     call$1: function(rec) {
@@ -6850,12 +6878,29 @@ var $$ = {};
   "": "",
   Parser: {
     "": "Object;tokens,symbols,index,scope",
+    analyse$0: function() {
+      var exception;
+      $.get$Parser_log().log$4(C.Level_INFO_800, "Parser starting analysis...", null, null);
+      if (this.tokens.length !== 0) {
+        try {
+          if (J.$eq(this.popNextToken$0().type, C.TokenType_OPEN_BRACE))
+            this.statementList$0();
+          else
+            M.ExceptionUtil_logAndThrow(new T.CompilerSyntaxError("Program must begin with a block denoted by an Open Bracket symbol"), $.get$Parser_log());
+        } catch (exception) {
+          H.unwrapException(exception);
+        }
+
+        $.get$Parser_log().log$4(C.Level_INFO_800, "Parser finished analysis...", null, null);
+      } else
+        $.get$Parser_log().log$4(C.Level_WARNING_900, "No tokens to parse, finished.", null, null);
+    },
     statementList$0: function() {
       var token, t1, t2, t3, token0, t4, t5, ID;
       token = this.popNextToken$0();
       for (t1 = this.symbols; t2 = token.type, t3 = J.getInterceptor(t2), !t3.$eq(t2, C.TokenType_CLOSE_BRACE);) {
         if (t3.$eq(t2, C.TokenType_TYPE)) {
-          $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing variable declaration", null, null);
+          $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing variable declaration on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
           this.expect$1(C.TokenType_ID);
           token0 = this.getToken$0();
           t2 = token0.value;
@@ -6865,9 +6910,9 @@ var $$ = {};
           J.insertAdjacentText$2$x(document.querySelector("#symbol-table"), "beforeend", "Symbol: name=" + H.S(t2) + " scope=" + t3 + " line=" + t4 + " type=" + H.S(t5) + " \n");
           t1.push(new T.CompilerSymbol(t2, t3, t4, t5));
         } else if (t3.$eq(t2, C.TokenType_ID)) {
-          $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing assignment statement", null, null);
+          $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing assignment statement on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
           ID = token.value;
-          this.checkCompilerSymbol$1(ID);
+          this.findCompilerSymbol$1(ID);
           this.expect$1(C.TokenType_EQUALS);
           if (this.isNextToken$1(C.TokenType_DIGIT))
             this.intExpression$1(ID);
@@ -6880,21 +6925,21 @@ var $$ = {};
           else if (this.isNextToken$1(C.TokenType_ID))
             this.expect$2(C.TokenType_ID, ID);
         } else if (t3.$eq(t2, C.TokenType_IF)) {
-          $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing if statement", null, null);
+          $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing if statement on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
           this.condition$0();
           this.scope = this.scope + 1;
           this.popNextToken$0();
           this.statementList$0();
           this.scope = this.scope - 1;
         } else if (t3.$eq(t2, C.TokenType_WHILE)) {
-          $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing while statement", null, null);
+          $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing while statement on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
           this.condition$0();
           this.scope = this.scope + 1;
           this.popNextToken$0();
           this.statementList$0();
           this.scope = this.scope - 1;
         } else if (t3.$eq(t2, C.TokenType_PRINT)) {
-          $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing print statement", null, null);
+          $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing print statement on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
           this.expect$1(C.TokenType_OPEN_PAREN);
           this.expression$0();
           this.expect$1(C.TokenType_CLOSE_PAREN);
@@ -6926,13 +6971,12 @@ var $$ = {};
       return this.expression$1(null);
     },
     intExpression$1: function(ID) {
-      var leftHand;
       this.expect$2(C.TokenType_DIGIT, ID);
       if (this.isNextToken$1(C.TokenType_INT_OP)) {
-        leftHand = this.getToken$0();
+        this.getToken$0();
         this.expect$1(C.TokenType_INT_OP);
         this.expectOneOf$1([C.TokenType_DIGIT, C.TokenType_ID]);
-        this.checkTypes$2(leftHand, this.getToken$0());
+        this.getToken$0();
       }
     },
     stringExpression$1: function(ID) {
@@ -6950,18 +6994,16 @@ var $$ = {};
       this.expect$2(C.TokenType_QUOTE, ID);
     },
     condition$1: function(ID) {
-      var leftHand, rightHand;
       if (ID != null)
-        this.checkCompilerSymbolTypeAgainstTokenType$2(C.TokenType_BOOLEAN, ID);
+        this.findCompilerSymbol$1(ID);
       if (J.$eq(this.peekNextToken$0().type, C.TokenType_OPEN_PAREN)) {
         this.expect$1(C.TokenType_OPEN_PAREN);
         this.expression$0();
-        leftHand = this.getToken$0();
+        this.getToken$0();
         this.expect$1(C.TokenType_BOOL_OP);
         this.expression$0();
-        rightHand = this.getToken$0();
+        this.getToken$0();
         this.expect$1(C.TokenType_CLOSE_PAREN);
-        this.checkTypes$2(leftHand, rightHand);
       } else
         this.expect$1(C.TokenType_BOOLEAN);
     },
@@ -7013,9 +7055,9 @@ var $$ = {};
       t1 = next.type;
       t2 = J.getInterceptor(t1);
       if (!t2.$eq(t1, type))
-        M.ExceptionUtil_logAndThrow(new T.CompilerSyntaxError(C.JSString_methods.$add("Expected type " + type._Enum$_value + ", found type ", t2.get$value(t1)) + " on line " + C.JSInt_methods.toString$0(next.line)), $.get$Parser_log());
+        M.ExceptionUtil_logAndThrow(new T.CompilerSyntaxError(C.JSString_methods.$add("Expected one of type type " + type._Enum$_value + ", found type ", t2.get$value(t1)) + " on line " + C.JSInt_methods.toString$0(next.line)), $.get$Parser_log());
       if (ID != null)
-        this.checkCompilerSymbolTypeAgainstToken$2(next, ID);
+        this.findCompilerSymbol$1(ID);
     },
     expect$1: function(type) {
       return this.expect$2(type, null);
@@ -7030,49 +7072,6 @@ var $$ = {};
       }
       M.ExceptionUtil_logAndThrow(new T.CompilerTypeError(C.JSString_methods.$add("Expected one of type " + H.IterableMixinWorkaround_toStringIterable(types, "[", "]") + ", found type ", J.get$value$x(next.type)) + " on line " + C.JSInt_methods.toString$0(next.line)), $.get$Parser_log());
     },
-    checkCompilerSymbolTypeAgainstTokenType$2: function(type, ID) {
-      var symbol, t1, t2;
-      symbol = this.findCompilerSymbol$1(ID);
-      t1 = J.getInterceptor$x(symbol);
-      if (!(J.$eq(t1.get$type(symbol), "int") && !J.$eq(type, C.TokenType_DIGIT))) {
-        if (J.$eq(t1.get$type(symbol), "string")) {
-          t2 = J.getInterceptor(type);
-          t2 = !t2.$eq(type, C.TokenType_CHAR) && !t2.$eq(type, C.TokenType_QUOTE);
-        } else
-          t2 = false;
-        if (!t2)
-          t2 = J.$eq(t1.get$type(symbol), "boolean") && !J.$eq(type, C.TokenType_BOOLEAN);
-        else
-          t2 = true;
-      } else
-        t2 = true;
-      if (t2)
-        M.ExceptionUtil_logAndThrow(new T.CompilerTypeError("Attempted to assign value of type " + H.S(J.get$value$x(type)) + " to symbol " + H.S(ID) + " of type " + H.S(t1.get$type(symbol))), $.get$Parser_log());
-    },
-    checkCompilerSymbolTypeAgainstToken$2: function(token, ID) {
-      var leftHand, t1, rightHand, t2;
-      leftHand = this.findCompilerSymbol$1(ID);
-      t1 = token.type;
-      if (J.$eq(t1, C.TokenType_ID)) {
-        t1 = token.value;
-        rightHand = this.findCompilerSymbol$1(t1);
-        if (rightHand != null) {
-          t1 = J.getInterceptor$x(rightHand);
-          t2 = J.getInterceptor$x(leftHand);
-          if (!J.$eq(t1.get$type(rightHand), t2.get$type(leftHand)))
-            M.ExceptionUtil_logAndThrow(new T.CompilerTypeError("Attempted to assign value of type " + H.S(t1.get$type(rightHand)) + " to symbol " + H.S(ID) + " of type " + H.S(t2.get$type(leftHand)) + " on line " + C.JSInt_methods.toString$0(rightHand.get$line())), $.get$Parser_log());
-        } else
-          M.ExceptionUtil_logAndThrow(new T.CompilerSyntaxError(C.JSString_methods.$add("Undefined value ", t1)), $.get$Parser_log());
-      } else
-        this.checkCompilerSymbolTypeAgainstTokenType$2(t1, ID);
-    },
-    checkCompilerSymbol$1: function(symbolID) {
-      var t1;
-      for (t1 = this.symbols, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();)
-        if (J.$eq(J.get$id$x(t1._current), symbolID))
-          return;
-      $.get$Parser_log().log$4(C.Level_SEVERE_1000, C.JSString_methods.$add("Identifier ", symbolID) + "not found.", null, null);
-    },
     findCompilerSymbol$1: function(symbolID) {
       var t1, symbol;
       for (t1 = this.symbols, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
@@ -7081,29 +7080,6 @@ var $$ = {};
           return symbol;
       }
       M.ExceptionUtil_logAndThrow(new T.CompilerSyntaxError(C.JSString_methods.$add("Identifier ", symbolID) + (" undefined on " + C.JSInt_methods.toString$0(this.getToken$0().line))), $.get$Parser_log());
-    },
-    checkTypes$2: function(leftHand, rightHand) {
-      var t1, t2, left, right, t3, t4;
-      t1 = leftHand.type;
-      t2 = J.getInterceptor(t1);
-      if (t2.$eq(t1, C.TokenType_ID)) {
-        left = this.findCompilerSymbol$1(leftHand.value);
-        if (J.$eq(rightHand.type, C.TokenType_ID)) {
-          right = this.findCompilerSymbol$1(rightHand.value);
-          t1 = J.getInterceptor$x(left);
-          t2 = J.getInterceptor$x(right);
-          if (!J.$eq(t1.get$type(left), t2.get$type(right)))
-            M.ExceptionUtil_logAndThrow(new T.CompilerTypeError(C.JSString_methods.$add(C.JSString_methods.$add(C.JSString_methods.$add(C.JSString_methods.$add("CompilerSymbol ", t1.get$id(left)) + " of type ", t1.get$type(left)) + " on line " + C.JSInt_methods.toString$0(left.get$line()) + " differs from symbol ", t2.get$id(right)) + " of type ", t2.get$type(right)) + " on line " + C.JSInt_methods.toString$0(right.get$line())), $.get$Parser_log());
-        } else
-          this.checkCompilerSymbolTypeAgainstToken$2(rightHand, J.get$id$x(left));
-      } else {
-        t3 = rightHand.type;
-        t4 = J.getInterceptor(t3);
-        if (t4.$eq(t3, C.TokenType_ID))
-          this.checkCompilerSymbolTypeAgainstToken$2(leftHand, J.get$id$x(this.findCompilerSymbol$1(rightHand.value)));
-        else if (!t2.$eq(t1, t3))
-          M.ExceptionUtil_logAndThrow(new T.CompilerTypeError(C.JSString_methods.$add(C.JSString_methods.$add(C.JSString_methods.$add(C.JSString_methods.$add("Value \"", leftHand.value) + "\" of type ", t2.get$value(t1)) + " on line " + C.JSInt_methods.toString$0(leftHand.line) + " differs from value \"", rightHand.value) + "\" of type ", t4.get$value(t3)) + " on line " + C.JSInt_methods.toString$0(rightHand.line)), $.get$Parser_log());
-      }
     },
     isNextToken$1: function(type) {
       if (!J.$eq(this.peekNextToken$0().type, type))
@@ -7617,6 +7593,7 @@ Isolate.$lazy($, "log", "Parser_log", "get$Parser_log", function() {
 init.functionAliases = {};
 ;
 init.metadata = [{func: "void__LogRecord", void: true, args: [N.LogRecord]},
+{func: "dynamic__String", args: [J.JSString]},
 {func: "void_", void: true},
 {func: "void__dynamic", void: true, args: [null]},
 {func: "void__dynamic__StackTrace", void: true, args: [null], opt: [P.StackTrace]},
@@ -7625,12 +7602,11 @@ init.metadata = [{func: "void__LogRecord", void: true, args: [N.LogRecord]},
 {func: "int__dynamic", ret: J.JSInt, args: [null]},
 {func: "bool__Object_Object", ret: J.JSBool, args: [P.Object, P.Object]},
 {func: "int__Object", ret: J.JSInt, args: [P.Object]},
+{func: "args1", args: [null]},
 {func: "void__MouseEvent", void: true, args: [W.MouseEvent]},
 {func: "args0"},
 {func: "args2", args: [null, null]},
-{func: "args1", args: [null]},
 {func: "dynamic__dynamic_String", args: [null, J.JSString]},
-{func: "dynamic__String", args: [J.JSString]},
 {func: "dynamic__dynamic__dynamic", args: [null], opt: [null]},
 {func: "dynamic__dynamic_StackTrace", args: [null, P.StackTrace]},
 {func: "dynamic__Symbol_dynamic", args: [P.Symbol, null]},
@@ -7990,9 +7966,6 @@ function dart_precompiled($collectedClasses) {
   if ($desc instanceof Array)
     $desc = $desc[1];
   AnchorElement.prototype = $desc;
-  AnchorElement.prototype.get$type = function(receiver) {
-    return receiver.type;
-  };
   function AnimationEvent() {
   }
   AnimationEvent.builtin$cls = "AnimationEvent";
@@ -8085,9 +8058,6 @@ function dart_precompiled($collectedClasses) {
   ButtonElement.prototype = $desc;
   ButtonElement.prototype.get$name = function(receiver) {
     return receiver.name;
-  };
-  ButtonElement.prototype.get$type = function(receiver) {
-    return receiver.type;
   };
   ButtonElement.prototype.get$value = function(receiver) {
     return receiver.value;
@@ -8311,9 +8281,6 @@ function dart_precompiled($collectedClasses) {
   EmbedElement.prototype.get$name = function(receiver) {
     return receiver.name;
   };
-  EmbedElement.prototype.get$type = function(receiver) {
-    return receiver.type;
-  };
   function ErrorEvent() {
   }
   ErrorEvent.builtin$cls = "ErrorEvent";
@@ -8355,9 +8322,6 @@ function dart_precompiled($collectedClasses) {
   FieldSetElement.prototype = $desc;
   FieldSetElement.prototype.get$name = function(receiver) {
     return receiver.name;
-  };
-  FieldSetElement.prototype.get$type = function(receiver) {
-    return receiver.type;
   };
   function FileError() {
   }
@@ -8479,9 +8443,6 @@ function dart_precompiled($collectedClasses) {
   InputElement.prototype.get$name = function(receiver) {
     return receiver.name;
   };
-  InputElement.prototype.get$type = function(receiver) {
-    return receiver.type;
-  };
   InputElement.prototype.get$value = function(receiver) {
     return receiver.value;
   };
@@ -8505,9 +8466,6 @@ function dart_precompiled($collectedClasses) {
   KeygenElement.prototype = $desc;
   KeygenElement.prototype.get$name = function(receiver) {
     return receiver.name;
-  };
-  KeygenElement.prototype.get$type = function(receiver) {
-    return receiver.type;
   };
   function LIElement() {
   }
@@ -8548,9 +8506,6 @@ function dart_precompiled($collectedClasses) {
   if ($desc instanceof Array)
     $desc = $desc[1];
   LinkElement.prototype = $desc;
-  LinkElement.prototype.get$type = function(receiver) {
-    return receiver.type;
-  };
   function MapElement() {
   }
   MapElement.builtin$cls = "MapElement";
@@ -8776,9 +8731,6 @@ function dart_precompiled($collectedClasses) {
   if ($desc instanceof Array)
     $desc = $desc[1];
   OListElement.prototype = $desc;
-  OListElement.prototype.get$type = function(receiver) {
-    return receiver.type;
-  };
   function ObjectElement() {
   }
   ObjectElement.builtin$cls = "ObjectElement";
@@ -8790,9 +8742,6 @@ function dart_precompiled($collectedClasses) {
   ObjectElement.prototype = $desc;
   ObjectElement.prototype.get$name = function(receiver) {
     return receiver.name;
-  };
-  ObjectElement.prototype.get$type = function(receiver) {
-    return receiver.type;
   };
   function OptGroupElement() {
   }
@@ -8826,9 +8775,6 @@ function dart_precompiled($collectedClasses) {
   OutputElement.prototype = $desc;
   OutputElement.prototype.get$name = function(receiver) {
     return receiver.name;
-  };
-  OutputElement.prototype.get$type = function(receiver) {
-    return receiver.type;
   };
   OutputElement.prototype.get$value = function(receiver) {
     return receiver.value;
@@ -8986,9 +8932,6 @@ function dart_precompiled($collectedClasses) {
   if ($desc instanceof Array)
     $desc = $desc[1];
   ScriptElement.prototype = $desc;
-  ScriptElement.prototype.get$type = function(receiver) {
-    return receiver.type;
-  };
   function SecurityPolicyViolationEvent() {
   }
   SecurityPolicyViolationEvent.builtin$cls = "SecurityPolicyViolationEvent";
@@ -9012,9 +8955,6 @@ function dart_precompiled($collectedClasses) {
   };
   SelectElement.prototype.get$name = function(receiver) {
     return receiver.name;
-  };
-  SelectElement.prototype.get$type = function(receiver) {
-    return receiver.type;
   };
   SelectElement.prototype.get$value = function(receiver) {
     return receiver.value;
@@ -9046,9 +8986,6 @@ function dart_precompiled($collectedClasses) {
   if ($desc instanceof Array)
     $desc = $desc[1];
   SourceElement.prototype = $desc;
-  SourceElement.prototype.get$type = function(receiver) {
-    return receiver.type;
-  };
   function SpanElement() {
   }
   SpanElement.builtin$cls = "SpanElement";
@@ -9118,9 +9055,6 @@ function dart_precompiled($collectedClasses) {
   if ($desc instanceof Array)
     $desc = $desc[1];
   StyleElement.prototype = $desc;
-  StyleElement.prototype.get$type = function(receiver) {
-    return receiver.type;
-  };
   function TableCaptionElement() {
   }
   TableCaptionElement.builtin$cls = "TableCaptionElement";
@@ -9204,9 +9138,6 @@ function dart_precompiled($collectedClasses) {
   TextAreaElement.prototype = $desc;
   TextAreaElement.prototype.get$name = function(receiver) {
     return receiver.name;
-  };
-  TextAreaElement.prototype.get$type = function(receiver) {
-    return receiver.type;
   };
   TextAreaElement.prototype.get$value = function(receiver) {
     return receiver.value;
@@ -9580,9 +9511,6 @@ function dart_precompiled($collectedClasses) {
   if ($desc instanceof Array)
     $desc = $desc[1];
   FEColorMatrixElement.prototype = $desc;
-  FEColorMatrixElement.prototype.get$type = function(receiver) {
-    return receiver.type;
-  };
   function FEComponentTransferElement() {
   }
   FEComponentTransferElement.builtin$cls = "FEComponentTransferElement";
@@ -9781,9 +9709,6 @@ function dart_precompiled($collectedClasses) {
   if ($desc instanceof Array)
     $desc = $desc[1];
   FETurbulenceElement.prototype = $desc;
-  FETurbulenceElement.prototype.get$type = function(receiver) {
-    return receiver.type;
-  };
   function FilterElement() {
   }
   FilterElement.builtin$cls = "FilterElement";
@@ -9937,9 +9862,6 @@ function dart_precompiled($collectedClasses) {
   if ($desc instanceof Array)
     $desc = $desc[1];
   ScriptElement0.prototype = $desc;
-  ScriptElement0.prototype.get$type = function(receiver) {
-    return receiver.type;
-  };
   function SetElement() {
   }
   SetElement.builtin$cls = "SetElement";
@@ -9967,9 +9889,6 @@ function dart_precompiled($collectedClasses) {
   if ($desc instanceof Array)
     $desc = $desc[1];
   StyleElement0.prototype = $desc;
-  StyleElement0.prototype.get$type = function(receiver) {
-    return receiver.type;
-  };
   function SvgDocument() {
   }
   SvgDocument.builtin$cls = "SvgDocument";
@@ -10345,12 +10264,6 @@ function dart_precompiled($collectedClasses) {
   CompilerSymbol.prototype = $desc;
   CompilerSymbol.prototype.get$id = function(receiver) {
     return this.id;
-  };
-  CompilerSymbol.prototype.get$line = function() {
-    return this.line;
-  };
-  CompilerSymbol.prototype.get$type = function(receiver) {
-    return this.type;
   };
   function Token(type, value, line, symbol) {
     this.type = type;

@@ -94,7 +94,7 @@ class Parser{
   
   /* STATEMENTS */
   void printStatement(){
-    log.info("Parsing print statement");
+    log.info("Parsing print statement on line " + getLine());
     expect(TokenType.OPEN_PAREN);
     expression();  
     expect(TokenType.CLOSE_PAREN);
@@ -102,7 +102,7 @@ class Parser{
   
   /* ASSIGNMENT STATEMENTS */
   void assignmentStatement(Token token){
-    log.info("Parsing assignment statement");
+    log.info("Parsing assignment statement on line " + getLine());
     
     String ID = token.value;
     
@@ -133,14 +133,14 @@ class Parser{
   
   /* IF STATEMENT */
   void ifStatement(){
-    log.info("Parsing if statement");
+    log.info("Parsing if statement on line " + getLine());
     condition();
     block();
   }
   
   /* WHILE STATEMENT */
   void whileStatement(){
-    log.info("Parsing while statement");
+    log.info("Parsing while statement on line " + getLine());
     condition();
     block();
   }
@@ -149,7 +149,7 @@ class Parser{
   
   // Checks for an ID type token, creates the symbol, and adds it to the symbol table
   void variableDeclaration(Token typeToken){
-    log.info("Parsing variable declaration");
+    log.info("Parsing variable declaration on line " + getLine());
     expect(TokenType.ID);
     
     // Get the ID token
@@ -277,12 +277,17 @@ class Parser{
     }
   }
   
+  // Gets the current token line
+  String getLine(){
+    return getToken().line.toString();
+  }
+  
   // Checks to see if the next token is what it should be
   void expect(TokenType type, [ID = null]){
     Token next = popNextToken();  
     
     if(next.type != type){
-      ExceptionUtil.logAndThrow(new CompilerSyntaxError("Expected type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString()), log);
+      ExceptionUtil.logAndThrow(new CompilerSyntaxError("Expected one of type type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString()), log);
     }
     if(ID != null){
       findCompilerSymbol(ID);
@@ -308,7 +313,7 @@ class Parser{
         return symbol;
       }
     }
-    ExceptionUtil.logAndThrow(new CompilerSyntaxError("Identifier " + symbolID + " undefined on ${getToken().line.toString()}"), log);
+    ExceptionUtil.logAndThrow(new CompilerSyntaxError("Identifier " + symbolID + " undefined on ${getLine()}"), log);
   }
   
   /* Determines if the next token is the type of token
