@@ -26,7 +26,14 @@ void unhide(MouseEvent event) {
 void compile(MouseEvent event) {
   // Clear out textareas
   (querySelector("#symbol-table") as TextAreaElement).text = '';
-  (querySelector("#log") as TextAreaElement).text = '';
+  (querySelector("#log-all") as TextAreaElement).text = '';
+  (querySelector("#badge-all") as SpanElement).text = '0';
+  (querySelector("#log-info") as TextAreaElement).text = '';
+  (querySelector("#badge-info") as SpanElement).text = '0';
+  (querySelector("#log-warning") as TextAreaElement).text = '';
+  (querySelector("#badge-warning") as SpanElement).text = '0';
+  (querySelector("#log-severe") as TextAreaElement).text = '';
+  (querySelector("#badge-severe") as SpanElement).text = '0';
 
   var source = (querySelector("#input-code") as TextAreaElement).value;
   Compiler compiler = new Compiler(source);

@@ -27,8 +27,12 @@ class Parser{
   /* This is the main method for the Parser where all the magic happens */
   analyse(){
     log.info("Parser starting analysis...");
-    if(!tokens.isEmpty){    
+    if(!tokens.isEmpty){
+       try{
        startBlock();
+       }catch(e){
+         // Let logAndThrow handle
+       }
        log.info("Parser finished analysis...");
     }
     else{
@@ -40,7 +44,7 @@ class Parser{
     Token token = popNextToken();
     
     if(token.type == TokenType.OPEN_BRACE){
-      statementList();
+        statementList();
     }
     else{
       ExceptionUtil.logAndThrow(new CompilerSyntaxError("Program must begin with a block denoted by an Open Bracket symbol"), log);
@@ -317,4 +321,6 @@ class Parser{
     }
     return true;
   }
+  
+  
 }

@@ -40,15 +40,6 @@
 			             </div>
               </div>
               <div class="col-md-4">
-              <h2>Log</h2>
-               <textarea readonly id="log"
-                                   cols="40"
-                                   rows="24"
-      
-                         ></textarea>
-              </div>
-              <div class="col-md-4">
-                 <div>
                 <h2>Symbol Table</h2>
                    <textarea readonly id="symbol-table"
                          cols="40"
@@ -57,20 +48,59 @@
                    ></textarea>
               </div>
             </div>
+            
+            <div class="row">
+            <div class="col-md-12">
+              <h2>Log</h2>
+               <!-- Nav tabs -->
+              <ul class="nav nav-tabs">
+                <li class="active"><a href="#all" data-toggle="tab">All <span class="badge" id="badge-all">0</span></a></li>
+                <li><a href="#info" data-toggle="tab">Info <span class="badge" id="badge-info">0</span></a></li>
+                <li><a href="#warning" data-toggle="tab">Warning <span class="badge" id="badge-warning">0</span></a></li>
+                <li><a href="#error" data-toggle="tab">Severe <span class="badge" id="badge-severe">0</span></a></li>
+              </ul>
+              <!-- Tab panes -->
+              <div class="tab-content">
+                <div class="tab-pane active" id="all">
+                <textarea readonly id="log-all"
+                                   cols="130"
+                                   rows="10"
+      
+                         ></textarea></div>
+                <div class="tab-pane" id="info">
+                <textarea readonly id="log-info"
+                                   cols="130"
+                                   rows="10"
+      
+                         ></textarea></div>
+                <div class="tab-pane" id="warning">
+                <textarea readonly id="log-warning"
+                                   cols="130"
+                                   rows="10"
+      
+                         ></textarea></div>
+                <div class="tab-pane" id="error">
+                <textarea readonly id="log-severe"
+                                   cols="130"
+                                   rows="10"
+      
+                         ></textarea></div>
+              </div>
+             </div>
             </div>
             <div class="row">
-            <div class="col-md-4">
-                 <div id="output">
-			         	<h2>Output</h2>
-			             <textarea id="output-code"
-			             		   cols="40"
-			                       rows="10"
-
-			             ></textarea>
-			        </div>
+              <div class="col-md-4">
+                   <div id="output">
+  			         	<h2>Output</h2>
+  			             <textarea id="output-code"
+  			             		   cols="40"
+  			                       rows="10"
+  
+  			             ></textarea>
+  			        </div>
+              </div>
             </div>
-        </div>
-    </div>
+  
 		
 	</body>
 	 <script type="text/javascript" src="../assets/javascripts/jquery.js"></script>
