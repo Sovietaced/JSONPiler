@@ -103,7 +103,7 @@ class Parser{
     String ID = token.value;
     
     // First make sure the left hand side is a valid reference to a symbol
-    checkCompilerSymbol(ID);
+    findCompilerSymbol(ID);
     
     // Equals assignment
     expect(TokenType.EQUALS);
@@ -192,9 +192,6 @@ class Parser{
       // Right hand side can be an int or symbol
       expectOneOf([TokenType.DIGIT, TokenType.ID]);
       Token rightHand = getToken();
-      
-      // Make sure both sides of the operand are of type int
-      checkTypes(leftHand, rightHand);
     }
   }
   
@@ -216,7 +213,7 @@ class Parser{
   void condition([ID = null]){
     // In case this condition is being assigned
     if(ID != null){
-      checkCompilerSymbolTypeAgainstTokenType(TokenType.BOOLEAN, ID);
+      findCompilerSymbol(ID);
     }
     
     // Handles conditionals within parenthesis
@@ -235,9 +232,6 @@ class Parser{
       Token rightHand = getToken();
       
       expect(TokenType.CLOSE_PAREN);
-      
-      // Check type of two tokens
-      checkTypes(leftHand, rightHand);
     }
     // Handles simple conditionals without parenthesis (true/false)
     else{
@@ -287,7 +281,7 @@ class Parser{
       ExceptionUtil.logAndThrow(new CompilerSyntaxError("Expected type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString()), log);
     }
     if(ID != null){
-      checkCompilerSymbolTypeAgainstToken(next, ID);
+      findCompilerSymbol(ID);
     }
   }
   
@@ -304,50 +298,6 @@ class Parser{
     ExceptionUtil.logAndThrow(new CompilerTypeError("Expected one of type " + types.toString() + ", found type " + next.type.value + " on line " + next.line.toString()), log);
   }
   
-  void checkCompilerSymbolTypeAgainstTokenType(TokenType type, String ID){
-    // Get the symbol
-    CompilerSymbol symbol = findCompilerSymbol(ID);
-    
-    if((symbol.type == "int" && type != TokenType.DIGIT) ||
-        (symbol.type == "string" && type != TokenType.CHAR && type != TokenType.QUOTE) ||
-        (symbol.type == "boolean" && type != TokenType.BOOLEAN)
-        ){
-      ExceptionUtil.logAndThrow(new CompilerTypeError("Attempted to assign value of type ${type.value} to symbol $ID of type ${symbol.type}"), log);
-    }
-  }
-  
-  // Does type checking
-  void checkCompilerSymbolTypeAgainstToken(Token token, String ID){
-    // Get the symbol
-    CompilerSymbol leftHand = findCompilerSymbol(ID);
-    
-    // For handling symbols
-    if(token.type == TokenType.ID){
-      CompilerSymbol rightHand = findCompilerSymbol(token.value);
-      if(rightHand != null){
-        if(rightHand.type != leftHand.type){
-          ExceptionUtil.logAndThrow(new CompilerTypeError("Attempted to assign value of type ${rightHand.type} to symbol $ID of type ${leftHand.type} on line ${rightHand.line.toString()}"), log);
-        }
-      }
-      else{
-        ExceptionUtil.logAndThrow(new CompilerSyntaxError("Undefined value " + token.value), log);
-      }
-    }
-    // For handling normal variables
-    else {
-      checkCompilerSymbolTypeAgainstTokenType(token.type, ID);
-    }
-  }
-  
-  void checkCompilerSymbol(String symbolID){
-    for(CompilerSymbol symbol in this.symbols){
-      if(symbol.id == symbolID){
-        return;
-      }
-    }
-    log.severe("Identifier " + symbolID + "not found.");
-  }
-  
   CompilerSymbol findCompilerSymbol(String symbolID){
     for(CompilerSymbol symbol in this.symbols){
       if(symbol.id == symbolID){
@@ -355,35 +305,6 @@ class Parser{
       }
     }
     ExceptionUtil.logAndThrow(new CompilerSyntaxError("Identifier " + symbolID + " undefined on ${getToken().line.toString()}"), log);
-  }
-  
-  void checkTypes(Token leftHand, Token rightHand){
-    if(leftHand.type == TokenType.ID){
-      CompilerSymbol left = findCompilerSymbol(leftHand.value);
-      
-      if(rightHand.type == TokenType.ID){
-        CompilerSymbol right = findCompilerSymbol(rightHand.value);
-        
-        if(left.type != right.type){
-          ExceptionUtil.logAndThrow(new CompilerTypeError("CompilerSymbol " + left.id + " of type " + left.type + " on line " + left.line.toString() + 
-              " differs from symbol " + right.id + " of type " + right.type + " on line " + right.line.toString()), log);
-        }
-      }
-      else{
-        checkCompilerSymbolTypeAgainstToken(rightHand, left.id);
-      }
-    }
-    else if(rightHand.type == TokenType.ID){
-      CompilerSymbol right = findCompilerSymbol(rightHand.value);
-        
-      checkCompilerSymbolTypeAgainstToken(leftHand, right.id);
-    }
-    else{
-      if(leftHand.type != rightHand.type){
-        ExceptionUtil.logAndThrow(new CompilerTypeError("Value \"" + leftHand.value + "\" of type " + leftHand.type.value + " on line " + leftHand.line.toString() + 
-            " differs from value \"" + rightHand.value + "\" of type " + rightHand.type.value + " on line " + rightHand.line.toString()),log);
-      }
-    }
   }
   
   /* Determines if the next token is the type of token
