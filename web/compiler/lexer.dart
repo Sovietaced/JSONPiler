@@ -115,7 +115,7 @@ class Lexer{
       log.warning("Code missing \$ symbol! Inserting for you.");
       tokens.add(new Token(TokenType.END, "\$", lines.length + 1));
     }
-    
+
     // DUMP
     for(Token t in tokens){
       log.info(t.toString());
