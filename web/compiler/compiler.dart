@@ -17,8 +17,12 @@ class Compiler{
   Compiler(this.source);
   
   run(){
-    this.tokens = Lexer.analyze(this.source);
-    this.parser = new Parser(this.tokens);
-    this.parser.analyse();
+    try{
+      this.tokens = Lexer.analyze(this.source);
+      this.parser = new Parser(this.tokens);
+      this.parser.analyse();
+    }catch(e){
+      // Let log and throw handle
+    }
   }
 }

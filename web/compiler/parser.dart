@@ -19,7 +19,7 @@ class Parser{
   List<Token> tokens;
   // Simple for now
   List<CompilerSymbol> symbols = new List<CompilerSymbol>();
-  num index = -1;
+  num index = 0;
   num scope = 0;
   
   Parser(this.tokens);
@@ -28,41 +28,34 @@ class Parser{
   analyse(){
     log.info("Parser starting analysis...");
     if(!tokens.isEmpty){
-       try{
-       startBlock();
-       }catch(e){
-         // Let logAndThrow handle
-       }
-       log.info("Parser finished analysis...");
+      
+      block();
+      
+      Token token = popNextToken();
+      
+      if(token.type != TokenType.END){
+        ExceptionUtil.logAndThrow(new CompilerSyntaxError("Expected END token, found type " + token.type.value + " on line " + token.line.toString()), log);
+      }
+      log.info("Parser finished analysis...");
     }
     else{
       log.warning("No tokens to parse, finished.");
     }
   }
-  
-  void startBlock(){
-    Token token = popNextToken();
-    
-    if(token.type == TokenType.OPEN_BRACE){
-        statementList();
-    }
-    else{
-      ExceptionUtil.logAndThrow(new CompilerSyntaxError("Program must begin with a block denoted by an Open Bracket symbol"), log);
-    }
-  }
-  
+
   void block(){
     // Entering a block denotes new scope
     scope++;
-    
-    Token token = popNextToken();
     
     statementList();
 
     // Exiting a block denotes new scope
     scope--;
+    
   }
+  
   void statementList(){
+    // seed
     Token token = popNextToken();
     
     while(token.type != TokenType.CLOSE_BRACE){
@@ -82,9 +75,10 @@ class Parser{
         printStatement();
       }
       else if(token.type == TokenType.OPEN_BRACE){
-        // We decriment index because normally we parse the block as part of another statement instead of an arbitrary block 
-        index--;
         block();
+      }
+      else{
+        ExceptionUtil.logAndThrow(new CompilerSyntaxError("Expected statement, found type " + token.type.value + " on line " + token.line.toString()), log);
       }
   
       // Change sentinel value
@@ -274,7 +268,7 @@ class Parser{
     Token next = popNextToken();  
     
     if(next.type != type){
-      ExceptionUtil.logAndThrow(new CompilerSyntaxError("Expected one of type type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString()), log);
+      ExceptionUtil.logAndThrow(new CompilerSyntaxError("Expected token of type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString()), log);
     }
   }
   
@@ -288,7 +282,7 @@ class Parser{
       }
     }
     // In case not found
-    ExceptionUtil.logAndThrow(new CompilerTypeError("Expected one of type " + types.toString() + ", found type " + next.type.value + " on line " + next.line.toString()), log);
+    ExceptionUtil.logAndThrow(new CompilerTypeError("Expected token of type " + types.toString() + ", found type " + next.type.value + " on line " + next.line.toString()), log);
   }
   
   /* Determines if the next token is the type of token

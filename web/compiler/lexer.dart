@@ -9,6 +9,8 @@ library Lexer;
 import '../util/logger_util.dart';
 import 'package:logging/logging.dart';
 import 'token.dart';
+import 'exceptions.dart';
+import '../util/exception_util.dart';
 
 
 class Lexer{
@@ -26,10 +28,10 @@ class Lexer{
     List<Token> tokens = new List<Token>();
     
     // Patterns
-    RegExp splitPattern = new RegExp(r'([a-z]+)|(\d+)|("[^"]*")|(!=)|(==)|(\S)');
-    RegExp numberPattern = new RegExp(r'\d+');
+    RegExp splitPattern = new RegExp(r'([a-z]+)|([0-9])|("[^"]*")|(!=)|(==)|(\S)');
+    RegExp numberPattern = new RegExp(r'[0-9]');
     RegExp charPattern = new RegExp(r'[a-z]');
-    RegExp stringPattern = new RegExp(r'[^"]*"');
+    RegExp stringPattern = new RegExp(r'"[^"]*"');
     RegExp idPattern = new RegExp(r'[a-z]+');
 
     
@@ -58,12 +60,15 @@ class Lexer{
         if( lexeme == '\$'){
             tokens.add(new Token(TokenType.END, "\$", numLine));
             terminated = true;
+           
+            if(l != lines.last || m.group(0) != matches.last.group(0)){
+              log.warning("Extra code after \$ found! Ignoring it for you.");
+            }
             break loop;
         }
         
         // STRINGS
         else if(stringPattern.hasMatch(lexeme)){
-          
           // Begin quote
           tokens.add(new Token(TokenType.QUOTE, "\"", numLine));
           
@@ -95,7 +100,12 @@ class Lexer{
             tokens.add(new Token(TokenType.RESERVED[lexeme], lexeme, numLine));
           }
           else {
-            tokens.add(new Token(TokenType.ID, lexeme, numLine));
+            if(lexeme.length == 1){
+              tokens.add(new Token(TokenType.ID, lexeme, numLine));
+            }
+            else{
+              ExceptionUtil.logAndThrow(new CompilerSyntaxError("Unexpected : $lexeme on line $numLine"), log);
+            }
           }
         } 
         
@@ -105,7 +115,7 @@ class Lexer{
             tokens.add(new Token(TokenType.SYMBOLS[lexeme], lexeme, numLine));
           }
           else{
-          log.warning("Count not identify : $lexeme on line $numLine");
+            ExceptionUtil.logAndThrow(new CompilerSyntaxError("Unexpected : $lexeme on line $numLine"), log);
           }
         }
       }
