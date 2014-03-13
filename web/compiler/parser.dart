@@ -104,27 +104,25 @@ class Parser{
   void assignmentStatement(Token token){
     log.info("Parsing assignment statement on line " + getLine());
     
-    String ID = token.value;
-    
     // Equals assignment
     expect(TokenType.EQUALS);
     
     if(isNextToken(TokenType.DIGIT)){
-      intExpression(ID);   
+      intExpression();   
     }
     // Assignment can be for boolval or boolean expression
     else if(isNextToken(TokenType.BOOLEAN)){
-      expect(TokenType.BOOLEAN, ID);
+      expect(TokenType.BOOLEAN);
     }
     else if(isNextToken(TokenType.OPEN_PAREN)){
-      condition(ID);
+      condition();
     }
     // Otherwise it must be a string
     else if(isNextToken(TokenType.QUOTE)){
-      stringExpression(ID);
+      stringExpression();
     }
     else if(isNextToken(TokenType.ID)){
-      expect(TokenType.ID, ID);
+      expect(TokenType.ID);
     }
   }
   
@@ -160,33 +158,33 @@ class Parser{
   
   /* TYPE EXPRESSIONS */
   
-  void expression([ID = null]){
+  void expression(){
     
     log.info("Parsing an expression on line " + getLine());
     if(isNextToken(TokenType.DIGIT)){
-      intExpression(ID);
+      intExpression();
     }
     else if(isNextToken(TokenType.BOOLEAN)){
-      expect(TokenType.BOOLEAN, ID);
+      expect(TokenType.BOOLEAN);
     }
     else if(isNextToken(TokenType.OPEN_PAREN)){
      condition();
     }
     // Otherwise it must be a string
     else if(isNextToken(TokenType.QUOTE)){
-      stringExpression(ID);
+      stringExpression();
     }
     else if(isNextToken(TokenType.ID)){
-      expect(TokenType.ID, ID);
+      expect(TokenType.ID);
     }
     else{
       print("idk");
     }
   }
   
-  void intExpression([ID = null]){
+  void intExpression(){
     // Check for type int
-    expect(TokenType.DIGIT, ID);
+    expect(TokenType.DIGIT);
     
     // Handle int operations aka +
     if(isNextToken(TokenType.INT_OP)){
@@ -195,10 +193,10 @@ class Parser{
     }
   }
   
-  void stringExpression([ID = null]){
+  void stringExpression(){
     
     // Opening Quote
-    expect(TokenType.QUOTE, ID);
+    expect(TokenType.QUOTE);
   
     // Iterate over the rest of the string
     while(peekNextToken() != null && (isNextToken(TokenType.CHAR) || isNextToken(TokenType.SPACE))){
@@ -206,15 +204,11 @@ class Parser{
     }
     
     // Closing Quote
-    expect(TokenType.QUOTE, ID);
+    expect(TokenType.QUOTE);
   }
   
   // Parses Conditionals and does type checking
-  void condition([ID = null]){
-    // In case this condition is being assigned
-    if(ID != null){
-      findCompilerSymbol(ID);
-    }
+  void condition(){
     
     // Handles conditionals within parenthesis
     if(peekNextToken().type == TokenType.OPEN_PAREN){
@@ -276,7 +270,7 @@ class Parser{
   }
   
   // Checks to see if the next token is what it should be
-  void expect(TokenType type, [ID = null]){
+  void expect(TokenType type){
     Token next = popNextToken();  
     
     if(next.type != type){
@@ -295,15 +289,6 @@ class Parser{
     }
     // In case not found
     ExceptionUtil.logAndThrow(new CompilerTypeError("Expected one of type " + types.toString() + ", found type " + next.type.value + " on line " + next.line.toString()), log);
-  }
-  
-  CompilerSymbol findCompilerSymbol(String symbolID){
-    for(CompilerSymbol symbol in this.symbols){
-      if(symbol.id == symbolID){
-        return symbol;
-      }
-    }
-    ExceptionUtil.logAndThrow(new CompilerSyntaxError("Identifier " + symbolID + " undefined on ${getLine()}"), log);
   }
   
   /* Determines if the next token is the type of token
