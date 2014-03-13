@@ -7,3 +7,4 @@
 *.js.deps
 *.js.map
 .buildlog
+packages/
