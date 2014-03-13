@@ -161,6 +161,8 @@ class Parser{
   /* TYPE EXPRESSIONS */
   
   void expression([ID = null]){
+    
+    log.info("Parsing an expression on line " + getLine());
     if(isNextToken(TokenType.DIGIT)){
       intExpression(ID);
     }
@@ -188,11 +190,8 @@ class Parser{
     
     // Handle int operations aka +
     if(isNextToken(TokenType.INT_OP)){
-      Token leftHand = getToken();
       expect(TokenType.INT_OP);
-      // Right hand side can be an int or symbol
-      expectOneOf([TokenType.DIGIT, TokenType.ID]);
-      Token rightHand = getToken();
+      expression();
     }
   }
   
