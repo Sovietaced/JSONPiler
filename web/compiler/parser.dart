@@ -106,9 +106,6 @@ class Parser{
     
     String ID = token.value;
     
-    // First make sure the left hand side is a valid reference to a symbol
-    findCompilerSymbol(ID);
-    
     // Equals assignment
     expect(TokenType.EQUALS);
     
@@ -226,15 +223,12 @@ class Parser{
       
       // Left Hand
       expression();
-      Token leftHand = getToken();
   
       // Boolean expression
       expect(TokenType.BOOL_OP);
       
       // Right Hand
       expression();
-      Token rightHand = getToken();
-      
       expect(TokenType.CLOSE_PAREN);
     }
     // Handles simple conditionals without parenthesis (true/false)
@@ -288,9 +282,6 @@ class Parser{
     
     if(next.type != type){
       ExceptionUtil.logAndThrow(new CompilerSyntaxError("Expected one of type type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString()), log);
-    }
-    if(ID != null){
-      findCompilerSymbol(ID);
     }
   }
   
