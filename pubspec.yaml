@@ -1,7 +1,6 @@
-name:  JSONPiler
-description:  A compiler written in Dart
-
+name: JSONPiler
+description: A compiler written in Dart
 dependencies:
+  logging: 0.9.1+1
   polymer: any
   poppy: any
-  logging: 0.9.1+1
