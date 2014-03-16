@@ -77,11 +77,15 @@ class Lexer{
           // String characters
           for(var code in str_lexeme.codeUnits){
             String char = new String.fromCharCode(code);
+
             if(char == ' '){
               tokens.add(new Token(TokenType.SPACE, char, numLine));
             }
-            else{
+            else if (charPattern.matchAsPrefix(char) != null){
               tokens.add(new Token(TokenType.CHAR, char, numLine));
+            }
+            else{
+              ExceptionUtil.logAndThrow(new CompilerSyntaxError("String $lexeme on line $numLine is not a char-list"), log);
             }
           }
           
