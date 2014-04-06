@@ -52,9 +52,9 @@ class Parser {
 
 
   Tree<dynamic> addChild(dynamic data, Tree<dynamic> root) {
-      Tree<dynamic> child = new Tree<dynamic>(data, root);
-      root.addChild(child);
-      return child;
+    Tree<dynamic> child = new Tree<dynamic>(data, root);
+    root.addChild(child);
+    return child;
   }
 
   void block(Tree<dynamic> currNode) {
@@ -76,13 +76,12 @@ class Parser {
 
   void statementList(Tree<dynamic> currNode) {
 
-    // Entering a statement list denotes a new sub tree
-    currNode = addChild("Statement List", currNode);
-
-    // seed
     Token token = popNextToken();
 
     while (token.type != TokenType.CLOSE_BRACE) {
+      // Entering a statement list denotes a new sub tree
+      currNode = addChild("Statement List", currNode);
+
       if (token.type == TokenType.TYPE) {
         variableDeclaration(currNode);
       } else if (token.type == TokenType.ID) {
@@ -108,47 +107,50 @@ class Parser {
 
   /* STATEMENTS */
   void printStatement(Tree<dynamic> currNode) {
+    log.info("Parsing print statement on line " + getLine());
     
     currNode = addChild("Print Statement", currNode);
-    
-    log.info("Parsing print statement on line " + getLine());
+    addChild("Print", currNode);
+
     expect(TokenType.OPEN_PAREN);
+    addChild(TokenType.OPEN_PAREN, currNode);
+    
     expression(currNode);
     expect(TokenType.CLOSE_PAREN);
+    addChild(TokenType.CLOSE_PAREN, currNode);
   }
 
   /* ASSIGNMENT STATEMENTS */
   void assignmentStatement(Tree<dynamic> currNode) {
     log.info("Parsing assignment statement on line " + getLine());
-    Token token = getToken(); 
-    
-    currNode = addChild("Assignment Statement", currNode);
-    Tree<dynamic> temp = addChild("ID", currNode);
-    temp = addChild("char", temp);
-    addChild(token.value, temp);
 
-    expect(TokenType.EQUALS);  
+    currNode = addChild("Assignment Statement", currNode);
+    // Backtrack to parse id
+    index--;
+    idExpression(currNode);
+
+    expect(TokenType.EQUALS);
     addChild(TokenType.EQUALS, currNode);
-    
+
     expression(currNode);
   }
 
   /* IF STATEMENT */
   void ifStatement(Tree<dynamic> currNode) {
+    log.info("Parsing if statement on line " + getLine());
     
     currNode = addChild("If Statement", currNode);
-    
-    log.info("Parsing if statement on line " + getLine());
+
     condition(currNode);
     block(currNode);
   }
 
   /* WHILE STATEMENT */
   void whileStatement(Tree<dynamic> currNode) {
+    log.info("Parsing while statement on line " + getLine());
     
     currNode = addChild("While Statement", currNode);
-    
-    log.info("Parsing while statement on line " + getLine());
+
     condition(currNode);
     block(currNode);
   }
@@ -159,19 +161,15 @@ class Parser {
   void variableDeclaration(Tree<dynamic> currNode) {
     log.info("Parsing variable declaration on line " + getLine());
     Token typeToken = getToken();
-    
-    Tree<dynamic> varDecl = addChild("Variable Declaration", currNode);
-    Tree<dynamic> temp = addChild("Type", varDecl);
+
+    currNode = addChild("Variable Declaration", currNode);
+    Tree<dynamic> temp = addChild(typeToken.type, currNode);
     addChild(typeToken.value, temp);
     
-    expect(TokenType.ID);
-
+    idExpression(currNode);
+    
     // Get the ID token
     Token token = getToken();
-    
-    temp = addChild("ID", varDecl);
-    temp = addChild("char", temp);
-    addChild(token.value, temp);
 
     // Generate the symbol with both the ID and type from both tokens
     CompilerSymbol symbol = new CompilerSymbol(token.value, this.scope,
@@ -184,29 +182,29 @@ class Parser {
 
   void expression(Tree<dynamic> currNode) {
     log.info("Parsing an expression on line " + getLine());
-    
+
     currNode = addChild("Expression", currNode);
-    
+
     if (isNextToken(TokenType.DIGIT)) {
       intExpression(currNode);
     } else if (isNextToken(TokenType.BOOLEAN)) {
-      expect(TokenType.BOOLEAN);
+      booleanExpression(currNode);
     } else if (isNextToken(TokenType.OPEN_PAREN)) {
       condition(currNode);
     } // Otherwise it must be a string
     else if (isNextToken(TokenType.QUOTE)) {
       stringExpression(currNode);
     } else if (isNextToken(TokenType.ID)) {
-      expect(TokenType.ID);
+      idExpression(currNode);
     } else {
       print("idk");
     }
   }
 
   void intExpression(Tree<dynamic> currNode) {
-    
+
     currNode = addChild("Int Expression", currNode);
-    
+
     // Check for type int
     expect(TokenType.DIGIT);
     Tree<dynamic> temp = addChild(TokenType.DIGIT, currNode);
@@ -219,40 +217,75 @@ class Parser {
     }
   }
 
+  void booleanExpression(Tree<dynamic> currNode) {
+    currNode = addChild("Boolean Expression", currNode);
+    expect(TokenType.BOOLEAN); 
+    
+    Token token = getToken();
+    addChild(token.value, currNode);
+  }
+  
   void stringExpression(Tree<dynamic> currNode) {
-
+    
+    Tree<dynamic> stringExpr = addChild("String Expression", currNode);
+    
     // Opening Quote
     expect(TokenType.QUOTE);
-
+    addChild(TokenType.QUOTE, stringExpr);
+    
+    Tree<dynamic> charList = addChild("CharList", stringExpr);
     // Iterate over the rest of the string
     while (peekNextToken() != null && (isNextToken(TokenType.CHAR) ||
         isNextToken(TokenType.SPACE))) {
       expectOneOf([TokenType.CHAR, TokenType.SPACE]);
+      
+      Token token = getToken();
+      currNode = addChild(token.type, charList);
+      addChild(token.value, currNode);
     }
 
     // Closing Quote
     expect(TokenType.QUOTE);
+    addChild(TokenType.QUOTE, stringExpr);
+  }
+  
+  void idExpression(Tree<dynamic> currNode) {
+    
+    currNode = addChild("ID Expression", currNode);
+    expect(TokenType.ID);
+    
+    Token token = getToken();
+    currNode = addChild("Char", currNode);
+    addChild(token.value, currNode);
   }
 
-  // Parses Conditionals and does type checking
+  // Parses Conditionals (which are boolean expressions)
   void condition(Tree<dynamic> currNode) {
-
+    
+    Tree<dynamic> booleanExpr = addChild("Boolean Expression", currNode);
+    
     // Handles conditionals within parenthesis
     if (peekNextToken().type == TokenType.OPEN_PAREN) {
       expect(TokenType.OPEN_PAREN);
-
+      addChild(TokenType.OPEN_PAREN, booleanExpr);
+      
       // Left Hand
-      expression(currNode);
+      expression(booleanExpr);
 
       // Boolean expression
       expect(TokenType.BOOL_OP);
+      Token token = getToken();
+      Tree<dynamic> op = addChild(token.type, booleanExpr);
+      addChild(token.value, op);
 
       // Right Hand
-      expression(currNode);
+      expression(booleanExpr);
+      
       expect(TokenType.CLOSE_PAREN);
+      addChild(TokenType.CLOSE_PAREN, booleanExpr);
     } // Handles simple conditionals without parenthesis (true/false)
     else {
-      expect(TokenType.BOOLEAN);
+      booleanExpression(currNode);
     }
   }
 
