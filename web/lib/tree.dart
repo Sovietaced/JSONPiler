@@ -13,4 +13,17 @@ class Tree<T> {
   void addChild(Tree<dynamic> child) {
     this.children.add(child);
   }
+  
+  String toString() {
+    return this.data.toString();
+  }
+  /**
+   * Recursive data dump for debugging
+   */
+  void dump() {
+    print("Dumping tree ${this} with parent ${this.parent}");
+    for(Tree<dynamic> child in this.children){
+      child.dump();
+    }
+  }
 }

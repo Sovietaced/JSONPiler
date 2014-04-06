@@ -69,4 +69,8 @@ class TokenType extends Enum<String> {
   
   static const EPSILON = const TokenType("EPSILON"); // User cannot enter this, the parser does it.
   
+  String toString(){
+      return "Token type=${this.value}";
+    }
+  
 }
