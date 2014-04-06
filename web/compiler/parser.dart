@@ -61,14 +61,14 @@ class Parser {
 
     // Entering a block denotes a new sub tree
     currNode = addChild("Block", currNode);
-    addChild(TokenType.OPEN_PAREN, currNode);
+    addChild(TokenType.OPEN_BRACE, currNode);
 
     // Entering a block denotes new scope
     scope++;
 
     statementList(currNode);
 
-    addChild(TokenType.CLOSE_PAREN, currNode);
+    addChild(TokenType.CLOSE_BRACE, currNode);
 
     // Exiting a block denotes new scope
     scope--;
