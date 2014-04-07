@@ -2,6 +2,7 @@
 import 'lexer.dart';
 import 'parser.dart';
 import 'token.dart';
+import '../lib/tree.dart';
 import 'package:logging/logging.dart';
 import '../util/logger_util.dart';
 
@@ -12,6 +13,7 @@ class Compiler{
   
   String source;
   List<Token> tokens = new List<Token>();
+  Tree<dynamic> cst;
   Parser parser;
   
   Compiler(this.source);
@@ -20,7 +22,7 @@ class Compiler{
     try{
       this.tokens = Lexer.analyze(this.source);
       this.parser = new Parser(this.tokens);
-      this.parser.analyse();
+      this.cst = this.parser.analyse();
     }catch(e){
       // Let log and throw handle
     }

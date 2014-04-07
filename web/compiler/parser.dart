@@ -8,7 +8,7 @@ import 'token.dart';
 import 'symbol.dart';
 import 'exceptions.dart';
 import 'package:logging/logging.dart';
-import '../lib/tree.dart'; // Enum lib
+import '../lib/tree.dart'; 
 import '../util/logger_util.dart';
 import '../util/exception_util.dart';
 
@@ -19,14 +19,15 @@ class Parser {
 
   List<Token> tokens;
   Tree<dynamic> cst;
-  // Simple for now
   List<CompilerSymbol> symbols = new List<CompilerSymbol>();
   num index = 0;
   num scope = 0;
 
   Parser(this.tokens);
 
-  /* This is the main method for the Parser where all the magic happens */
+  /**
+   *  This is the main method for the Parser where all the magic happens 
+   */
   analyse() {
     log.info("Parser starting analysis...");
     if (!tokens.isEmpty) {
@@ -34,6 +35,7 @@ class Parser {
       // Instantiate CST
       cst = new Tree<dynamic>("Program", null);
 
+      // Load block with root
       block(cst);
 
       Token token = popNextToken();
@@ -45,18 +47,24 @@ class Parser {
       }
       cst.dump();
       log.info("Parser finished analysis...");
+      return cst;
     } else {
       log.warning("No tokens to parse, finished.");
     }
   }
 
-
+  /**
+   * Helper to add a new child tree to the specified root tree
+   */
   Tree<dynamic> addChild(dynamic data, Tree<dynamic> root) {
     Tree<dynamic> child = new Tree<dynamic>(data, root);
     root.addChild(child);
     return child;
   }
 
+  /**
+   * Parses a block 
+   */
   void block(Tree<dynamic> currNode) {
 
     // Entering a block denotes a new sub tree
@@ -74,6 +82,9 @@ class Parser {
     scope--;
   }
 
+  /**
+   * Parses a statement list
+   */
   void statementList(Tree<dynamic> currNode) {
 
     Token token = popNextToken();
@@ -105,22 +116,26 @@ class Parser {
     }
   }
 
-  /* STATEMENTS */
+  /**
+   * Parses a print statement
+   */
   void printStatement(Tree<dynamic> currNode) {
     log.info("Parsing print statement on line " + getLine());
-    
+
     currNode = addChild("Print Statement", currNode);
     addChild("Print", currNode);
 
     expect(TokenType.OPEN_PAREN);
     addChild(TokenType.OPEN_PAREN, currNode);
-    
+
     expression(currNode);
     expect(TokenType.CLOSE_PAREN);
     addChild(TokenType.CLOSE_PAREN, currNode);
   }
 
-  /* ASSIGNMENT STATEMENTS */
+  /**
+   * Parses an assignment statement
+   */
   void assignmentStatement(Tree<dynamic> currNode) {
     log.info("Parsing assignment statement on line " + getLine());
 
@@ -135,39 +150,43 @@ class Parser {
     expression(currNode);
   }
 
-  /* IF STATEMENT */
+  /**
+   * Parses an if statement
+   */
   void ifStatement(Tree<dynamic> currNode) {
     log.info("Parsing if statement on line " + getLine());
-    
+
     currNode = addChild("If Statement", currNode);
 
-    condition(currNode);
+    booleanExpression(currNode);
     block(currNode);
   }
 
-  /* WHILE STATEMENT */
+  /**
+   * Parses a while statement
+   */
   void whileStatement(Tree<dynamic> currNode) {
     log.info("Parsing while statement on line " + getLine());
-    
+
     currNode = addChild("While Statement", currNode);
 
-    condition(currNode);
+    booleanExpression(currNode);
     block(currNode);
   }
 
-  /* VARIABLE DECLARATIONS */
-
-  // Checks for an ID type token, creates the symbol, and adds it to the symbol table
+  /**
+   * Parses a variable declaration
+   */
   void variableDeclaration(Tree<dynamic> currNode) {
-    log.info("Parsing variable declaration on line " + getLine());
+    log.info("Parsing a variable declaration on line " + getLine());
     Token typeToken = getToken();
 
     currNode = addChild("Variable Declaration", currNode);
     Tree<dynamic> temp = addChild(typeToken.type, currNode);
     addChild(typeToken.value, temp);
-    
+
     idExpression(currNode);
-    
+
     // Get the ID token
     Token token = getToken();
 
@@ -178,8 +197,9 @@ class Parser {
     this.symbols.add(symbol);
   }
 
-  /* TYPE EXPRESSIONS */
-
+  /**
+   * Parses type expressions
+   */
   void expression(Tree<dynamic> currNode) {
     log.info("Parsing an expression on line " + getLine());
 
@@ -187,10 +207,9 @@ class Parser {
 
     if (isNextToken(TokenType.DIGIT)) {
       intExpression(currNode);
-    } else if (isNextToken(TokenType.BOOLEAN)) {
+    } else if (isNextToken(TokenType.BOOLEAN) || isNextToken(
+        TokenType.OPEN_PAREN)) {
       booleanExpression(currNode);
-    } else if (isNextToken(TokenType.OPEN_PAREN)) {
-      condition(currNode);
     } // Otherwise it must be a string
     else if (isNextToken(TokenType.QUOTE)) {
       stringExpression(currNode);
@@ -201,7 +220,11 @@ class Parser {
     }
   }
 
+  /**
+   * Parses an int expression
+   */
   void intExpression(Tree<dynamic> currNode) {
+    log.info("Parsing an int expression on line " + getLine());
 
     currNode = addChild("Int Expression", currNode);
 
@@ -217,58 +240,19 @@ class Parser {
     }
   }
 
+  /**
+   * Parses a boolean expression
+   */
   void booleanExpression(Tree<dynamic> currNode) {
-    currNode = addChild("Boolean Expression", currNode);
-    expect(TokenType.BOOLEAN); 
-    
-    Token token = getToken();
-    addChild(token.value, currNode);
-  }
-  
-  void stringExpression(Tree<dynamic> currNode) {
-    
-    Tree<dynamic> stringExpr = addChild("String Expression", currNode);
-    
-    // Opening Quote
-    expect(TokenType.QUOTE);
-    addChild(TokenType.QUOTE, stringExpr);
-    
-    Tree<dynamic> charList = addChild("CharList", stringExpr);
-    // Iterate over the rest of the string
-    while (peekNextToken() != null && (isNextToken(TokenType.CHAR) ||
-        isNextToken(TokenType.SPACE))) {
-      expectOneOf([TokenType.CHAR, TokenType.SPACE]);
-      
-      Token token = getToken();
-      currNode = addChild(token.type, charList);
-      addChild(token.value, currNode);
-    }
+    log.info("Parsing a boolean expression on line " + getLine());
 
-    // Closing Quote
-    expect(TokenType.QUOTE);
-    addChild(TokenType.QUOTE, stringExpr);
-  }
-  
-  void idExpression(Tree<dynamic> currNode) {
-    
-    currNode = addChild("ID Expression", currNode);
-    expect(TokenType.ID);
-    
-    Token token = getToken();
-    currNode = addChild("Char", currNode);
-    addChild(token.value, currNode);
-  }
-
-  // Parses Conditionals (which are boolean expressions)
-  void condition(Tree<dynamic> currNode) {
-    
     Tree<dynamic> booleanExpr = addChild("Boolean Expression", currNode);
-    
+
     // Handles conditionals within parenthesis
     if (peekNextToken().type == TokenType.OPEN_PAREN) {
       expect(TokenType.OPEN_PAREN);
       addChild(TokenType.OPEN_PAREN, booleanExpr);
-      
+
       // Left Hand
       expression(booleanExpr);
 
@@ -280,18 +264,61 @@ class Parser {
 
       // Right Hand
       expression(booleanExpr);
-      
+
       expect(TokenType.CLOSE_PAREN);
       addChild(TokenType.CLOSE_PAREN, booleanExpr);
     } // Handles simple conditionals without parenthesis (true/false)
     else {
-      booleanExpression(currNode);
+      expect(TokenType.BOOLEAN); 
+      Token token = getToken();
+      addChild(token.value, booleanExpr);
     }
   }
 
-  /* TOKEN HELPERS */
+  /**
+   * Parses a string expression
+   */
+  void stringExpression(Tree<dynamic> currNode) {
+    log.info("Parsing a string expression on line " + getLine());
 
-  /* This gets the next token and increments the index.
+    Tree<dynamic> stringExpr = addChild("String Expression", currNode);
+
+    // Opening Quote
+    expect(TokenType.QUOTE);
+    addChild(TokenType.QUOTE, stringExpr);
+
+    // Iterate over the rest of the string
+    Tree<dynamic> charList = addChild("CharList", stringExpr);
+    while (peekNextToken() != null && (isNextToken(TokenType.CHAR) ||
+        isNextToken(TokenType.SPACE))) {
+      expectOneOf([TokenType.CHAR, TokenType.SPACE]);
+
+      Token token = getToken();
+      currNode = addChild(token.type, charList);
+      addChild(token.value, currNode);
+    }
+
+    // Closing Quote
+    expect(TokenType.QUOTE);
+    addChild(TokenType.QUOTE, stringExpr);
+  }
+
+  /**
+   * Parses an identifier expression
+   */
+  void idExpression(Tree<dynamic> currNode) {
+    log.info("Parsing an id expression on line " + getLine());
+    
+    currNode = addChild("ID Expression", currNode);
+    expect(TokenType.ID);
+
+    Token token = getToken();
+    currNode = addChild("Char", currNode);
+    addChild(token.value, currNode);
+  }
+
+  /** 
+   * This gets the next token and increments the index.
    * Named pop to imply mutating behavior.
    */
   Token popNextToken() {
@@ -302,7 +329,9 @@ class Parser {
     }
   }
 
-  // Looks at the next token without incrementing the current token pointer
+  /**
+   *  Looks at the next token without incrementing the current token pointer
+   */
   Token peekNextToken() {
     if (index < this.tokens.length - 1) {
       return this.tokens[index + 1];
@@ -311,7 +340,9 @@ class Parser {
     }
   }
 
-  // Gets the current token
+  /**
+   *  Gets the current token
+   */
   Token getToken() {
     if (index < this.tokens.length) {
       return this.tokens[index];
@@ -320,12 +351,16 @@ class Parser {
     }
   }
 
-  // Gets the current token line
+  /**
+   *  Gets the current token line
+   */
   String getLine() {
     return getToken().line.toString();
   }
 
-  // Checks to see if the next token is what it should be
+  /**
+   *  Checks to see if the next token is what it should be
+   */
   void expect(TokenType type) {
     Token next = popNextToken();
 
@@ -336,7 +371,9 @@ class Parser {
     }
   }
 
-  // Checks to see if the next token is what it should be
+  /**
+   *  Checks to see if the next token is what it should be
+   */
   void expectOneOf(List<TokenType> types) {
     Token next = popNextToken();
 
@@ -351,7 +388,8 @@ class Parser {
         next.line.toString()), log);
   }
 
-  /* Determines if the next token is the type of token
+  /**
+   * Determines if the next token is the type of token
    * that we're looking for. Used for determing the next statement. 
    */
   bool isNextToken(TokenType type) {
