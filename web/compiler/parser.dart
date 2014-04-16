@@ -33,7 +33,7 @@ class Parser {
     if (!tokens.isEmpty) {
 
       // Instantiate CST
-      cst = new Tree<dynamic>("Program", null);
+      cst = new Tree<dynamic>(NonTerminal.PROGRAM, null);
 
       // Load block with root
       block(cst);
@@ -68,7 +68,7 @@ class Parser {
   void block(Tree<dynamic> currNode) {
 
     // Entering a block denotes a new sub tree
-    currNode = addChild("Block", currNode);
+    currNode = addChild(NonTerminal.BLOCK, currNode);
     addChild(TokenType.OPEN_BRACE, currNode);
 
     // Entering a block denotes new scope
@@ -91,8 +91,8 @@ class Parser {
 
     while (token.type != TokenType.CLOSE_BRACE) {
       // Entering a statement list denotes a new sub tree
-      currNode = addChild("Statement List", currNode);
-
+      currNode = addChild(NonTerminal.STATEMENT_LIST, currNode);
+      
       if (token.type == TokenType.TYPE) {
         variableDeclaration(currNode);
       } else if (token.type == TokenType.ID) {
@@ -121,8 +121,9 @@ class Parser {
    */
   void printStatement(Tree<dynamic> currNode) {
     log.info("Parsing print statement on line " + getLine());
-
-    currNode = addChild("Print Statement", currNode);
+    
+    currNode = addChild(NonTerminal.STATEMENT, currNode);
+    currNode = addChild(NonTerminal.PRINT_STATEMENT, currNode);
     addChild("Print", currNode);
 
     expect(TokenType.OPEN_PAREN);
@@ -138,8 +139,9 @@ class Parser {
    */
   void assignmentStatement(Tree<dynamic> currNode) {
     log.info("Parsing assignment statement on line " + getLine());
-
-    currNode = addChild("Assignment Statement", currNode);
+    
+    currNode = addChild(NonTerminal.STATEMENT, currNode);
+    currNode = addChild(NonTerminal.ASSIGNMENT_STATEMENT, currNode);
     // Backtrack to parse id
     index--;
     idExpression(currNode);
@@ -155,8 +157,9 @@ class Parser {
    */
   void ifStatement(Tree<dynamic> currNode) {
     log.info("Parsing if statement on line " + getLine());
-
-    currNode = addChild("If Statement", currNode);
+    
+    currNode = addChild(NonTerminal.STATEMENT, currNode);
+    currNode = addChild(NonTerminal.IF_STATEMENT, currNode);
 
     booleanExpression(currNode);
     block(currNode);
@@ -167,8 +170,9 @@ class Parser {
    */
   void whileStatement(Tree<dynamic> currNode) {
     log.info("Parsing while statement on line " + getLine());
-
-    currNode = addChild("While Statement", currNode);
+    
+    currNode = addChild(NonTerminal.STATEMENT, currNode);
+    currNode = addChild(NonTerminal.WHILE_STATEMENT, currNode);
 
     booleanExpression(currNode);
     block(currNode);
@@ -180,8 +184,9 @@ class Parser {
   void variableDeclaration(Tree<dynamic> currNode) {
     log.info("Parsing a variable declaration on line " + getLine());
     Token typeToken = getToken();
-
-    currNode = addChild("Variable Declaration", currNode);
+    
+    currNode = addChild(NonTerminal.STATEMENT, currNode);
+    currNode = addChild(NonTerminal.VARIABLE_DECLARATION, currNode);
     Tree<dynamic> temp = addChild(typeToken.type, currNode);
     addChild(typeToken.value, temp);
 
@@ -203,7 +208,7 @@ class Parser {
   void expression(Tree<dynamic> currNode) {
     log.info("Parsing an expression on line " + getLine());
 
-    currNode = addChild("Expression", currNode);
+    currNode = addChild(NonTerminal.EXPRESSION, currNode);
 
     if (isNextToken(TokenType.DIGIT)) {
       intExpression(currNode);
@@ -226,7 +231,7 @@ class Parser {
   void intExpression(Tree<dynamic> currNode) {
     log.info("Parsing an int expression on line " + getLine());
 
-    currNode = addChild("Int Expression", currNode);
+    currNode = addChild(NonTerminal.INT_EXPRESSION, currNode);
 
     // Check for type int
     expect(TokenType.DIGIT);
@@ -246,7 +251,7 @@ class Parser {
   void booleanExpression(Tree<dynamic> currNode) {
     log.info("Parsing a boolean expression on line " + getLine());
 
-    Tree<dynamic> booleanExpr = addChild("Boolean Expression", currNode);
+    Tree<dynamic> booleanExpr = addChild(NonTerminal.BOOLEAN_EXPRESSION, currNode);
 
     // Handles conditionals within parenthesis
     if (peekNextToken().type == TokenType.OPEN_PAREN) {
@@ -281,14 +286,14 @@ class Parser {
   void stringExpression(Tree<dynamic> currNode) {
     log.info("Parsing a string expression on line " + getLine());
 
-    Tree<dynamic> stringExpr = addChild("String Expression", currNode);
+    Tree<dynamic> stringExpr = addChild(NonTerminal.STRING_EXPRESSION, currNode);
 
     // Opening Quote
     expect(TokenType.QUOTE);
     addChild(TokenType.QUOTE, stringExpr);
 
     // Iterate over the rest of the string
-    Tree<dynamic> charList = addChild("CharList", stringExpr);
+    Tree<dynamic> charList = addChild(NonTerminal.CHAR_LIST, stringExpr);
     while (peekNextToken() != null && (isNextToken(TokenType.CHAR) ||
         isNextToken(TokenType.SPACE))) {
       expectOneOf([TokenType.CHAR, TokenType.SPACE]);
@@ -309,11 +314,11 @@ class Parser {
   void idExpression(Tree<dynamic> currNode) {
     log.info("Parsing an id expression on line " + getLine());
     
-    currNode = addChild("ID Expression", currNode);
+    currNode = addChild(NonTerminal.ID_EXPRESSION, currNode);
     expect(TokenType.ID);
 
     Token token = getToken();
-    currNode = addChild("Char", currNode);
+    currNode = addChild(TokenType.CHAR, currNode);
     addChild(token.value, currNode);
   }
 
