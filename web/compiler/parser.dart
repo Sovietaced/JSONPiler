@@ -66,7 +66,6 @@ class Parser {
    * Parses a block 
    */
   void block(Tree<dynamic> currNode) {
-
     // Entering a block denotes a new sub tree
     currNode = addChild(NonTerminal.BLOCK, currNode);
     addChild(TokenType.OPEN_BRACE, currNode);
@@ -81,6 +80,11 @@ class Parser {
     // Exiting a block denotes new scope
     scope--;
   }
+  
+  void expectBlock(Tree<dynamic> currNode) {
+    index++;
+    block(currNode);
+  }
 
   /**
    * Parses a statement list
@@ -92,7 +96,6 @@ class Parser {
     while (token.type != TokenType.CLOSE_BRACE) {
       // Entering a statement list denotes a new sub tree
       currNode = addChild(NonTerminal.STATEMENT_LIST, currNode);
-      
       if (token.type == TokenType.TYPE) {
         variableDeclaration(currNode);
       } else if (token.type == TokenType.ID) {
@@ -162,7 +165,8 @@ class Parser {
     currNode = addChild(NonTerminal.IF_STATEMENT, currNode);
 
     booleanExpression(currNode);
-    block(currNode);
+    
+    expectBlock(currNode);
   }
 
   /**
@@ -175,7 +179,8 @@ class Parser {
     currNode = addChild(NonTerminal.WHILE_STATEMENT, currNode);
 
     booleanExpression(currNode);
-    block(currNode);
+    
+    expectBlock(currNode);
   }
 
   /**
