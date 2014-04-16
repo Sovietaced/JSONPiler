@@ -1,6 +1,7 @@
 /* compiler.dart  */
 import 'lexer.dart';
 import 'parser.dart';
+import 'semanticAnalyzer.dart';
 import 'token.dart';
 import '../lib/tree.dart';
 import 'package:logging/logging.dart';
@@ -14,6 +15,7 @@ class Compiler{
   String source;
   List<Token> tokens = new List<Token>();
   Tree<dynamic> cst;
+  Tree<dynamic> ast;
   Parser parser;
   
   Compiler(this.source);
@@ -23,6 +25,7 @@ class Compiler{
       this.tokens = Lexer.analyze(this.source);
       this.parser = new Parser(this.tokens);
       this.cst = this.parser.analyse();
+      this.ast = SemanticAnalyzer.analyze(this.cst);
     }catch(e){
       // Let log and throw handle
     }

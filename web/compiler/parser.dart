@@ -399,6 +399,4 @@ class Parser {
     }
     return true;
   }
-
-
 }
