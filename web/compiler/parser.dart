@@ -97,16 +97,22 @@ class Parser {
       // Entering a statement list denotes a new sub tree
       currNode = addChild(NonTerminal.STATEMENT_LIST, currNode);
       if (token.type == TokenType.TYPE) {
+        currNode = addChild(NonTerminal.STATEMENT, currNode);
         variableDeclaration(currNode);
       } else if (token.type == TokenType.ID) {
+        currNode = addChild(NonTerminal.STATEMENT, currNode);
         assignmentStatement(currNode);
       } else if (token.type == TokenType.IF) {
+        currNode = addChild(NonTerminal.STATEMENT, currNode);
         ifStatement(currNode);
       } else if (token.type == TokenType.WHILE) {
+        currNode = addChild(NonTerminal.STATEMENT, currNode);
         whileStatement(currNode);
       } else if (token.type == TokenType.PRINT) {
+        currNode = addChild(NonTerminal.STATEMENT, currNode);
         printStatement(currNode);
       } else if (token.type == TokenType.OPEN_BRACE) {
+        currNode = addChild(NonTerminal.STATEMENT, currNode);
         block(currNode);
       } else {
         ExceptionUtil.logAndThrow(new CompilerSyntaxError(
@@ -125,7 +131,6 @@ class Parser {
   void printStatement(Tree<dynamic> currNode) {
     log.info("Parsing print statement on line " + getLine());
     
-    currNode = addChild(NonTerminal.STATEMENT, currNode);
     currNode = addChild(NonTerminal.PRINT_STATEMENT, currNode);
     addChild("Print", currNode);
 
@@ -143,7 +148,6 @@ class Parser {
   void assignmentStatement(Tree<dynamic> currNode) {
     log.info("Parsing assignment statement on line " + getLine());
     
-    currNode = addChild(NonTerminal.STATEMENT, currNode);
     currNode = addChild(NonTerminal.ASSIGNMENT_STATEMENT, currNode);
     // Backtrack to parse id
     index--;
@@ -161,7 +165,6 @@ class Parser {
   void ifStatement(Tree<dynamic> currNode) {
     log.info("Parsing if statement on line " + getLine());
     
-    currNode = addChild(NonTerminal.STATEMENT, currNode);
     currNode = addChild(NonTerminal.IF_STATEMENT, currNode);
 
     booleanExpression(currNode);
@@ -175,7 +178,6 @@ class Parser {
   void whileStatement(Tree<dynamic> currNode) {
     log.info("Parsing while statement on line " + getLine());
     
-    currNode = addChild(NonTerminal.STATEMENT, currNode);
     currNode = addChild(NonTerminal.WHILE_STATEMENT, currNode);
 
     booleanExpression(currNode);
@@ -190,7 +192,6 @@ class Parser {
     log.info("Parsing a variable declaration on line " + getLine());
     Token typeToken = getToken();
     
-    currNode = addChild(NonTerminal.STATEMENT, currNode);
     currNode = addChild(NonTerminal.VARIABLE_DECLARATION, currNode);
     Tree<dynamic> temp = addChild(typeToken.type, currNode);
     addChild(typeToken.value, temp);

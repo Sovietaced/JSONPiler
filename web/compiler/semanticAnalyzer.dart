@@ -107,6 +107,9 @@ class SemanticAnalyzer {
       case NonTerminal.PRINT_STATEMENT:
         return convertPrintStatement(tree, parent);
         break;
+      case NonTerminal.BLOCK:
+        return convertBlock(tree, parent);
+        break;
       default:
         print("failed to convert statement list");
         return null;
@@ -171,47 +174,45 @@ class SemanticAnalyzer {
 
   static Tree<dynamic> convertIfStatement(Tree<dynamic> currNode, Tree<dynamic>
       parent) {
-    if (currNode.data == NonTerminal.IF_STATEMENT) {
-      // New tree
-      Tree<dynamic> ifStatement = new Tree<dynamic>(NonTerminal.IF_STATEMENT,
-          parent);
+    // New tree
+    Tree<dynamic> ifStatement = new Tree<dynamic>(NonTerminal.IF_STATEMENT,
+        parent);
 
-      ifStatement.addChildren(convertBooleanExpression(currNode, ifStatement));
-
-      return ifStatement;
-    } else {
-      print("if statement error");
+    for (Tree<dynamic> tree in currNode.children) {
+      if (tree.data == NonTerminal.BOOLEAN_EXPRESSION) {
+        ifStatement.addChildren(convertBooleanExpression(tree, ifStatement));
+        ifStatement.dump();
+      } else if (tree.data == NonTerminal.BLOCK) {
+        print("fuck");
+        ifStatement.addChild(convertBlock(tree, ifStatement));
+        ifStatement.dump();
+      }
     }
-    return null;
+    ifStatement.dump();
+    return ifStatement;
   }
 
   static Tree<dynamic> convertWhileStatement(Tree<dynamic>
       currNode, Tree<dynamic> parent) {
-    if (currNode.data == NonTerminal.WHILE_STATEMENT) {
-      // New tree
-      Tree<dynamic> whileStatement = new Tree<dynamic>(
-          NonTerminal.WHILE_STATEMENT, parent);
+    // New tree
+    Tree<dynamic> whileStatement = new Tree<dynamic>(
+        NonTerminal.WHILE_STATEMENT, parent);
 
-      whileStatement.addChildren(convertBooleanExpression(currNode, whileStatement)
-          );
-
-      return whileStatement;
-    } else {
-      print("while statement error");
+    for (Tree<dynamic> tree in currNode.children) {
+      if (tree.data == NonTerminal.BOOLEAN_EXPRESSION) {
+        whileStatement.addChildren(convertBooleanExpression(tree, whileStatement
+            ));
+      } else if (tree.data == NonTerminal.BLOCK) {
+        whileStatement.addChild(convertBlock(tree, whileStatement));
+      }
     }
-    return null;
+    return whileStatement;
   }
 
   static Tree<dynamic> convertTypeDeclaration(Tree<dynamic>
       currNode, Tree<dynamic> parent) {
     Tree<dynamic> typeValue = currNode.children.first;
-
-    if (typeValue.data != null) {
-      return new Tree<dynamic>(typeValue.data, parent);
-    } else {
-      print("IM THROWING AN EXCEPTION");
-    }
-    return null;
+    return new Tree<dynamic>(typeValue.data, parent);
   }
 
   static Tree<dynamic> convertPrintStatement(Tree<dynamic>
@@ -219,8 +220,8 @@ class SemanticAnalyzer {
     Tree<dynamic> ast = new Tree<dynamic>(NonTerminal.PRINT_STATEMENT, parent);
 
     for (Tree<dynamic> tree in currNode.children) {
-      if (tree.data == NonTerminal.EXPRESSION){
-          ast.addChildren(convertExpression(tree, ast));
+      if (tree.data == NonTerminal.EXPRESSION) {
+        ast.addChildren(convertExpression(tree, ast));
       }
     }
     return ast;
@@ -282,7 +283,6 @@ class SemanticAnalyzer {
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
 
     for (Tree<dynamic> tree in currNode.children) {
-      print(tree.data);
       if (tree.data == TokenType.BOOLEAN) {
         subTrees.add(convertBoolean(tree, parent));
       } else if (tree.data == TokenType.BOOL_OP) {
