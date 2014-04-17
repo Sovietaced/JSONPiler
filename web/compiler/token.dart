@@ -72,5 +72,4 @@ class TokenType extends Enum<String> {
   String toString(){
       return "Token type=${this.value}";
     }
-  
 }

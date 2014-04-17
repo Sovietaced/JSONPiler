@@ -1,5 +1,8 @@
 library Tree;
 
+import '../compiler/symbol.dart';
+import '../compiler/token.dart';
+
 class Tree<T> {
 
   dynamic data;
@@ -29,5 +32,27 @@ class Tree<T> {
     for(Tree<dynamic> child in this.children){
       child.dump();
     }
+  }
+  
+  String syntrify() {
+    String syntree = " [";
+    
+    if(this.data is NonTerminal){
+      NonTerminal nt = this.data as NonTerminal;
+      syntree = syntree + nt.value;
+    }else if(this.data is TokenType){
+      TokenType tt = this.data as TokenType;
+      syntree = syntree + tt.value;
+    }
+    else{
+      syntree = syntree + this.toString();
+    }
+    
+    for(Tree<dynamic> child in this.children){
+      syntree = syntree + child.syntrify();
+    }
+    
+    syntree = syntree + "] ";
+    return syntree;
   }
 }

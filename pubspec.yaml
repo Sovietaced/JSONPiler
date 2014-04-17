@@ -5,7 +5,7 @@ dependencies:
   polymer: any
   poppy: any
   logging: 0.9.1
-  
+
 transformers:
   - polymer:
     entry_points:

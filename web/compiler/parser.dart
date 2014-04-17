@@ -139,6 +139,8 @@ class Parser {
     addChild(TokenType.OPEN_PAREN, currNode);
 
     expression(currNode);
+    scopeCheck();
+    
     expect(TokenType.CLOSE_PAREN);
     addChild(TokenType.CLOSE_PAREN, currNode);
   }
@@ -152,13 +154,14 @@ class Parser {
     currNode = addChild(NonTerminal.ASSIGNMENT_STATEMENT, currNode);
     // Backtrack to parse id
     index--;
-    String symbol = idExpression(currNode);
-    scopeCheck(symbol);
+    idExpression(currNode);
+    scopeCheck();
 
     expect(TokenType.EQUALS);
     addChild(TokenType.EQUALS, currNode);
 
     expression(currNode);
+    scopeCheck();
   }
 
   /**
@@ -255,6 +258,7 @@ class Parser {
       addChild(token.value, temp);
       
       expression(currNode);
+      scopeCheck();
     }
   }
 
@@ -273,6 +277,7 @@ class Parser {
 
       // Left Hand
       expression(booleanExpr);
+      scopeCheck();
 
       // Boolean expression
       expect(TokenType.BOOL_OP);
@@ -282,6 +287,7 @@ class Parser {
 
       // Right Hand
       expression(booleanExpr);
+      scopeCheck();
 
       expect(TokenType.CLOSE_PAREN);
       addChild(TokenType.CLOSE_PAREN, booleanExpr);
@@ -422,27 +428,38 @@ class Parser {
   }
   
   /**
-   * Does scope checking. Finds the occurences of a symbol and ensures
+   * Does scope checking on the current token. If the current token is an ID
+   * it will find the occurences of the symbol and ensures
    * that the symbol being used is defined for the current scope. 
    */
-  void scopeCheck(String symbol){
-    List<CompilerSymbol> symbols = getSymbols(symbol);
+  void scopeCheck(){
     
-    if(!symbols.isEmpty){
-      num max = symbols.first.scope;
-      for(CompilerSymbol symbol in symbols){
-        if(symbol.scope > max){
-          max = symbol.scope;
+    Token token = getToken();
+    
+    if(token.type == TokenType.ID){
+      
+      String symbol = token.value;
+      List<CompilerSymbol> symbols = getSymbols(symbol);
+      
+      if(!symbols.isEmpty){
+        num max = symbols.first.scope;
+        for(CompilerSymbol symbol in symbols){
+          if(symbol.scope > max){
+            max = symbol.scope;
+          }
         }
-      }   
-      if(scope > max){
-        ExceptionUtil.logAndThrow(new CompilerSyntaxError(
-                  "Identifier $symbol used out of scope on line " + getLine().toString()), log);
+        if(scope <= max) {
+          log.info("Identifier $symbol on line " + getLine().toString() + " scope OK. Current scope is $scope, max scope is $max ");
+        }
+        else{
+          ExceptionUtil.logAndThrow(new CompilerSyntaxError(
+                    "Identifier $symbol used out of scope on line " + getLine().toString()), log);
+        }
       }
-    }
-    else{
-      ExceptionUtil.logAndThrow(new CompilerSyntaxError(
-                        "Identifier $symbol undefined on line " + getLine().toString()), log);
+      else{
+        ExceptionUtil.logAndThrow(new CompilerSyntaxError(
+                          "Identifier $symbol undefined on line " + getLine().toString()), log);
+      }
     }
   }
   

@@ -19,6 +19,7 @@ class Compiler{
   Tree<dynamic> cst;
   Tree<dynamic> ast;
   Parser parser;
+  SemanticAnalyzer analyzer;
   
   Compiler(this.source);
   
@@ -29,7 +30,8 @@ class Compiler{
       var hash = this.parser.analyse();
       this.cst = hash['cst'];
       this.symbols = hash['symbols'];
-      this.ast = SemanticAnalyzer.analyze(this.cst);
+      analyzer = new SemanticAnalyzer(this.cst, this.symbols);
+      this.ast = analyzer.analyze();
     }catch(e){
       // Let log and throw handle
     }

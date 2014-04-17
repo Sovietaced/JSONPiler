@@ -3,6 +3,9 @@
  * 
  * */
 
+library SemanticAnalyzer;
+
+import 'dart:html';
 import 'token.dart';
 import 'symbol.dart';
 import 'exceptions.dart';
@@ -15,14 +18,19 @@ class SemanticAnalyzer {
 
   // Logging
   static Logger log = LoggerUtil.createLogger('SemanticAnalyzer');
-
+  
+  Tree<dynamic> cst;
+  List<CompilerSymbol> symbols;
+  
+  SemanticAnalyzer(this.cst, this.symbols);
   /**
    *  This is the main method for the Semantic Analyzer where all the magic happens 
    */
-  static analyze(Tree<dynamic> cst) {
+  analyze() {
     log.info("Semantic Analyzer starting analysis...");
-    if (!cst.children.isEmpty) {
-
+    if (!this.cst.children.isEmpty) {
+      
+     drawTree(this.cst, "cst");
       // Instantiate AST
       Tree<dynamic> ast = convertProgram(cst, null);
 
@@ -30,14 +38,14 @@ class SemanticAnalyzer {
       log.info("Semantic Analyzer finished analysis...");
       return ast;
     } else {
-      log.warning("CST is empty, finished.");
+      log.warning("CST is empty, finished analysis...");
     }
   }
 
   /**
    * Begins converting a program to an AST.
    */
-  static Tree<dynamic> convertProgram(Tree<dynamic> currNode, Tree<dynamic>
+  Tree<dynamic> convertProgram(Tree<dynamic> currNode, Tree<dynamic>
       parent) {
     Tree<dynamic> block = currNode.children.first;
 
@@ -49,7 +57,7 @@ class SemanticAnalyzer {
     return null;
   }
 
-  static Tree<dynamic> convertBlock(Tree<dynamic> currNode, Tree<dynamic>
+ Tree<dynamic> convertBlock(Tree<dynamic> currNode, Tree<dynamic>
       parent) {
     Tree<dynamic> ast = new Tree<dynamic>(NonTerminal.BLOCK, parent);
 
@@ -61,7 +69,7 @@ class SemanticAnalyzer {
     return ast;
   }
 
-  static List<Tree<dynamic>> convertStatementList(Tree<dynamic>
+ List<Tree<dynamic>> convertStatementList(Tree<dynamic>
       currNode, Tree<dynamic> parent) {
 
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
@@ -82,7 +90,7 @@ class SemanticAnalyzer {
     return subTrees;
   }
 
-  static Tree<dynamic> convertStatement(Tree<dynamic> currNode, Tree<dynamic>
+ Tree<dynamic> convertStatement(Tree<dynamic> currNode, Tree<dynamic>
       parent) {
     // Statements only have one child
     Tree<dynamic> tree = currNode.children.first;
@@ -112,7 +120,7 @@ class SemanticAnalyzer {
     }
   }
 
-  static Tree<dynamic> convertVariableDeclaration(Tree<dynamic>
+  Tree<dynamic> convertVariableDeclaration(Tree<dynamic>
       currNode, Tree<dynamic> parent) {
     // We know that a variable declaration tree only has two children
     Tree<dynamic> type = currNode.children[0];
@@ -121,24 +129,14 @@ class SemanticAnalyzer {
     // New tree
     Tree<dynamic> variableDeclaration = new Tree<dynamic>(
         NonTerminal.VARIABLE_DECLARATION, parent);
-
-    if (type.data == TokenType.TYPE) {
-      variableDeclaration.addChild(convertTypeDeclaration(type,
-          variableDeclaration));
-      if (id.data == NonTerminal.ID_EXPRESSION) {
-        variableDeclaration.addChild(convertIdExpression(id, variableDeclaration
-            ));
-        return variableDeclaration;
-      } else {
-        print("meow");
-      }
-    } else {
-      print("meow");
-    }
-    return null;
+   
+    variableDeclaration.addChild(convertTypeDeclaration(type, variableDeclaration));
+    variableDeclaration.addChild(convertIdExpression(id, variableDeclaration));
+    
+    return variableDeclaration;
   }
 
-  static Tree<dynamic> convertAssignmentStatement(Tree<dynamic>
+ Tree<dynamic> convertAssignmentStatement(Tree<dynamic>
       currNode, Tree<dynamic> parent) {
     // We know that an assignment statement tree only has two children
     Tree<dynamic> id = currNode.children[0];
@@ -147,13 +145,19 @@ class SemanticAnalyzer {
     // New tree
     Tree<dynamic> assignmentStatement = new Tree<dynamic>(
         NonTerminal.ASSIGNMENT_STATEMENT, parent);
-    assignmentStatement.addChild(convertIdExpression(id, assignmentStatement));
-    if (value.data == NonTerminal.EXPRESSION) assignmentStatement.addChildren(
-        convertExpression(value, assignmentStatement));
+    
+    Tree<dynamic> idValue = convertIdExpression(id, assignmentStatement);
+    assignmentStatement.addChild(idValue);
+    
+    List<Tree<dynamic>> expressionValues = convertExpression(value, assignmentStatement);
+    assignmentStatement.addChildren(expressionValues);
+        
+    typeCheck(idValue, expressionValues);
+    
     return assignmentStatement;
   }
 
-  static Tree<dynamic> convertIfStatement(Tree<dynamic> currNode, Tree<dynamic>
+ Tree<dynamic> convertIfStatement(Tree<dynamic> currNode, Tree<dynamic>
       parent) {
     // New tree
     Tree<dynamic> ifStatement = new Tree<dynamic>(NonTerminal.IF_STATEMENT,
@@ -170,7 +174,7 @@ class SemanticAnalyzer {
     return ifStatement;
   }
 
-  static Tree<dynamic> convertWhileStatement(Tree<dynamic>
+ Tree<dynamic> convertWhileStatement(Tree<dynamic>
       currNode, Tree<dynamic> parent) {
     // New tree
     Tree<dynamic> whileStatement = new Tree<dynamic>(
@@ -187,13 +191,13 @@ class SemanticAnalyzer {
     return whileStatement;
   }
 
-  static Tree<dynamic> convertTypeDeclaration(Tree<dynamic>
+  Tree<dynamic> convertTypeDeclaration(Tree<dynamic>
       currNode, Tree<dynamic> parent) {
     Tree<dynamic> typeValue = currNode.children.first;
     return new Tree<dynamic>(typeValue.data, parent);
   }
 
-  static Tree<dynamic> convertPrintStatement(Tree<dynamic>
+  Tree<dynamic> convertPrintStatement(Tree<dynamic>
       currNode, Tree<dynamic> parent) {
     Tree<dynamic> ast = new Tree<dynamic>(NonTerminal.PRINT_STATEMENT, parent);
 
@@ -205,7 +209,7 @@ class SemanticAnalyzer {
     return ast;
   }
 
-  static List<Tree<dynamic>> convertExpression(Tree<dynamic>
+  List<Tree<dynamic>> convertExpression(Tree<dynamic>
       currNode, Tree<dynamic> parent) {
 
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
@@ -236,12 +240,12 @@ class SemanticAnalyzer {
    *  If we are in this situation we already know that 
    * the current tree node is an id expression. Forward to convertChar 
    **/
-  static Tree<dynamic> convertIdExpression(Tree<dynamic> currNode, Tree<dynamic>
+  Tree<dynamic> convertIdExpression(Tree<dynamic> currNode, Tree<dynamic>
       parent) {
     return convertChar(currNode, parent);
   }
 
-  static List<Tree<dynamic>> convertIntExpression(Tree<dynamic>
+  List<Tree<dynamic>> convertIntExpression(Tree<dynamic>
       currNode, Tree<dynamic> parent) {
 
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
@@ -258,7 +262,7 @@ class SemanticAnalyzer {
     return subTrees;
   }
 
-  static List<Tree<dynamic>> convertBooleanExpression(Tree<dynamic>
+  List<Tree<dynamic>> convertBooleanExpression(Tree<dynamic>
       currNode, Tree<dynamic> parent) {
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
 
@@ -271,10 +275,11 @@ class SemanticAnalyzer {
         subTrees.addAll(convertExpression(tree, parent));
       }
     }
+    
     return subTrees;
   }
 
-  static Tree<dynamic> convertStringExpression(Tree<dynamic>
+  Tree<dynamic> convertStringExpression(Tree<dynamic>
       currNode, Tree<dynamic> parent) {
 
     // New tree
@@ -311,21 +316,21 @@ class SemanticAnalyzer {
     return subTrees;
   }
 
-  static Tree<dynamic> convertIntOp(Tree<dynamic> currNode, Tree<dynamic>
+  Tree<dynamic> convertIntOp(Tree<dynamic> currNode, Tree<dynamic>
       parent) {
     // An ID expression only has one child
     Tree<dynamic> value = currNode.children.first;
     return new Tree<dynamic>(value.data, parent);
   }
 
-  static Tree<dynamic> convertBoolOp(Tree<dynamic> currNode, Tree<dynamic>
+  Tree<dynamic> convertBoolOp(Tree<dynamic> currNode, Tree<dynamic>
       parent) {
     // An ID expression only has one child
     Tree<dynamic> value = currNode.children.first;
     return new Tree<dynamic>(value.data, parent);
   }
 
-  static Tree<dynamic> convertChar(Tree<dynamic> currNode, Tree<dynamic> parent)
+  Tree<dynamic> convertChar(Tree<dynamic> currNode, Tree<dynamic> parent)
       {
     // An ID expression only has one child
     Tree<dynamic> c = currNode.children.first;
@@ -339,9 +344,46 @@ class SemanticAnalyzer {
     return null;
   }
 
-  static Tree<dynamic> convertBoolean(Tree<dynamic> currNode, Tree<dynamic>
+  Tree<dynamic> convertBoolean(Tree<dynamic> currNode, Tree<dynamic>
       parent) {
     Tree<dynamic> value = currNode.children.first;
     return new Tree<dynamic>(value.data, parent);
+  }
+  
+  typeCheck(Tree<dynamic> left, List<Tree<dynamic>> right) {
+    
+    if(left is num){
+      ensureIntegers(right);
+    }
+    else if(left is String){
+      
+    }
+  }
+  
+  ensureIntegers(List<Tree<dynamic>> right) {
+    for(Tree<dynamic> tree in right){
+      if(!tree.data is num){
+        print("TYPE CHECKING EXCEPTION");
+      }
+    }
+    return true;
+  }
+  
+  /**
+   * Gets all instances of a symbol from the symbol table.
+   */
+  List<CompilerSymbol> getSymbols(String symbol) {
+    List<CompilerSymbol> instances = new List<CompilerSymbol>();
+    
+    for(CompilerSymbol s in this.symbols) {
+      if(s.id == symbol){
+        instances.add(s);
+      }
+    }  
+    return instances;
+  }
+  
+  void drawTree(Tree<dynamic> tree, String id) {
+    (querySelector("#$id")).appendText(tree.syntrify());
   }
 }
