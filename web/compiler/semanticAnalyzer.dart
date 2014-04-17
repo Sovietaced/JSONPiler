@@ -210,7 +210,7 @@ class SemanticAnalyzer {
     Tree<dynamic> typeValue = currNode.children.first;
 
     if (typeValue.data != null) {
-      return typeValue;
+      return new Tree<dynamic>(typeValue.data,parent);
     } else {
       print("IM THROWING AN EXCEPTION");
     }
@@ -272,8 +272,9 @@ class SemanticAnalyzer {
     // An ID expression only has one child
     Tree<dynamic> c = cst.children.first;
     if (c.data == TokenType.CHAR) {
+      Tree<dynamic> value = c.children.first;
       // The only child should be the value
-      return c.children.first;
+      return new Tree<dynamic>(value.data, parent);
     } else {
       print("fuuu");
     }
@@ -284,8 +285,9 @@ class SemanticAnalyzer {
     // An int expression only has one child
     Tree<dynamic> i = cst.children.first;
     if (i.data == TokenType.DIGIT) {
+      Tree<dynamic> value = i.children.first;
       // The only child should be the value
-      return i.children.first;
+      return new Tree<dynamic>(value.data, parent);
     } else {
       print("we president now");
     }
