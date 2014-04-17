@@ -66,6 +66,7 @@ class Parser {
    * Parses a block 
    */
   void block(Tree<dynamic> currNode) {
+    log.info("Parsing block on line " + getLine());
     // Entering a block denotes a new sub tree
     currNode = addChild(NonTerminal.BLOCK, currNode);
     addChild(TokenType.OPEN_BRACE, currNode);
@@ -97,23 +98,23 @@ class Parser {
       // Entering a statement list denotes a new sub tree
       currNode = addChild(NonTerminal.STATEMENT_LIST, currNode);
       if (token.type == TokenType.TYPE) {
-        currNode = addChild(NonTerminal.STATEMENT, currNode);
-        variableDeclaration(currNode);
+        Tree<dynamic> temp = addChild(NonTerminal.STATEMENT, currNode);
+        variableDeclaration(temp);
       } else if (token.type == TokenType.ID) {
-        currNode = addChild(NonTerminal.STATEMENT, currNode);
-        assignmentStatement(currNode);
+        Tree<dynamic> temp = addChild(NonTerminal.STATEMENT, currNode);
+        assignmentStatement(temp);
       } else if (token.type == TokenType.IF) {
-        currNode = addChild(NonTerminal.STATEMENT, currNode);
-        ifStatement(currNode);
+        Tree<dynamic> temp = addChild(NonTerminal.STATEMENT, currNode);
+        ifStatement(temp);
       } else if (token.type == TokenType.WHILE) {
-        currNode = addChild(NonTerminal.STATEMENT, currNode);
-        whileStatement(currNode);
+        Tree<dynamic> temp = addChild(NonTerminal.STATEMENT, currNode);
+        whileStatement(temp);
       } else if (token.type == TokenType.PRINT) {
-        currNode = addChild(NonTerminal.STATEMENT, currNode);
-        printStatement(currNode);
+        Tree<dynamic> temp = addChild(NonTerminal.STATEMENT, currNode);
+        printStatement(temp);
       } else if (token.type == TokenType.OPEN_BRACE) {
-        currNode = addChild(NonTerminal.STATEMENT, currNode);
-        block(currNode);
+        Tree<dynamic> temp = addChild(NonTerminal.STATEMENT, currNode);
+        block(temp);
       } else {
         ExceptionUtil.logAndThrow(new CompilerSyntaxError(
             "Expected statement, found type " + token.type.value + " on line " +

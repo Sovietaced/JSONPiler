@@ -61,7 +61,7 @@ class SemanticAnalyzer {
       }
       return ast;
     } else {
-      // Exception
+      print("trololol");
     }
     return null;
   }
@@ -91,6 +91,7 @@ class SemanticAnalyzer {
       parent) {
     // Statements only have one child
     Tree<dynamic> tree = currNode.children.first;
+    print(tree.data);
     switch (tree.data) {
       case NonTerminal.VARIABLE_DECLARATION:
         return convertVariableDeclaration(tree, parent);
@@ -181,11 +182,8 @@ class SemanticAnalyzer {
     for (Tree<dynamic> tree in currNode.children) {
       if (tree.data == NonTerminal.BOOLEAN_EXPRESSION) {
         ifStatement.addChildren(convertBooleanExpression(tree, ifStatement));
-        ifStatement.dump();
       } else if (tree.data == NonTerminal.BLOCK) {
-        print("fuck");
         ifStatement.addChild(convertBlock(tree, ifStatement));
-        ifStatement.dump();
       }
     }
     ifStatement.dump();
@@ -243,6 +241,9 @@ class SemanticAnalyzer {
         case NonTerminal.BOOLEAN_EXPRESSION:
           subTrees.addAll(convertBooleanExpression(tree, parent));
           break;
+        case NonTerminal.STRING_EXPRESSION:
+          subTrees.add(convertStringExpression(tree, parent));
+          break;
         default:
           print("failed to convert statement list");
           return null;
@@ -293,12 +294,41 @@ class SemanticAnalyzer {
     }
     return subTrees;
   }
+  
+  static Tree<dynamic> convertStringExpression(Tree<dynamic>
+      currNode, Tree<dynamic> parent) {
+    
+// New tree
+ Tree<dynamic> stringTree = new Tree<dynamic>(
+     NonTerminal.STRING_EXPRESSION, parent);
+    
+    for (Tree<dynamic> tree in currNode.children) {
+      print(tree.data);
+      if (tree.data == NonTerminal.CHAR_LIST) {
+        stringTree.addChildren(convertCharList(tree, stringTree));
+      }
+    }
+    return stringTree;
+  }
 
   static Tree<dynamic> convertDigit(Tree<dynamic> currNode, Tree<dynamic>
       parent) {
     // An ID expression only has one child
     Tree<dynamic> value = currNode.children.first;
     return new Tree<dynamic>(value.data, parent);
+  }
+  
+  static List<Tree<dynamic>> convertCharList(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
+
+        for (Tree<dynamic> tree in currNode.children) {
+          if (tree.data == TokenType.CHAR) {
+            Tree<dynamic> value = tree.children.first;
+                  // The only child should be the value
+                  subTrees.add(new Tree<dynamic>(value.data, parent));
+          }
+        }
+        return subTrees;
   }
 
   static Tree<dynamic> convertIntOp(Tree<dynamic> currNode, Tree<dynamic>
