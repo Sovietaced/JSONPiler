@@ -55,15 +55,10 @@ class SemanticAnalyzer {
 
     // Second item should be a statement list
     Tree<dynamic> statementList = currNode.children[1];
-    if (statementList.data == NonTerminal.STATEMENT_LIST) {
-      for (Tree<dynamic> child in convertStatementList(statementList, ast)) {
-        ast.addChild(child);
-      }
-      return ast;
-    } else {
-      print("trololol");
+    for (Tree<dynamic> child in convertStatementList(statementList, ast)) {
+      ast.addChild(child);
     }
-    return null;
+    return ast;
   }
 
   static List<Tree<dynamic>> convertStatementList(Tree<dynamic>
@@ -149,28 +144,13 @@ class SemanticAnalyzer {
     Tree<dynamic> id = currNode.children[0];
     Tree<dynamic> value = currNode.children[2];
 
-    if (currNode.data == NonTerminal.ASSIGNMENT_STATEMENT) {
-      // New tree
-      Tree<dynamic> assignmentStatement = new Tree<dynamic>(
-          NonTerminal.ASSIGNMENT_STATEMENT, parent);
-
-      if (id.data == NonTerminal.ID_EXPRESSION) {
-        assignmentStatement.addChild(convertIdExpression(id, assignmentStatement
-            ));
-        if (value.data == NonTerminal.EXPRESSION) {
-          assignmentStatement.addChildren(convertExpression(value,
-              assignmentStatement));
-          return assignmentStatement;
-        } else {
-
-        }
-      } else {
-
-      }
-    } else {
-      // throw an error
-    }
-    return null;
+    // New tree
+    Tree<dynamic> assignmentStatement = new Tree<dynamic>(
+        NonTerminal.ASSIGNMENT_STATEMENT, parent);
+    assignmentStatement.addChild(convertIdExpression(id, assignmentStatement));
+    if (value.data == NonTerminal.EXPRESSION) assignmentStatement.addChildren(
+        convertExpression(value, assignmentStatement));
+    return assignmentStatement;
   }
 
   static Tree<dynamic> convertIfStatement(Tree<dynamic> currNode, Tree<dynamic>
@@ -270,7 +250,6 @@ class SemanticAnalyzer {
       if (tree.data == TokenType.DIGIT) {
         subTrees.add(convertDigit(tree, parent));
       } else if (tree.data == TokenType.INT_OP) {
-
         subTrees.add(convertIntOp(tree, parent));
       } else if (tree.data == NonTerminal.EXPRESSION) {
         subTrees.addAll(convertExpression(tree, parent));
@@ -294,14 +273,14 @@ class SemanticAnalyzer {
     }
     return subTrees;
   }
-  
+
   static Tree<dynamic> convertStringExpression(Tree<dynamic>
       currNode, Tree<dynamic> parent) {
-    
-// New tree
- Tree<dynamic> stringTree = new Tree<dynamic>(
-     NonTerminal.STRING_EXPRESSION, parent);
-    
+
+    // New tree
+    Tree<dynamic> stringTree = new Tree<dynamic>(NonTerminal.STRING_EXPRESSION,
+        parent);
+
     for (Tree<dynamic> tree in currNode.children) {
       print(tree.data);
       if (tree.data == NonTerminal.CHAR_LIST) {
@@ -317,18 +296,19 @@ class SemanticAnalyzer {
     Tree<dynamic> value = currNode.children.first;
     return new Tree<dynamic>(value.data, parent);
   }
-  
-  static List<Tree<dynamic>> convertCharList(Tree<dynamic> currNode, Tree<dynamic> parent) {
+
+  static List<Tree<dynamic>> convertCharList(Tree<dynamic>
+      currNode, Tree<dynamic> parent) {
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
 
-        for (Tree<dynamic> tree in currNode.children) {
-          if (tree.data == TokenType.CHAR) {
-            Tree<dynamic> value = tree.children.first;
-                  // The only child should be the value
-                  subTrees.add(new Tree<dynamic>(value.data, parent));
-          }
-        }
-        return subTrees;
+    for (Tree<dynamic> tree in currNode.children) {
+      if (tree.data == TokenType.CHAR || tree.data == TokenType.SPACE) {
+        Tree<dynamic> value = tree.children.first;
+        // The only child should be the value
+        subTrees.add(new Tree<dynamic>(value.data, parent));
+      }
+    }
+    return subTrees;
   }
 
   static Tree<dynamic> convertIntOp(Tree<dynamic> currNode, Tree<dynamic>

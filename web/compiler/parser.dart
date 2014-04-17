@@ -47,7 +47,7 @@ class Parser {
       }
       cst.dump();
       log.info("Parser finished analysis...");
-      return cst;
+      return {"cst":cst, "symbols": symbols};
     } else {
       log.warning("No tokens to parse, finished.");
     }
@@ -152,7 +152,8 @@ class Parser {
     currNode = addChild(NonTerminal.ASSIGNMENT_STATEMENT, currNode);
     // Backtrack to parse id
     index--;
-    idExpression(currNode);
+    String symbol = idExpression(currNode);
+    scopeCheck(symbol);
 
     expect(TokenType.EQUALS);
     addChild(TokenType.EQUALS, currNode);
@@ -324,7 +325,7 @@ class Parser {
   /**
    * Parses an identifier expression
    */
-  void idExpression(Tree<dynamic> currNode) {
+  String idExpression(Tree<dynamic> currNode) {
     log.info("Parsing an id expression on line " + getLine());
     
     currNode = addChild(NonTerminal.ID_EXPRESSION, currNode);
@@ -333,6 +334,8 @@ class Parser {
     Token token = getToken();
     currNode = addChild(TokenType.CHAR, currNode);
     addChild(token.value, currNode);
+    
+    return token.value;
   }
 
   /** 
@@ -416,5 +419,44 @@ class Parser {
       return false;
     }
     return true;
+  }
+  
+  /**
+   * Does scope checking. Finds the occurences of a symbol and ensures
+   * that the symbol being used is defined for the current scope. 
+   */
+  void scopeCheck(String symbol){
+    List<CompilerSymbol> symbols = getSymbols(symbol);
+    
+    if(!symbols.isEmpty){
+      num max = symbols.first.scope;
+      for(CompilerSymbol symbol in symbols){
+        if(symbol.scope > max){
+          max = symbol.scope;
+        }
+      }   
+      if(scope > max){
+        ExceptionUtil.logAndThrow(new CompilerSyntaxError(
+                  "Identifier $symbol used out of scope on line " + getLine().toString()), log);
+      }
+    }
+    else{
+      ExceptionUtil.logAndThrow(new CompilerSyntaxError(
+                        "Identifier $symbol undefined on line " + getLine().toString()), log);
+    }
+  }
+  
+  /**
+   * Gets all instances of a symbol from the symbol table.
+   */
+  List<CompilerSymbol> getSymbols(String symbol) {
+    List<CompilerSymbol> instances = new List<CompilerSymbol>();
+    
+    for(CompilerSymbol s in this.symbols) {
+      if(s.id == symbol){
+        instances.add(s);
+      }
+    }  
+    return instances;
   }
 }
