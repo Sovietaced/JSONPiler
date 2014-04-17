@@ -48,8 +48,9 @@ Node.prototype.set_siblings = function(parent) {
 
 Node.prototype.check_triangle = function() {
 	this.draw_triangle = 0;
-	if ((!this.has_children) && (this.parent.starred))
-		this.draw_triangle = 1;
+	   
+  	if ((!this.has_children) && (this.parent.starred))
+  		this.draw_triangle = 1;
 
 	for (var child = this.first; child != null; child = child.next)
 		child.check_triangle();
@@ -290,7 +291,7 @@ MovementLine.prototype.draw = function(ctx) {
 }
 
 function go(str, font_size, term_font, nonterm_font, vert_space, hor_space, color, term_lines) {
-	 str = str.replace('_', '-');
+	str = str.replace(/_/g, "-");
 	// Clean up the string
 	str = str.replace(/^\s+/, "");
 	var open = 0;

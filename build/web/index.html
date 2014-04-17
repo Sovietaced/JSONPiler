@@ -1,10 +1,11 @@
-<!DOCTYPE HTML>
-<html>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<!DOCTYPE html><html><head><script src="packages/shadow_dom/shadow_dom.debug.js"></script>
+<script src="packages/custom_element/custom-elements.debug.js"></script>
+<script src="packages/browser/interop.js"></script>
+
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 		<title>JSONPiler</title>
 
-		<link rel="stylesheet" href="../assets/stylesheets/bootstrap.min.css" type="text/css" media="screen" />
+		<link rel="stylesheet" href="../assets/stylesheets/bootstrap.min.css" type="text/css" media="screen">
          <script type="text/javascript" src="../assets/javascripts/jquery.js"></script>
      <script type="text/javascript" src="../assets/javascripts/bootstrap.min.js"></script>
      <script type="text/javascript" src="../assets/javascripts/base64.js"></script>
@@ -38,20 +39,12 @@
                    <div id="input">
       			         	<h2 style="float: left;">Input</h2>
       			         	<h2 id="compile" style="float: right;"><a href="#">Compile</a></h2>
-      			             <textarea id="input-code"
-      			                       cols="60"
-      			                       rows="16"
-      
-      			             ></textarea>
+      			             <textarea id="input-code" cols="60" rows="16"></textarea>
 			             </div>
               </div>
               <div class="col-md-6">
                 <h2>Symbol Table</h2>
-                   <textarea readonly id="symbol-table"
-                         cols="60"
-                             rows="16"
-
-                   ></textarea>
+                   <textarea readonly="" id="symbol-table" cols="60" rows="16"></textarea>
               </div>
             </div>
             
@@ -68,29 +61,13 @@
               <!-- Tab panes -->
               <div class="tab-content">
                 <div class="tab-pane active" id="all">
-                <textarea readonly id="log-all"
-                                   cols="130"
-                                   rows="16"
-      
-                         ></textarea></div>
+                <textarea readonly="" id="log-all" cols="130" rows="16"></textarea></div>
                 <div class="tab-pane" id="info">
-                <textarea readonly id="log-info"
-                                   cols="130"
-                                   rows="16"
-      
-                         ></textarea></div>
+                <textarea readonly="" id="log-info" cols="130" rows="16"></textarea></div>
                 <div class="tab-pane" id="warning">
-                <textarea readonly id="log-warning"
-                                   cols="130"
-                                   rows="16"
-      
-                         ></textarea></div>
+                <textarea readonly="" id="log-warning" cols="130" rows="16"></textarea></div>
                 <div class="tab-pane" id="error">
-                <textarea readonly id="log-severe"
-                                   cols="130"
-                                   rows="16"
-      
-                         ></textarea></div>
+                <textarea readonly="" id="log-severe" cols="130" rows="16"></textarea></div>
               </div>
              </div>
             </div>
@@ -98,11 +75,7 @@
               <div class="col-md-4">
                    <div id="output">
   			         	<h2>Output</h2>
-  			             <textarea id="output-code"
-  			             		   cols="40"
-  			                       rows="10"
-  
-  			             ></textarea>
+  			             <textarea id="output-code" cols="40" rows="10"></textarea>
   			        </div>
               </div>
             </div>
@@ -120,8 +93,8 @@
        </div>
     </div>
     </div>
-	</body>
+	
    
-   <script type="application/dart" src="main.dart"></script>
+   <script type="application/dart" src="index.html_bootstrap.dart"></script>
    <script src="packages/browser/dart.js"></script>
-</html>
+</body></html>

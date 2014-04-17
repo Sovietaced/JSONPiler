@@ -7,5 +7,5 @@ dependencies:
   logging: 0.9.1
   
 transformers:
-  - polymer:
+- polymer:
     entry_points: web/index.html
