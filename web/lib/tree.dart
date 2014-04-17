@@ -14,6 +14,10 @@ class Tree<T> {
     this.children.add(child);
   }
   
+  void addChildren(List<Tree<dynamic>> children) {
+    this.children.addAll(children);
+  }
+  
   String toString() {
     return this.data.toString();
   }

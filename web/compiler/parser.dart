@@ -246,6 +246,11 @@ class Parser {
     // Handle int operations aka +
     if (isNextToken(TokenType.INT_OP)) {
       expect(TokenType.INT_OP);
+      
+      Token token = getToken();
+      Tree<dynamic> temp = addChild(token.type, currNode);
+      addChild(token.value, temp);
+      
       expression(currNode);
     }
   }
@@ -281,7 +286,8 @@ class Parser {
     else {
       expect(TokenType.BOOLEAN); 
       Token token = getToken();
-      addChild(token.value, booleanExpr);
+      Tree<dynamic> temp = addChild(token.type, booleanExpr);
+      addChild(token.value, temp);
     }
   }
 

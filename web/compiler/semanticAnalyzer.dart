@@ -56,7 +56,7 @@ class SemanticAnalyzer {
     // Second item should be a statement list
     Tree<dynamic> statementList = currNode.children[1];
     if (statementList.data == NonTerminal.STATEMENT_LIST) {
-      for(Tree<dynamic> child in convertStatementList(statementList, ast)){
+      for (Tree<dynamic> child in convertStatementList(statementList, ast)) {
         ast.addChild(child);
       }
       return ast;
@@ -68,9 +68,9 @@ class SemanticAnalyzer {
 
   static List<Tree<dynamic>> convertStatementList(Tree<dynamic>
       currNode, Tree<dynamic> parent) {
-    
+
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
-    
+
     for (Tree<dynamic> tree in currNode.children) {
       switch (tree.data) {
         case NonTerminal.STATEMENT:
@@ -138,68 +138,65 @@ class SemanticAnalyzer {
     }
     return null;
   }
-  
-  static Tree<dynamic> convertAssignmentStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
-  // We know that an assignment statement tree only has two children
-   Tree<dynamic> id = currNode.children[0];
-   Tree<dynamic> value = currNode.children[2];
-   print(id);
-   print(value);
-    
-    if(currNode.data == NonTerminal.ASSIGNMENT_STATEMENT){
+
+  static Tree<dynamic> convertAssignmentStatement(Tree<dynamic>
+      currNode, Tree<dynamic> parent) {
+    // We know that an assignment statement tree only has two children
+    Tree<dynamic> id = currNode.children[0];
+    Tree<dynamic> value = currNode.children[2];
+
+    if (currNode.data == NonTerminal.ASSIGNMENT_STATEMENT) {
       // New tree
       Tree<dynamic> assignmentStatement = new Tree<dynamic>(
           NonTerminal.ASSIGNMENT_STATEMENT, parent);
-      
-      if(id.data == NonTerminal.ID_EXPRESSION) {
-        assignmentStatement.addChild(convertIdExpression(id, assignmentStatement));
-        if(value.data == NonTerminal.EXPRESSION) {
-          assignmentStatement.addChild(convertExpression(value, assignmentStatement));
+
+      if (id.data == NonTerminal.ID_EXPRESSION) {
+        assignmentStatement.addChild(convertIdExpression(id, assignmentStatement
+            ));
+        if (value.data == NonTerminal.EXPRESSION) {
+          assignmentStatement.addChildren(convertExpression(value,
+              assignmentStatement));
           return assignmentStatement;
+        } else {
+
         }
-        else{
-          
-        }
+      } else {
+
       }
-      else{
-        
-      }
-    }
-    else{
+    } else {
       // throw an error
-    }  
+    }
     return null;
   }
-  
-  static Tree<dynamic> convertIfStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
-    if(currNode.data == NonTerminal.IF_STATEMENT){
-       // New tree
-       Tree<dynamic> ifStatement = new Tree<dynamic>(
-           NonTerminal.IF_STATEMENT, parent);
-       
-       ifStatement.addChild(convertBooleanExpression(currNode, ifStatement));
-       
-       // Handle Block
-       return ifStatement;
-    }
-    else{
+
+  static Tree<dynamic> convertIfStatement(Tree<dynamic> currNode, Tree<dynamic>
+      parent) {
+    if (currNode.data == NonTerminal.IF_STATEMENT) {
+      // New tree
+      Tree<dynamic> ifStatement = new Tree<dynamic>(NonTerminal.IF_STATEMENT,
+          parent);
+
+      ifStatement.addChildren(convertBooleanExpression(currNode, ifStatement));
+
+      return ifStatement;
+    } else {
       print("if statement error");
     }
     return null;
   }
-  
-  static Tree<dynamic> convertWhileStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
-    if(currNode.data == NonTerminal.WHILE_STATEMENT){
-       // New tree
-       Tree<dynamic> whileStatement = new Tree<dynamic>(
-           NonTerminal.WHILE_STATEMENT, parent);
-       
-       whileStatement.addChild(convertBooleanExpression(currNode, whileStatement));
-       
-       // Handle Block
-       return whileStatement;
-    }
-    else{
+
+  static Tree<dynamic> convertWhileStatement(Tree<dynamic>
+      currNode, Tree<dynamic> parent) {
+    if (currNode.data == NonTerminal.WHILE_STATEMENT) {
+      // New tree
+      Tree<dynamic> whileStatement = new Tree<dynamic>(
+          NonTerminal.WHILE_STATEMENT, parent);
+
+      whileStatement.addChildren(convertBooleanExpression(currNode, whileStatement)
+          );
+
+      return whileStatement;
+    } else {
       print("while statement error");
     }
     return null;
@@ -210,7 +207,7 @@ class SemanticAnalyzer {
     Tree<dynamic> typeValue = currNode.children.first;
 
     if (typeValue.data != null) {
-      return new Tree<dynamic>(typeValue.data,parent);
+      return new Tree<dynamic>(typeValue.data, parent);
     } else {
       print("IM THROWING AN EXCEPTION");
     }
@@ -221,33 +218,36 @@ class SemanticAnalyzer {
       currNode, Tree<dynamic> parent) {
     Tree<dynamic> ast = new Tree<dynamic>(NonTerminal.PRINT_STATEMENT, parent);
 
-    // Print value always third element
-    Tree<dynamic> value = currNode.children[2];
-
-    if (value.data == NonTerminal.EXPRESSION) {
-      ast.addChild(convertExpression(value, ast));
-      return ast;
-    } else {
-      print("fuck");
+    for (Tree<dynamic> tree in currNode.children) {
+      if (tree.data == NonTerminal.EXPRESSION){
+          ast.addChildren(convertExpression(tree, ast));
+      }
     }
-    return null;
+    return ast;
   }
 
-  static Tree<dynamic> convertExpression(Tree<dynamic> currNode, Tree<dynamic>
-      parent) {
-    // An expression only has one child
-    Tree<dynamic> expression = currNode.children.first;
-    switch (expression.data) {
-      case NonTerminal.ID_EXPRESSION:
-        return convertIdExpression(expression, parent);
-        break;
-      case NonTerminal.INT_EXPRESSION:
-        return convertIntExpression(expression, parent);
-        break;
-      default:
-        print("failed to convert expression");
-        return null;
+  static List<Tree<dynamic>> convertExpression(Tree<dynamic>
+      currNode, Tree<dynamic> parent) {
+
+    List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
+
+    for (Tree<dynamic> tree in currNode.children) {
+      switch (tree.data) {
+        case NonTerminal.ID_EXPRESSION:
+          subTrees.add(convertIdExpression(tree, parent));
+          break;
+        case NonTerminal.INT_EXPRESSION:
+          subTrees.addAll(convertIntExpression(tree, parent));
+          break;
+        case NonTerminal.BOOLEAN_EXPRESSION:
+          subTrees.addAll(convertBooleanExpression(tree, parent));
+          break;
+        default:
+          print("failed to convert statement list");
+          return null;
+      }
     }
+    return subTrees;
   }
 
   /**
@@ -258,19 +258,67 @@ class SemanticAnalyzer {
       parent) {
     return convertChar(currNode, parent);
   }
-  
-  static Tree<dynamic> convertIntExpression(Tree<dynamic> currNode, Tree<dynamic>
-       parent) {
-     return convertDigit(currNode, parent);
-   }
-  
-  static Tree<dynamic> convertBooleanExpression(Tree<dynamic> currNode, Tree<dynamic> parent) {
-    // handles parens  vs normal
+
+  static List<Tree<dynamic>> convertIntExpression(Tree<dynamic>
+      currNode, Tree<dynamic> parent) {
+
+    List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
+
+    for (Tree<dynamic> tree in currNode.children) {
+      if (tree.data == TokenType.DIGIT) {
+        subTrees.add(convertDigit(tree, parent));
+      } else if (tree.data == TokenType.INT_OP) {
+
+        subTrees.add(convertIntOp(tree, parent));
+      } else if (tree.data == NonTerminal.EXPRESSION) {
+        subTrees.addAll(convertExpression(tree, parent));
+      }
+    }
+    return subTrees;
   }
 
-  static Tree<dynamic> convertChar(Tree<dynamic> cst, Tree<dynamic> parent) {
+  static List<Tree<dynamic>> convertBooleanExpression(Tree<dynamic>
+      currNode, Tree<dynamic> parent) {
+    List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
+
+    for (Tree<dynamic> tree in currNode.children) {
+      print(tree.data);
+      if (tree.data == TokenType.BOOLEAN) {
+        subTrees.add(convertBoolean(tree, parent));
+      } else if (tree.data == TokenType.BOOL_OP) {
+        subTrees.add(convertBoolOp(tree, parent));
+      } else if (tree.data == NonTerminal.EXPRESSION) {
+        subTrees.addAll(convertExpression(tree, parent));
+      }
+    }
+    return subTrees;
+  }
+
+  static Tree<dynamic> convertDigit(Tree<dynamic> currNode, Tree<dynamic>
+      parent) {
     // An ID expression only has one child
-    Tree<dynamic> c = cst.children.first;
+    Tree<dynamic> value = currNode.children.first;
+    return new Tree<dynamic>(value.data, parent);
+  }
+
+  static Tree<dynamic> convertIntOp(Tree<dynamic> currNode, Tree<dynamic>
+      parent) {
+    // An ID expression only has one child
+    Tree<dynamic> value = currNode.children.first;
+    return new Tree<dynamic>(value.data, parent);
+  }
+
+  static Tree<dynamic> convertBoolOp(Tree<dynamic> currNode, Tree<dynamic>
+      parent) {
+    // An ID expression only has one child
+    Tree<dynamic> value = currNode.children.first;
+    return new Tree<dynamic>(value.data, parent);
+  }
+
+  static Tree<dynamic> convertChar(Tree<dynamic> currNode, Tree<dynamic> parent)
+      {
+    // An ID expression only has one child
+    Tree<dynamic> c = currNode.children.first;
     if (c.data == TokenType.CHAR) {
       Tree<dynamic> value = c.children.first;
       // The only child should be the value
@@ -280,17 +328,10 @@ class SemanticAnalyzer {
     }
     return null;
   }
-  
-  static Tree<dynamic> convertDigit(Tree<dynamic> cst, Tree<dynamic> parent) {
-    // An int expression only has one child
-    Tree<dynamic> i = cst.children.first;
-    if (i.data == TokenType.DIGIT) {
-      Tree<dynamic> value = i.children.first;
-      // The only child should be the value
-      return new Tree<dynamic>(value.data, parent);
-    } else {
-      print("we president now");
-    }
-    return null;
+
+  static Tree<dynamic> convertBoolean(Tree<dynamic> currNode, Tree<dynamic>
+      parent) {
+    Tree<dynamic> value = currNode.children.first;
+    return new Tree<dynamic>(value.data, parent);
   }
 }
