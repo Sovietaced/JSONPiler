@@ -30,12 +30,12 @@ class SemanticAnalyzer {
     log.info("Semantic Analyzer starting analysis...");
     if (!this.cst.children.isEmpty) {
       
-     drawTree(this.cst, "cst");
+     //drawTree(this.cst, "cst");
       // Instantiate AST
       Tree<dynamic> ast = convertProgram(cst, null);
 
+      log.info("Semantic Analyzer finished analysis... Dumping AST");
       ast.dump();
-      log.info("Semantic Analyzer finished analysis...");
       return ast;
     } else {
       log.warning("CST is empty, finished analysis...");

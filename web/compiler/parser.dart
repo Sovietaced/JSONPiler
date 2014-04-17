@@ -45,8 +45,8 @@ class Parser {
             "Expected END token, found type " + token.type.value + " on line " +
             token.line.toString()), log);
       }
+      log.info("Parser finished analysis...Dumping CST");
       cst.dump();
-      log.info("Parser finished analysis...");
       return {"cst":cst, "symbols": symbols};
     } else {
       log.warning("No tokens to parse, finished.");
@@ -442,14 +442,14 @@ class Parser {
       List<CompilerSymbol> symbols = getSymbols(symbol);
       
       if(!symbols.isEmpty){
-        num max = symbols.first.scope;
+        num min = symbols.first.scope;
         for(CompilerSymbol symbol in symbols){
-          if(symbol.scope > max){
-            max = symbol.scope;
+          if(symbol.scope < min){
+            min = symbol.scope;
           }
         }
-        if(scope <= max) {
-          log.info("Identifier $symbol on line " + getLine().toString() + " scope OK. Current scope is $scope, max scope is $max ");
+        if(scope >= min) {
+          log.info("Identifier $symbol on line " + getLine().toString() + " scope OK. Current scope is $scope, min scope is $min ");
         }
         else{
           ExceptionUtil.logAndThrow(new CompilerSyntaxError(
