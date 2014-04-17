@@ -48,13 +48,7 @@ class SemanticAnalyzer {
   Tree<dynamic> convertProgram(Tree<dynamic> currNode, Tree<dynamic>
       parent) {
     Tree<dynamic> block = currNode.children.first;
-
-    if (block.data == NonTerminal.BLOCK) {
-      return convertBlock(block, parent);
-    } else {
-      print("unique exception");
-    }
-    return null;
+    return convertBlock(block, parent);
   }
 
  Tree<dynamic> convertBlock(Tree<dynamic> currNode, Tree<dynamic>
@@ -83,7 +77,7 @@ class SemanticAnalyzer {
           subTrees.addAll(convertStatementList(tree, parent));
           break;
         default:
-          print("failed to convert statement list");
+          log.warning("failed to convert statement list");
           return null;
       }
     }
@@ -115,7 +109,7 @@ class SemanticAnalyzer {
         return convertBlock(tree, parent);
         break;
       default:
-        print("failed to convert statement list");
+        log.warning("failed to convert statement list");
         return null;
     }
   }
@@ -229,7 +223,7 @@ class SemanticAnalyzer {
           subTrees.add(convertStringExpression(tree, parent));
           break;
         default:
-          print("failed to convert statement list");
+          log.warning("failed to convert expression");
           return null;
       }
     }
@@ -334,14 +328,9 @@ class SemanticAnalyzer {
       {
     // An ID expression only has one child
     Tree<dynamic> c = currNode.children.first;
-    if (c.data == TokenType.CHAR) {
       Tree<dynamic> value = c.children.first;
       // The only child should be the value
       return new Tree<dynamic>(value.data, parent);
-    } else {
-      print("fuuu");
-    }
-    return null;
   }
 
   Tree<dynamic> convertBoolean(Tree<dynamic> currNode, Tree<dynamic>
