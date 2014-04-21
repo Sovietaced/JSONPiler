@@ -24,7 +24,7 @@ class Compiler{
   Compiler(this.source);
   
   run(){
-    try{
+    //try{
       this.tokens = Lexer.analyze(this.source);
       this.parser = new Parser(this.tokens);
       var hash = this.parser.analyse();
@@ -32,9 +32,8 @@ class Compiler{
       this.symbols = hash['symbols'];
       analyzer = new SemanticAnalyzer(this.cst, this.symbols);
       this.ast = analyzer.analyze();
-    }catch(e){
+    //}catch(e){
       // Let log and throw handle
-      print(e.toString());
-    }
+    //}
   }
 }

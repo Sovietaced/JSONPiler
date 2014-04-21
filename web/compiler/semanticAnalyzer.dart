@@ -53,6 +53,7 @@ class SemanticAnalyzer {
    * Begins converting a program to an AST.
    */
   Tree<dynamic> convertProgram(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting a program");
     Tree<dynamic> block = currNode.children.first;
     return convertBlock(block, parent);
   }
@@ -61,6 +62,8 @@ class SemanticAnalyzer {
    * Convert a CST block to an AST block
    */
   Tree<dynamic> convertBlock(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting a block on line " + currNode.line);
+    
     // Increment the scope
     scope++;
 
@@ -71,6 +74,9 @@ class SemanticAnalyzer {
     for (Tree<dynamic> child in convertStatementList(statementList, ast)) {
       ast.addChild(child);
     }
+    
+    scope--;
+    
     return ast;
   }
 
@@ -78,7 +84,7 @@ class SemanticAnalyzer {
  * Converts a CST statement list to an AST statement list
  */
   List<Tree<dynamic>> convertStatementList(Tree<dynamic> currNode, Tree<dynamic> parent) {
-
+    log.info("Converting a statement list on line " + currNode.line);
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
 
     for (Tree<dynamic> tree in currNode.children) {
@@ -101,6 +107,8 @@ class SemanticAnalyzer {
    * Relays a CST statement to one of many AST statements
    */
   Tree<dynamic> convertStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting a statement on line " + currNode.line);
+   
     // Statements only have one child
     Tree<dynamic> tree = currNode.children.first;
 
@@ -126,6 +134,7 @@ class SemanticAnalyzer {
    * Convert a CST variable delcaration to an AST variable delcaration
    */
   Tree<dynamic> convertVariableDeclaration(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting a variable deckaration on line " + currNode.line);
     // We know that a variable declaration tree only has two children
     Tree<dynamic> type = currNode.children[0];
     Tree<dynamic> id = currNode.children[1];
@@ -143,7 +152,7 @@ class SemanticAnalyzer {
    * Convert a CST assignment statement to an AST assignment statement
    */
   Tree<dynamic> convertAssignmentStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
-    log.info("Converting an asignment statement");
+    log.info("Converting an assignment statement on line " + currNode.line);
 
     // We know that an assignment statement tree only has two children
     Tree<dynamic> id = currNode.children[0];
@@ -167,7 +176,7 @@ class SemanticAnalyzer {
    * Convert a CST if statement to an AST if statement
    */
   Tree<dynamic> convertIfStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
-    // New tree
+    log.info("Converting an if statement on line " + currNode.line);
     Tree<dynamic> ifStatement = new Tree<dynamic>(NonTerminal.IF_STATEMENT, parent, currNode.line);
 
     for (Tree<dynamic> tree in currNode.children) {
@@ -184,7 +193,7 @@ class SemanticAnalyzer {
    * Convert a CST while statement to an AST while statement.
    */
   Tree<dynamic> convertWhileStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
-    // New tree
+    log.info("Converting a while statement on line " + currNode.line);
     Tree<dynamic> whileStatement = new Tree<dynamic>(NonTerminal.WHILE_STATEMENT, parent, currNode.line);
 
     for (Tree<dynamic> tree in currNode.children) {
@@ -201,6 +210,7 @@ class SemanticAnalyzer {
    * Convert a CST type declaration to a AST type value
    */
   Tree<dynamic> convertTypeDeclaration(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting a type declaration on line " + currNode.line);
     Tree<dynamic> typeValue = currNode.children.first;
     return new Tree<dynamic>(typeValue.data, parent, currNode.line);
   }
@@ -209,6 +219,7 @@ class SemanticAnalyzer {
    * Convert a CST print statement to an AST print statement
    */
   Tree<dynamic> convertPrintStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting a print statement on line " + currNode.line);
     Tree<dynamic> ast = new Tree<dynamic>(NonTerminal.PRINT_STATEMENT, parent, currNode.line);
 
     for (Tree<dynamic> tree in currNode.children) {
@@ -223,7 +234,7 @@ class SemanticAnalyzer {
    * Converts a CST expression to one of many AST expressions
    */
   List<Tree<dynamic>> convertExpression(Tree<dynamic> currNode, Tree<dynamic> parent) {
-
+    log.info("Converting an expression on line " + currNode.line);
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
 
     for (Tree<dynamic> tree in currNode.children) {
@@ -242,7 +253,6 @@ class SemanticAnalyzer {
           break;
         default:
           log.warning("failed to convert expression");
-          return null;
       }
     }
     return subTrees;
@@ -253,6 +263,7 @@ class SemanticAnalyzer {
    * the current tree node is an id expression. Forward to convertChar 
    **/
   Tree<dynamic> convertIdExpression(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting an identifier expression on line " + currNode.line);
     return convertChar(currNode, parent);
   }
 
@@ -260,7 +271,7 @@ class SemanticAnalyzer {
    * Convert a CST int expression to an AST int expression
    */
   List<Tree<dynamic>> convertIntExpression(Tree<dynamic> currNode, Tree<dynamic> parent) {
-
+    log.info("Converting an int expression on line " + currNode.line);
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
 
     for (Tree<dynamic> tree in currNode.children) {
@@ -282,6 +293,7 @@ class SemanticAnalyzer {
    * Convert a CST boolean expression into an AST boolean expression
    */
   List<Tree<dynamic>> convertBooleanExpression(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting a boolean expression on line " + currNode.line);
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
 
     for (Tree<dynamic> tree in currNode.children) {
@@ -303,25 +315,28 @@ class SemanticAnalyzer {
    * Convert a CST string expression into an AST string expression
    */
   Tree<dynamic> convertStringExpression(Tree<dynamic> currNode, Tree<dynamic> parent) {
-
+    log.info("Converting a string expression on line " + currNode.line);
     // New tree
     Tree<dynamic> stringTree = new Tree<dynamic>(NonTerminal.STRING_EXPRESSION, parent, currNode.line);
 
     for (Tree<dynamic> tree in currNode.children) {
+      print(tree.data);
       if (tree.data == NonTerminal.CHAR_LIST) {
         stringTree.addChildren(convertCharList(tree, stringTree));
       }
+      else if (tree.data == TokenType.QUOTE) {
+        stringTree.addChild(new Tree<dynamic>("\"", stringTree, tree.line));
+      }
     }
-
-    typeCheck(stringTree.children);
-
-    return stringTree;
+    
+    return new Tree<dynamic>(stringTree.children.join(""), parent, currNode.line);
   }
 
   /**
    * Convert a CST digit to an AST digit value
    */
   Tree<dynamic> convertDigit(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting a digit on line " + currNode.line);
     // An ID expression only has one child
     Tree<dynamic> value = currNode.children.first;
     return new Tree<dynamic>(value.data, parent, value.line);
@@ -331,6 +346,7 @@ class SemanticAnalyzer {
    * Convert a CST charlist to an AST charlist (singular tree)
    */
   List<Tree<dynamic>> convertCharList(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting a char list on line " + currNode.line);
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
 
     for (Tree<dynamic> tree in currNode.children) {
@@ -347,6 +363,7 @@ class SemanticAnalyzer {
    * Convert an int operation CST value to an int operation AST value
    */
   Tree<dynamic> convertIntOp(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting an integer operation on line " + currNode.line);
     // An ID expression only has one child
     Tree<dynamic> value = currNode.children.first;
     return new Tree<dynamic>(value.data, parent, value.line);
@@ -356,6 +373,7 @@ class SemanticAnalyzer {
    * Convert a boolean operation CST value to a boolean operation AST value
    */
   Tree<dynamic> convertBoolOp(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting a boolean operation on line " + currNode.line);
     // An ID expression only has one child
     Tree<dynamic> value = currNode.children.first;
     return new Tree<dynamic>(value.data, parent, value.line);
@@ -365,6 +383,7 @@ class SemanticAnalyzer {
    * Convert a char CST value to a char AST value
    */
   Tree<dynamic> convertChar(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting a char on line " + currNode.line);
     // An ID expression only has one child
     Tree<dynamic> c = currNode.children.first;
     Tree<dynamic> value = c.children.first;
@@ -376,6 +395,7 @@ class SemanticAnalyzer {
    * Convert a boolean CST value to a boolean AST value
    */
   Tree<dynamic> convertBoolean(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting a boolean on line " + currNode.line);
     Tree<dynamic> value = currNode.children.first;
     return new Tree<dynamic>(value.data, parent, value.line);
   }
@@ -394,19 +414,24 @@ class SemanticAnalyzer {
     clean.removeWhere((item) => item.data == "!=");
     clean.removeWhere((item) => item.data == "+");
     clean.removeWhere((item) => item.data is NonTerminal);
-
-    // Reset values
-    Tree<dynamic> left = clean.removeAt(0);
-    right = clean;
-
-    // Compare all values against the left most (first value)
-    String type = determineType(left.data);
-    if (type == "int") {
-      ensureType(right, "int");
-    } else if (type == "boolean") {
-      ensureType(right, "boolean");
-    } else {
-      ensureType(right, "string");
+    
+    // Need two values to do type checking
+    if(clean.length > 1) {
+      log.info("Type checking the following values: " + clean.toString());
+      
+      // Reset values
+      Tree<dynamic> left = clean.removeAt(0);
+      right = clean;
+  
+      // Compare all values against the left most (first value)
+      String type = determineType(left.data);
+      if (type == "int") {
+        ensureType(right, "int");
+      } else if (type == "boolean") {
+        ensureType(right, "boolean");
+      } else {
+        ensureType(right, "string");
+      }
     }
   }
 
