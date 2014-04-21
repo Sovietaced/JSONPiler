@@ -45,8 +45,10 @@ class Parser {
             "Expected END token, found type " + token.type.value + " on line " +
             token.line.toString()), log);
       }
-      log.info("Parser finished analysis...Dumping CST");
-      cst.dump();
+      
+      warnSymbols();
+      
+      log.info("Parser finished analysis...");
       return {"cst":cst, "symbols": symbols};
     } else {
       log.warning("No tokens to parse, finished.");
@@ -155,6 +157,7 @@ class Parser {
     // Backtrack to parse id
     index--;
     idExpression(currNode);
+    markInited();
     scopeCheck();
 
     expect(TokenType.EQUALS);
@@ -231,6 +234,7 @@ class Parser {
       stringExpression(currNode);
     } else if (isNextToken(TokenType.ID)) {
       idExpression(currNode);
+      markUsed();
     } else {
       print("idk");
     }
@@ -475,5 +479,53 @@ class Parser {
       }
     }  
     return instances;
+  }
+  
+  /**
+   * Gets an instance of a symbol in the highest scope
+   */
+  CompilerSymbol getSymbol(String symbol) {
+    List<CompilerSymbol> instances = getSymbols(symbol);
+    for(CompilerSymbol s in instances){
+      if(s.scope == this.scope){
+        return s;
+      }
+    }
+    return instances.last;
+  }
+  
+  /**
+   * Marks a symbol as initialized
+   */
+  void markInited(){
+    Token token = getToken();
+    if(token.type == TokenType.ID){
+      String symbol = token.value;
+      CompilerSymbol instance = getSymbol(symbol);
+      instance.inited = true;
+    }
+  }
+  
+  /**
+   * Marks a symbol as used
+   */
+  void markUsed(){
+      Token token = getToken();
+      if(token.type == TokenType.ID){
+        String symbol = token.value;
+        CompilerSymbol instance = getSymbol(symbol);
+        instance.used = true;
+      }
+    }
+  
+  void warnSymbols() {
+    for(CompilerSymbol instance in this.symbols) {
+      if(instance.inited != true) {
+        log.warning("Symbol ${instance.id} on line ${instance.line.toString()} never initialized!");
+      }
+      else if(instance.used != true) {
+        log.warning("Symbol ${instance.id} on line ${instance.line.toString()} never used!");
+      }
+    }
   }
 }

@@ -35,13 +35,13 @@ class SemanticAnalyzer {
   analyze() {
     log.info("Semantic Analyzer starting analysis...");
     if (!this.cst.children.isEmpty) {
-
+      
+      drawSymbols(this.symbols);
       drawTree(this.cst, "cst");
       // Instantiate AST
       Tree<dynamic> ast = convertProgram(cst, null);
 
-      log.info("Semantic Analyzer finished analysis... Dumping AST");
-      ast.dump();
+      log.info("Semantic Analyzer finished analysis...");
       drawTree(ast, "ast");
       return ast;
     } else {
@@ -320,7 +320,6 @@ class SemanticAnalyzer {
     Tree<dynamic> stringTree = new Tree<dynamic>(NonTerminal.STRING_EXPRESSION, parent, currNode.line);
 
     for (Tree<dynamic> tree in currNode.children) {
-      print(tree.data);
       if (tree.data == NonTerminal.CHAR_LIST) {
         stringTree.addChildren(convertCharList(tree, stringTree));
       }
@@ -513,5 +512,11 @@ class SemanticAnalyzer {
    */
   void drawTree(Tree<dynamic> tree, String id) {
     (querySelector("#$id")).appendText(tree.syntrify());
+  }
+  
+  void drawSymbols(List<CompilerSymbol> symbols) {
+    for(CompilerSymbol symbol in symbols){
+      querySelector("#symbol-table").appendText(symbol.toString());
+    }
   }
 }

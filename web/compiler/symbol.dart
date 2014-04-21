@@ -15,13 +15,13 @@ class CompilerSymbol{
   num scope;
   num line;
   String type;
+  bool used = false;
+  bool inited = false;
   
-  CompilerSymbol(this.id, this.scope, this.line, this.type){
-    querySelector("#symbol-table").appendText(this.toString());
-  }
+  CompilerSymbol(this.id, this.scope, this.line, this.type);
   
   String toString(){
-    return "Symbol: name=${this.id} scope=${this.scope} line=${this.line} type=${this.type} \n";
+    return "Symbol: name=${this.id} scope=${this.scope} line=${this.line} type=${this.type} inited=${this.inited} used=${this.used} \n";
   }
 }
 
