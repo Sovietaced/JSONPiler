@@ -1,6 +1,8 @@
 /* semanticAnalyzer.dart
  * Jason Parraga <Sovietaced@gmail.com>  
  * 
+ * Recursively converts a CST to an AST. Performs type checking against literal values
+ * and identifiers with the use of the symbol table. 
  * */
 
 library SemanticAnalyzer;
@@ -23,7 +25,10 @@ class SemanticAnalyzer {
   List<CompilerSymbol> symbols;
   num scope = 0;
 
+  // Constructor
   SemanticAnalyzer(this.cst, this.symbols);
+  
+  
   /**
    *  This is the main method for the Semantic Analyzer where all the magic happens 
    */
@@ -52,6 +57,9 @@ class SemanticAnalyzer {
     return convertBlock(block, parent);
   }
 
+  /**
+   * Convert a CST block to an AST block
+   */
   Tree<dynamic> convertBlock(Tree<dynamic> currNode, Tree<dynamic> parent) {
     // Increment the scope
     scope++;
@@ -66,6 +74,9 @@ class SemanticAnalyzer {
     return ast;
   }
 
+  /**
+ * Converts a CST statement list to an AST statement list
+ */
   List<Tree<dynamic>> convertStatementList(Tree<dynamic> currNode, Tree<dynamic> parent) {
 
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
@@ -86,6 +97,9 @@ class SemanticAnalyzer {
     return subTrees;
   }
 
+  /**
+   * Relays a CST statement to one of many AST statements
+   */
   Tree<dynamic> convertStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
     // Statements only have one child
     Tree<dynamic> tree = currNode.children.first;
@@ -108,6 +122,9 @@ class SemanticAnalyzer {
     }
   }
 
+  /**
+   * Convert a CST variable delcaration to an AST variable delcaration
+   */
   Tree<dynamic> convertVariableDeclaration(Tree<dynamic> currNode, Tree<dynamic> parent) {
     // We know that a variable declaration tree only has two children
     Tree<dynamic> type = currNode.children[0];
@@ -122,6 +139,9 @@ class SemanticAnalyzer {
     return variableDeclaration;
   }
 
+  /**
+   * Convert a CST assignment statement to an AST assignment statement
+   */
   Tree<dynamic> convertAssignmentStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
     log.info("Converting an asignment statement");
 
@@ -138,11 +158,14 @@ class SemanticAnalyzer {
     List<Tree<dynamic>> expressionValues = convertExpression(value, assignmentStatement);
     assignmentStatement.addChildren(expressionValues);
 
-    typeCheck(assignmentStatement);
+    typeCheck(assignmentStatement.children);
 
     return assignmentStatement;
   }
 
+  /**
+   * Convert a CST if statement to an AST if statement
+   */
   Tree<dynamic> convertIfStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
     // New tree
     Tree<dynamic> ifStatement = new Tree<dynamic>(NonTerminal.IF_STATEMENT, parent, currNode.line);
@@ -157,6 +180,9 @@ class SemanticAnalyzer {
     return ifStatement;
   }
 
+  /**
+   * Convert a CST while statement to an AST while statement.
+   */
   Tree<dynamic> convertWhileStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
     // New tree
     Tree<dynamic> whileStatement = new Tree<dynamic>(NonTerminal.WHILE_STATEMENT, parent, currNode.line);
@@ -171,11 +197,17 @@ class SemanticAnalyzer {
     return whileStatement;
   }
 
+  /**
+   * Convert a CST type declaration to a AST type value
+   */
   Tree<dynamic> convertTypeDeclaration(Tree<dynamic> currNode, Tree<dynamic> parent) {
     Tree<dynamic> typeValue = currNode.children.first;
     return new Tree<dynamic>(typeValue.data, parent, currNode.line);
   }
 
+  /**
+   * Convert a CST print statement to an AST print statement
+   */
   Tree<dynamic> convertPrintStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
     Tree<dynamic> ast = new Tree<dynamic>(NonTerminal.PRINT_STATEMENT, parent, currNode.line);
 
@@ -187,6 +219,9 @@ class SemanticAnalyzer {
     return ast;
   }
 
+  /**
+   * Converts a CST expression to one of many AST expressions
+   */
   List<Tree<dynamic>> convertExpression(Tree<dynamic> currNode, Tree<dynamic> parent) {
 
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
@@ -221,6 +256,9 @@ class SemanticAnalyzer {
     return convertChar(currNode, parent);
   }
 
+  /**
+   * Convert a CST int expression to an AST int expression
+   */
   List<Tree<dynamic>> convertIntExpression(Tree<dynamic> currNode, Tree<dynamic> parent) {
 
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
@@ -240,6 +278,9 @@ class SemanticAnalyzer {
     return subTrees;
   }
 
+  /**
+   * Convert a CST boolean expression into an AST boolean expression
+   */
   List<Tree<dynamic>> convertBooleanExpression(Tree<dynamic> currNode, Tree<dynamic> parent) {
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
 
@@ -254,10 +295,13 @@ class SemanticAnalyzer {
     }
 
     typeCheck(subTrees);
-    
+
     return subTrees;
   }
 
+  /**
+   * Convert a CST string expression into an AST string expression
+   */
   Tree<dynamic> convertStringExpression(Tree<dynamic> currNode, Tree<dynamic> parent) {
 
     // New tree
@@ -270,16 +314,22 @@ class SemanticAnalyzer {
     }
 
     typeCheck(stringTree.children);
-    
+
     return stringTree;
   }
 
+  /**
+   * Convert a CST digit to an AST digit value
+   */
   Tree<dynamic> convertDigit(Tree<dynamic> currNode, Tree<dynamic> parent) {
     // An ID expression only has one child
     Tree<dynamic> value = currNode.children.first;
     return new Tree<dynamic>(value.data, parent, value.line);
   }
 
+  /**
+   * Convert a CST charlist to an AST charlist (singular tree)
+   */
   List<Tree<dynamic>> convertCharList(Tree<dynamic> currNode, Tree<dynamic> parent) {
     List<Tree<dynamic>> subTrees = new List<Tree<dynamic>>();
 
@@ -293,18 +343,27 @@ class SemanticAnalyzer {
     return subTrees;
   }
 
+  /**
+   * Convert an int operation CST value to an int operation AST value
+   */
   Tree<dynamic> convertIntOp(Tree<dynamic> currNode, Tree<dynamic> parent) {
     // An ID expression only has one child
     Tree<dynamic> value = currNode.children.first;
     return new Tree<dynamic>(value.data, parent, value.line);
   }
 
+  /**
+   * Convert a boolean operation CST value to a boolean operation AST value
+   */
   Tree<dynamic> convertBoolOp(Tree<dynamic> currNode, Tree<dynamic> parent) {
     // An ID expression only has one child
     Tree<dynamic> value = currNode.children.first;
     return new Tree<dynamic>(value.data, parent, value.line);
   }
 
+  /**
+   * Convert a char CST value to a char AST value
+   */
   Tree<dynamic> convertChar(Tree<dynamic> currNode, Tree<dynamic> parent) {
     // An ID expression only has one child
     Tree<dynamic> c = currNode.children.first;
@@ -313,13 +372,17 @@ class SemanticAnalyzer {
     return new Tree<dynamic>(value.data, parent, value.line);
   }
 
+  /**
+   * Convert a boolean CST value to a boolean AST value
+   */
   Tree<dynamic> convertBoolean(Tree<dynamic> currNode, Tree<dynamic> parent) {
     Tree<dynamic> value = currNode.children.first;
     return new Tree<dynamic>(value.data, parent, value.line);
   }
 
   /**
-   * Checks the list of values (right) against the type of the left value
+   * Checks a list of values for type contiguencey. Assumes the first vaid value is the 
+   * desired value to check against.
    */
   void typeCheck(List<Tree<dynamic>> right) {
 
@@ -333,9 +396,10 @@ class SemanticAnalyzer {
     clean.removeWhere((item) => item.data is NonTerminal);
 
     // Reset values
-    Tree<dynamic >left = clean.removeAt(0);
+    Tree<dynamic> left = clean.removeAt(0);
     right = clean;
 
+    // Compare all values against the left most (first value)
     String type = determineType(left.data);
     if (type == "int") {
       ensureType(right, "int");
@@ -346,6 +410,9 @@ class SemanticAnalyzer {
     }
   }
 
+  /**
+   * Ensure that the list of values conforms to the specified type desired.
+   */
   void ensureType(List<Tree<dynamic>> right, String desiredType) {
 
     for (Tree<dynamic> tree in right) {
@@ -361,6 +428,12 @@ class SemanticAnalyzer {
     }
   }
 
+  /**
+   * Determine the type of a value. Performs some really hacky tricks. Since AST values
+   * are held as dynamic determining types is not so easy. First, symbols are checked. Then
+   * the value is attempted to be parsed to a number. If an exception is thrown the value
+   * is either a string or a boolean.
+   */
   String determineType(String value) {
 
     // Symbol, easy
