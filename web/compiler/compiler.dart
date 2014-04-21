@@ -34,6 +34,7 @@ class Compiler{
       this.ast = analyzer.analyze();
     }catch(e){
       // Let log and throw handle
+      print(e.toString());
     }
   }
 }

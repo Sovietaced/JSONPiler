@@ -138,7 +138,7 @@ class SemanticAnalyzer {
     List<Tree<dynamic>> expressionValues = convertExpression(value, assignmentStatement);
     assignmentStatement.addChildren(expressionValues);
 
-    typeCheck(idValue, expressionValues);
+    typeCheck(assignmentStatement);
 
     return assignmentStatement;
   }
@@ -234,6 +234,9 @@ class SemanticAnalyzer {
         subTrees.addAll(convertExpression(tree, parent));
       }
     }
+
+    typeCheck(subTrees);
+
     return subTrees;
   }
 
@@ -250,6 +253,8 @@ class SemanticAnalyzer {
       }
     }
 
+    typeCheck(subTrees);
+    
     return subTrees;
   }
 
@@ -263,6 +268,9 @@ class SemanticAnalyzer {
         stringTree.addChildren(convertCharList(tree, stringTree));
       }
     }
+
+    typeCheck(stringTree.children);
+    
     return stringTree;
   }
 
@@ -310,91 +318,67 @@ class SemanticAnalyzer {
     return new Tree<dynamic>(value.data, parent, value.line);
   }
 
-  void typeCheck(Tree<dynamic> left, List<Tree<dynamic>> right) {
-
-    if (left.data is num) {
-      ensureIntegers(right);
-    } else if (left.data is String) {
-      if (symbolExists(left.data)) {
-        CompilerSymbol symbol = getSymbol(left.data);
-
-        if (symbol.type == "int") {
-          ensureIntegers(right);
-        } else if (symbol.type == "string") {
-          ensureStrings(right);
-        } else {
-          ensureBooleans(right);
-        }
-      } else {
-        ensureStrings(right);
-      }
-    }
-  }
-
   /**
-   * Ensures that the values in the list are integers.
-   * It attempts to parse them into nums, if they fail 
-   * they will throw a format exception and then we
-   * throw an exception. 
+   * Checks the list of values (right) against the type of the left value
    */
-  void ensureIntegers(List<Tree<dynamic>> right) {
+  void typeCheck(List<Tree<dynamic>> right) {
+
+    // Merge values
+    List<Tree<dynamic>> clean = new List.from(right);
+
+    // Remove any garbage we don't want to compare
+    clean.removeWhere((item) => item.data == "==");
+    clean.removeWhere((item) => item.data == "!=");
+    clean.removeWhere((item) => item.data == "+");
+    clean.removeWhere((item) => item.data is NonTerminal);
+
+    // Reset values
+    Tree<dynamic >left = clean.removeAt(0);
+    right = clean;
+
+    String type = determineType(left.data);
+    if (type == "int") {
+      ensureType(right, "int");
+    } else if (type == "boolean") {
+      ensureType(right, "boolean");
+    } else {
+      ensureType(right, "string");
+    }
+  }
+
+  void ensureType(List<Tree<dynamic>> right, String desiredType) {
+
     for (Tree<dynamic> tree in right) {
-      String string = tree.data.toString();
+      String value = tree.data.toString();
+      String foundType = determineType(value);
+
+      if (foundType != desiredType) {
+        if (symbolExists(value)) {
+          ExceptionUtil.logAndThrow(new CompilerTypeError("Identifier " + getSymbol(value).id + " on line " + tree.line + " is not of expected type $desiredType."), log);
+        }
+        ExceptionUtil.logAndThrow(new CompilerTypeError(tree.toString() + " on line " + tree.line + " is not of expected type $desiredType."), log);
+      }
+    }
+  }
+
+  String determineType(String value) {
+
+    // Symbol, easy
+    if (symbolExists(value)) {
+      CompilerSymbol symbol = getSymbol(value);
+      return symbol.type;
+    } // Literal value
+    else {
+      // Check if int
       try {
-        num.parse(string);
-
+        num.parse(value);
+        return "int";
+        // If an exception is thrown the value is either a string or a boolean
       } on FormatException {
-        // Value is not an integer, check if it is a symbol
-        if (symbolExists(string)) {
-          CompilerSymbol symbol = getSymbol(string);
-
-          if (symbol.type != "int") {
-            // Not an integer and not a symbol of an integer
-            ExceptionUtil.logAndThrow(new CompilerTypeError("Identifier " + symbol.id + " on line " + tree.line + " is not of expected type integer."), log);
-          }
+        if (value == "true" || value == "false") {
+          return "boolean";
         } else {
-          ExceptionUtil.logAndThrow(new CompilerTypeError(tree.toString() + " on line " + tree.line + " is not of expected type integer."), log);
-        }
-      }
-    }
-  }
-
-  void ensureStrings(List<Tree<dynamic>> right) {
-    for (Tree<dynamic> tree in right) {
-      String string = tree.data.toString();
-      try {
-        num.parse(string);
-        // No exception thrown, not a string...
-        ExceptionUtil.logAndThrow(new CompilerTypeError(tree.toString() + " on line " + tree.line + " is not of expected type string."), log);
-      } on FormatException {
-        if (symbolExists(string)) {
-          CompilerSymbol symbol = getSymbol(string);
-
-          if (symbol.type != "string") {
-            ExceptionUtil.logAndThrow(new CompilerTypeError("Identifier " + symbol.id + " on line " + tree.line + " is not of expected type string."), log);
-          }
-        }
-      }
-    }
-  }
-
-  void ensureBooleans(List<Tree<dynamic>> right) {
-    for (Tree<dynamic> tree in right) {
-      String string = tree.data.toString();
-      try {
-        num.parse(string);
-        // No exception thrown, not a string...
-        ExceptionUtil.logAndThrow(new CompilerTypeError(tree.toString() + " on line " + tree.line + " is not of expected type boolean."), log);
-      } on FormatException {
-        if (symbolExists(string)) {
-          CompilerSymbol symbol = getSymbol(string);
-
-          if (symbol.type != "boolean") {
-            ExceptionUtil.logAndThrow(new CompilerTypeError("Identifier " + symbol.id + " on line " + tree.line + " is not of expected type boolean."), log);
-          }
-        }
-        else if(string != "true" && string != "false"){
-          ExceptionUtil.logAndThrow(new CompilerTypeError(tree.toString() + " on line " + tree.line + " is not of expected type boolean."), log);
+          return "string";
         }
       }
     }
@@ -410,7 +394,7 @@ class SemanticAnalyzer {
         return s;
       }
     }
-    print("Throwing an error...");
+    log.warning("Compiler can't find symbol");
     return null;
   }
 
@@ -426,6 +410,9 @@ class SemanticAnalyzer {
     return false;
   }
 
+  /**
+   * Replaces a div on screen with a syntree string.
+   */
   void drawTree(Tree<dynamic> tree, String id) {
     (querySelector("#$id")).appendText(tree.syntrify());
   }
