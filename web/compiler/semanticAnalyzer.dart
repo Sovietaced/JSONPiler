@@ -21,6 +21,7 @@ class SemanticAnalyzer {
 
   Tree<dynamic> cst;
   List<CompilerSymbol> symbols;
+  num scope = 0;
 
   SemanticAnalyzer(this.cst, this.symbols);
   /**
@@ -52,7 +53,10 @@ class SemanticAnalyzer {
   }
 
   Tree<dynamic> convertBlock(Tree<dynamic> currNode, Tree<dynamic> parent) {
-    Tree<dynamic> ast = new Tree<dynamic>(NonTerminal.BLOCK, parent);
+    // Increment the scope
+    scope++;
+
+    Tree<dynamic> ast = new Tree<dynamic>(NonTerminal.BLOCK, parent, currNode.line);
 
     // Second item should be a statement list
     Tree<dynamic> statementList = currNode.children[1];
@@ -110,7 +114,7 @@ class SemanticAnalyzer {
     Tree<dynamic> id = currNode.children[1];
 
     // New tree
-    Tree<dynamic> variableDeclaration = new Tree<dynamic>(NonTerminal.VARIABLE_DECLARATION, parent);
+    Tree<dynamic> variableDeclaration = new Tree<dynamic>(NonTerminal.VARIABLE_DECLARATION, parent, currNode.line);
 
     variableDeclaration.addChild(convertTypeDeclaration(type, variableDeclaration));
     variableDeclaration.addChild(convertIdExpression(id, variableDeclaration));
@@ -119,12 +123,14 @@ class SemanticAnalyzer {
   }
 
   Tree<dynamic> convertAssignmentStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
+    log.info("Converting an asignment statement");
+
     // We know that an assignment statement tree only has two children
     Tree<dynamic> id = currNode.children[0];
     Tree<dynamic> value = currNode.children[2];
 
     // New tree
-    Tree<dynamic> assignmentStatement = new Tree<dynamic>(NonTerminal.ASSIGNMENT_STATEMENT, parent);
+    Tree<dynamic> assignmentStatement = new Tree<dynamic>(NonTerminal.ASSIGNMENT_STATEMENT, parent, currNode.line);
 
     Tree<dynamic> idValue = convertIdExpression(id, assignmentStatement);
     assignmentStatement.addChild(idValue);
@@ -139,7 +145,7 @@ class SemanticAnalyzer {
 
   Tree<dynamic> convertIfStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
     // New tree
-    Tree<dynamic> ifStatement = new Tree<dynamic>(NonTerminal.IF_STATEMENT, parent);
+    Tree<dynamic> ifStatement = new Tree<dynamic>(NonTerminal.IF_STATEMENT, parent, currNode.line);
 
     for (Tree<dynamic> tree in currNode.children) {
       if (tree.data == NonTerminal.BOOLEAN_EXPRESSION) {
@@ -148,13 +154,12 @@ class SemanticAnalyzer {
         ifStatement.addChild(convertBlock(tree, ifStatement));
       }
     }
-    ifStatement.dump();
     return ifStatement;
   }
 
   Tree<dynamic> convertWhileStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
     // New tree
-    Tree<dynamic> whileStatement = new Tree<dynamic>(NonTerminal.WHILE_STATEMENT, parent);
+    Tree<dynamic> whileStatement = new Tree<dynamic>(NonTerminal.WHILE_STATEMENT, parent, currNode.line);
 
     for (Tree<dynamic> tree in currNode.children) {
       if (tree.data == NonTerminal.BOOLEAN_EXPRESSION) {
@@ -168,11 +173,11 @@ class SemanticAnalyzer {
 
   Tree<dynamic> convertTypeDeclaration(Tree<dynamic> currNode, Tree<dynamic> parent) {
     Tree<dynamic> typeValue = currNode.children.first;
-    return new Tree<dynamic>(typeValue.data, parent);
+    return new Tree<dynamic>(typeValue.data, parent, currNode.line);
   }
 
   Tree<dynamic> convertPrintStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
-    Tree<dynamic> ast = new Tree<dynamic>(NonTerminal.PRINT_STATEMENT, parent);
+    Tree<dynamic> ast = new Tree<dynamic>(NonTerminal.PRINT_STATEMENT, parent, currNode.line);
 
     for (Tree<dynamic> tree in currNode.children) {
       if (tree.data == NonTerminal.EXPRESSION) {
@@ -251,10 +256,9 @@ class SemanticAnalyzer {
   Tree<dynamic> convertStringExpression(Tree<dynamic> currNode, Tree<dynamic> parent) {
 
     // New tree
-    Tree<dynamic> stringTree = new Tree<dynamic>(NonTerminal.STRING_EXPRESSION, parent);
+    Tree<dynamic> stringTree = new Tree<dynamic>(NonTerminal.STRING_EXPRESSION, parent, currNode.line);
 
     for (Tree<dynamic> tree in currNode.children) {
-      print(tree.data);
       if (tree.data == NonTerminal.CHAR_LIST) {
         stringTree.addChildren(convertCharList(tree, stringTree));
       }
@@ -265,7 +269,7 @@ class SemanticAnalyzer {
   Tree<dynamic> convertDigit(Tree<dynamic> currNode, Tree<dynamic> parent) {
     // An ID expression only has one child
     Tree<dynamic> value = currNode.children.first;
-    return new Tree<dynamic>(value.data, parent);
+    return new Tree<dynamic>(value.data, parent, value.line);
   }
 
   List<Tree<dynamic>> convertCharList(Tree<dynamic> currNode, Tree<dynamic> parent) {
@@ -275,7 +279,7 @@ class SemanticAnalyzer {
       if (tree.data == TokenType.CHAR || tree.data == TokenType.SPACE) {
         Tree<dynamic> value = tree.children.first;
         // The only child should be the value
-        subTrees.add(new Tree<dynamic>(value.data, parent));
+        subTrees.add(new Tree<dynamic>(value.data, parent, value.line));
       }
     }
     return subTrees;
@@ -284,13 +288,13 @@ class SemanticAnalyzer {
   Tree<dynamic> convertIntOp(Tree<dynamic> currNode, Tree<dynamic> parent) {
     // An ID expression only has one child
     Tree<dynamic> value = currNode.children.first;
-    return new Tree<dynamic>(value.data, parent);
+    return new Tree<dynamic>(value.data, parent, value.line);
   }
 
   Tree<dynamic> convertBoolOp(Tree<dynamic> currNode, Tree<dynamic> parent) {
     // An ID expression only has one child
     Tree<dynamic> value = currNode.children.first;
-    return new Tree<dynamic>(value.data, parent);
+    return new Tree<dynamic>(value.data, parent, value.line);
   }
 
   Tree<dynamic> convertChar(Tree<dynamic> currNode, Tree<dynamic> parent) {
@@ -298,44 +302,128 @@ class SemanticAnalyzer {
     Tree<dynamic> c = currNode.children.first;
     Tree<dynamic> value = c.children.first;
     // The only child should be the value
-    return new Tree<dynamic>(value.data, parent);
+    return new Tree<dynamic>(value.data, parent, value.line);
   }
 
   Tree<dynamic> convertBoolean(Tree<dynamic> currNode, Tree<dynamic> parent) {
     Tree<dynamic> value = currNode.children.first;
-    return new Tree<dynamic>(value.data, parent);
+    return new Tree<dynamic>(value.data, parent, value.line);
   }
 
-  typeCheck(Tree<dynamic> left, List<Tree<dynamic>> right) {
+  void typeCheck(Tree<dynamic> left, List<Tree<dynamic>> right) {
 
-    if (left is num) {
+    if (left.data is num) {
       ensureIntegers(right);
-    } else if (left is String) {
+    } else if (left.data is String) {
+      if (symbolExists(left.data)) {
+        CompilerSymbol symbol = getSymbol(left.data);
 
-    }
-  }
-
-  ensureIntegers(List<Tree<dynamic>> right) {
-    for (Tree<dynamic> tree in right) {
-      if (!tree.data is num) {
-        print("TYPE CHECKING EXCEPTION");
+        if (symbol.type == "int") {
+          ensureIntegers(right);
+        } else if (symbol.type == "string") {
+          ensureStrings(right);
+        } else {
+          ensureBooleans(right);
+        }
+      } else {
+        ensureStrings(right);
       }
     }
-    return true;
+  }
+
+  /**
+   * Ensures that the values in the list are integers.
+   * It attempts to parse them into nums, if they fail 
+   * they will throw a format exception and then we
+   * throw an exception. 
+   */
+  void ensureIntegers(List<Tree<dynamic>> right) {
+    for (Tree<dynamic> tree in right) {
+      String string = tree.data.toString();
+      try {
+        num.parse(string);
+
+      } on FormatException {
+        // Value is not an integer, check if it is a symbol
+        if (symbolExists(string)) {
+          CompilerSymbol symbol = getSymbol(string);
+
+          if (symbol.type != "int") {
+            // Not an integer and not a symbol of an integer
+            ExceptionUtil.logAndThrow(new CompilerTypeError("Identifier " + symbol.id + " on line " + tree.line + " is not of expected type integer."), log);
+          }
+        } else {
+          ExceptionUtil.logAndThrow(new CompilerTypeError(tree.toString() + " on line " + tree.line + " is not of expected type integer."), log);
+        }
+      }
+    }
+  }
+
+  void ensureStrings(List<Tree<dynamic>> right) {
+    for (Tree<dynamic> tree in right) {
+      String string = tree.data.toString();
+      try {
+        num.parse(string);
+        // No exception thrown, not a string...
+        ExceptionUtil.logAndThrow(new CompilerTypeError(tree.toString() + " on line " + tree.line + " is not of expected type string."), log);
+      } on FormatException {
+        if (symbolExists(string)) {
+          CompilerSymbol symbol = getSymbol(string);
+
+          if (symbol.type != "string") {
+            ExceptionUtil.logAndThrow(new CompilerTypeError("Identifier " + symbol.id + " on line " + tree.line + " is not of expected type string."), log);
+          }
+        }
+      }
+    }
+  }
+
+  void ensureBooleans(List<Tree<dynamic>> right) {
+    for (Tree<dynamic> tree in right) {
+      String string = tree.data.toString();
+      try {
+        num.parse(string);
+        // No exception thrown, not a string...
+        ExceptionUtil.logAndThrow(new CompilerTypeError(tree.toString() + " on line " + tree.line + " is not of expected type boolean."), log);
+      } on FormatException {
+        if (symbolExists(string)) {
+          CompilerSymbol symbol = getSymbol(string);
+
+          if (symbol.type != "boolean") {
+            ExceptionUtil.logAndThrow(new CompilerTypeError("Identifier " + symbol.id + " on line " + tree.line + " is not of expected type boolean."), log);
+          }
+        }
+        else if(string != "true" && string != "false"){
+          ExceptionUtil.logAndThrow(new CompilerTypeError(tree.toString() + " on line " + tree.line + " is not of expected type boolean."), log);
+        }
+      }
+    }
   }
 
   /**
    * Gets all instances of a symbol from the symbol table.
    */
-  List<CompilerSymbol> getSymbols(String symbol) {
-    List<CompilerSymbol> instances = new List<CompilerSymbol>();
+  CompilerSymbol getSymbol(String symbol) {
 
     for (CompilerSymbol s in this.symbols) {
-      if (s.id == symbol) {
-        instances.add(s);
+      if (s.id == symbol && s.scope == scope) {
+        return s;
       }
     }
-    return instances;
+    print("Throwing an error...");
+    return null;
+  }
+
+  /**
+   * Checks if the specified symbol exists
+   */
+  bool symbolExists(String symbol) {
+    for (CompilerSymbol s in this.symbols) {
+      if (s.id == symbol) {
+        return true;
+      }
+    }
+    return false;
   }
 
   void drawTree(Tree<dynamic> tree, String id) {

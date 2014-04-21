@@ -6,10 +6,11 @@ import '../compiler/token.dart';
 class Tree<T> {
 
   dynamic data;
+  String line;
   Tree<dynamic> parent;
   List<Tree<dynamic>> children;
  
-  Tree(this.data, this.parent) {
+  Tree(this.data, this.parent, this.line) {
     this.children = new List<Tree<dynamic>>();
   }
   

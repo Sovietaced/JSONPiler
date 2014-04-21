@@ -33,7 +33,7 @@ class Parser {
     if (!tokens.isEmpty) {
 
       // Instantiate CST
-      cst = new Tree<dynamic>(NonTerminal.PROGRAM, null);
+      cst = new Tree<dynamic>(NonTerminal.PROGRAM, null, null);
 
       // Load block with root
       block(cst);
@@ -57,7 +57,7 @@ class Parser {
    * Helper to add a new child tree to the specified root tree
    */
   Tree<dynamic> addChild(dynamic data, Tree<dynamic> root) {
-    Tree<dynamic> child = new Tree<dynamic>(data, root);
+    Tree<dynamic> child = new Tree<dynamic>(data, root, this.getLine());
     root.addChild(child);
     return child;
   }
@@ -449,16 +449,16 @@ class Parser {
           }
         }
         if(scope >= min) {
-          log.info("Identifier $symbol on line " + getLine().toString() + " scope OK. Current scope is $scope, min scope is $min ");
+          log.info("Identifier $symbol on line " + getLine() + " scope OK. Current scope is $scope, min scope is $min ");
         }
         else{
           ExceptionUtil.logAndThrow(new CompilerSyntaxError(
-                    "Identifier $symbol used out of scope on line " + getLine().toString()), log);
+                    "Identifier $symbol used out of scope on line " + getLine()), log);
         }
       }
       else{
         ExceptionUtil.logAndThrow(new CompilerSyntaxError(
-                          "Identifier $symbol undefined on line " + getLine().toString()), log);
+                          "Identifier $symbol undefined on line " + getLine()), log);
       }
     }
   }
