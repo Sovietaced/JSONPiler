@@ -1,6 +1,7 @@
 /* compiler.dart  */
 import 'lexer.dart';
 import 'parser.dart';
+import 'codeGenerator.dart';
 import 'symbol.dart';
 import 'semanticAnalyzer.dart';
 import 'token.dart';
