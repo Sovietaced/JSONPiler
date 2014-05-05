@@ -155,7 +155,15 @@ class CodeGenerator {
     String location = jumpTable.addRow();
     bne(location);
     
+    num preBranch = address;
     parseBlock(block);
+    num postBranch = address;
+    
+    // Calculate jump distance
+    num distance = (postBranch - preBranch) + 1;
+    jumpTable.setDistance(location, distance);
+    
+    //TODO: back patch jump distance
   }
 
   /**
@@ -254,6 +262,10 @@ class CodeGenerator {
   void sys() {
     log.info("Performing a system call");
     insertString("FF");
+  }
+  
+  void backPatch(String location, String value) {
+    
   }
 
   void addNumToHex(int value) {
