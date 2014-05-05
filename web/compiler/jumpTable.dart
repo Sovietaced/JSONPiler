@@ -2,20 +2,22 @@ library jumpTable;
 
 class JumpTable{
  
-  List<Row> rows; 
+  List<JumpTableRow> rows; 
   
   JumpTable() {
-    this.rows = new List<Row>();
+    this.rows = new List<JumpTableRow>();
   }
   
-  void addRow(String location, num distance) {
-    this.rows.add(new Row(location, distance));
+  String addRow() {
+    String location = "J" + this.rows.length.toString();
+    this.rows.add(new JumpTableRow(location));
+    return location;
   }
 }
 
-class Row {
+class JumpTableRow {
     String location;
     num distance;
     
-    Row(this.location, this.distance);
+    JumpTableRow(this.location);
   }

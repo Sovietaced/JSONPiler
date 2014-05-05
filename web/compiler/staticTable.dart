@@ -2,20 +2,20 @@ library staticTable;
 
 class StaticTable {
 
-  List<Row> rows;
+  List<StaticTableRow> rows;
 
   StaticTable() {
-    this.rows = new List<Row>();
+    this.rows = new List<StaticTableRow>();
   }
 
   String addRow(String name, num address) {
     String location = "T" + this.rows.length.toString() + "XX";
-    this.rows.add(new Row(location, name, address));
+    this.rows.add(new StaticTableRow(location, name, address));
     return location;
   }
 
-  Row getRow(String name) {
-    for (Row row in this.rows) {
+  StaticTableRow getRow(String name) {
+    for (StaticTableRow row in this.rows) {
       if (row.name == name) {
         return row;
       }
@@ -24,7 +24,7 @@ class StaticTable {
   }
 
   bool rowExists(String name) {
-    for (Row row in this.rows) {
+    for (StaticTableRow row in this.rows) {
       if (row.name == name) {
         return true;
       }
@@ -33,18 +33,18 @@ class StaticTable {
   }
 
   dump() {
-    for (Row row in this.rows) {
+    for (StaticTableRow row in this.rows) {
       print(row);
     }
   }
 }
 
-class Row {
+class StaticTableRow {
   String location;
   String name;
   num address;
 
-  Row(this.location, this.name, this.address);
+  StaticTableRow(this.location, this.name, this.address);
 
   String toString() {
     return "Row name=${this.name} location=${this.location} address=${this.address}";
