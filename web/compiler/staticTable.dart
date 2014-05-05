@@ -13,6 +13,12 @@ class StaticTable{
     this.rows.add(new Row(location, name, address));
     return location;
   }
+  
+  dump() {
+    for(Row row in this.rows) {
+      print(row);
+    }
+  }
 }
 
 class Row {
@@ -21,4 +27,8 @@ class Row {
     num address;
     
     Row(this.location, this.name, this.address);
+    
+    String toString() {
+      return "Row name=${this.name} location=${this.location} address=${this.address}";  
+    }
   }
