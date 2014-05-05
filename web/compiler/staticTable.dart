@@ -14,6 +14,15 @@ class StaticTable{
     return location;
   }
   
+  Row getRow(String name) {
+    for(Row row in this.rows) {
+      if(row.name == name) {
+        return row;
+      }
+    }
+    throw new Exception("No row with value ${name} exists in static table.");
+  }
+  
   dump() {
     for(Row row in this.rows) {
       print(row);

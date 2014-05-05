@@ -32,17 +32,19 @@ class CodeGenerator {
 
   void generateCode() {
     log.info("Code Generation starting...");
-    generateBlock(this.ast);
+    parseBlock(this.ast);
     log.info("Code Generation finished...");
   }
 
-  void generateBlock(Tree<dynamic> currNode) {
+  void parseBlock(Tree<dynamic> currNode) {
     for (Tree<dynamic> statement in currNode.children) {
       if (statement.data == NonTerminal.VARIABLE_DECLARATION) {
         generateVariableDeclaration(statement);
+      } else if (statement.data == NonTerminal.ASSIGNMENT_STATEMENT) {
+        generateAssignmentStatement(statement);
       }
     }
-    print(code);
+    print(code.join());
     staticTable.dump();
   }
 
@@ -57,15 +59,24 @@ class CodeGenerator {
     lda(0, location);
 
   }
-
+  
+  /**
+   * Generates code for an assignment statement.
+   */
   void generateAssignmentStatement(Tree<dynamic> currNode) {
     String id = currNode.children[0].data;
+    Row row = staticTable.getRow(id);
+    
     //FIXME: handle advanced statements here
-    String value = currNode.children[1].data;
-
-    // Make entry in static table
+    int value = int.parse(currNode.children[1].data);
+    
+    // Generate code
+    lda(value, row.location);
   }
-
+  
+  /**
+   * Loads the accumulator with a value
+   */
   void lda(int value, String location) {
     code.add("A9");
     address++;
@@ -92,7 +103,10 @@ class CodeGenerator {
       code.add(number[i] + number[i + 1]);
     }
   }
-
+  
+  /**
+   * Simply adds the string value to the code in byte formation.
+   */
   void insertString(String value) {
 
     // Make string even
