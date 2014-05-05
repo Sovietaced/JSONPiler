@@ -55,34 +55,39 @@ class CodeGenerator {
     // Make entry in static table
     String location = staticTable.addRow(id, address);
 
-    // Generate code
-    lda(0, location);
+    // Load accumulator with 0
+    lda("0", location);
 
   }
-  
+
   /**
    * Generates code for an assignment statement.
    */
   void generateAssignmentStatement(Tree<dynamic> currNode) {
     String id = currNode.children[0].data;
-    Row row = staticTable.getRow(id);
-    
+    Row leftRow = staticTable.getRow(id);
+
     //FIXME: handle advanced statements here
-    int value = int.parse(currNode.children[1].data);
-    
-    // Generate code
-    lda(value, row.location);
+    String right = currNode.children[1].data;
+
+    // Check if right hand side of assignment is an id
+    if (staticTable.rowExists(right)) {
+      Row rightRow = staticTable.getRow(right);
+      lda(rightRow.location, leftRow.location);
+    } else {
+
+      // Load accumulator with rightside of assignment
+      lda(right, leftRow.location);
+    }
   }
-  
+
   /**
    * Loads the accumulator with a value
    */
-  void lda(int value, String location) {
-    code.add("A9");
-    address++;
-    addNumToHex(value);
-    code.add("8D");
-    address++;
+  void lda(String value, String location) {
+    insertString("A9");
+    insertString(value);
+    insertString("8D");
     insertString(location);
   }
 
@@ -91,10 +96,9 @@ class CodeGenerator {
 
     // Make string even
     if (number.length % 2 != 0) {
-      if(number.length == 1) {
+      if (number.length == 1) {
         number = "0" + number;
-      }
-      else {
+      } else {
         number = number.substring(0, number.length - 2) + "0" + number[number.length - 1];
       }
     }
@@ -103,7 +107,7 @@ class CodeGenerator {
       code.add(number[i] + number[i + 1]);
     }
   }
-  
+
   /**
    * Simply adds the string value to the code in byte formation.
    */
@@ -111,16 +115,16 @@ class CodeGenerator {
 
     // Make string even
     if (value.length % 2 != 0) {
-      if(value.length == 1){
+      if (value.length == 1) {
         value = "0" + value;
-      }
-      else {
+      } else {
         value = value.substring(0, value.length - 2) + "0" + value[value.length - 1];
       }
     }
 
     for (var i = 0; i < value.length; i = i + 2) {
       code.add(value[i] + value[i + 1]);
+      address++;
     }
   }
 }
