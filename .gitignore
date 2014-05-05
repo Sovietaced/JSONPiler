@@ -8,3 +8,4 @@
 *.js.map
 .buildlog
 packages/
+build/
