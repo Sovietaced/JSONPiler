@@ -25,7 +25,8 @@ class CodeGenerator {
   List<String> code;
   StaticTable staticTable;
   JumpTable jumpTable;
-  num address = 0;
+  int address = 0;
+  num scope = 0;
 
   CodeGenerator(this.ast) {
     this.code = new List<String>();
@@ -40,6 +41,8 @@ class CodeGenerator {
     // Break
     brk();
     
+    generateStaticVariables();
+
     print(code.join());
     staticTable.dump();
     log.info("Code Generation finished...");
@@ -47,6 +50,10 @@ class CodeGenerator {
 
   void parseBlock(Tree<dynamic> currNode) {
     log.info("Parsing a block");
+    
+    // Increment scope
+    scope++;
+    
     for (Tree<dynamic> statement in currNode.children) {
       print(statement.data);
       if (statement.data == NonTerminal.VARIABLE_DECLARATION) {
@@ -61,6 +68,9 @@ class CodeGenerator {
         parseBlock(statement);
       }
     }
+    
+    // Decriment scope
+    scope--;
   }
 
   void generateVariableDeclaration(Tree<dynamic> currNode) {
@@ -69,7 +79,7 @@ class CodeGenerator {
     String id = currNode.children[1].data;
 
     // Make entry in static table
-    String location = staticTable.addRow(id, address);
+    String location = staticTable.addRow(id, scope);
 
     // Load accumulator with 0
     lda_constant("0");
@@ -150,20 +160,21 @@ class CodeGenerator {
       //FIXME: other things besides integers could be here, like booleans
       cpx(right);
     }
-    
+
     // Make new entry in the jump table
     String location = jumpTable.addRow();
     bne(location);
-    
-    num preBranch = address;
+
+    int preBranch = address;
     parseBlock(block);
-    num postBranch = address;
-    
+    int postBranch = address;
+
     // Calculate jump distance
-    num distance = (postBranch - preBranch) + 1;
+    int distance = (postBranch - preBranch) + 1;
     jumpTable.setDistance(location, distance);
-    
-    //TODO: back patch jump distance
+
+    String hexDistance = numToHex(distance);
+    backPatch(location, hexDistance);
   }
 
   /**
@@ -174,7 +185,7 @@ class CodeGenerator {
     insertString("A9");
     insertString(value);
   }
-  
+
   /**
    * Loads the accumulator from memory
    */
@@ -238,7 +249,7 @@ class CodeGenerator {
     insertString("EC");
     insertString(location);
   }
-  
+
   /**
    * Branch x bytes if Z flag = 0
    */
@@ -247,15 +258,15 @@ class CodeGenerator {
     insertString("D0");
     insertString(numBytes);
   }
-  
+
   /**
    * Break
    */
   void brk() {
     log.info("Breaking");
-    insertString("00");  
+    insertString("00");
   }
-  
+
   /**
    * System call
    */
@@ -263,12 +274,104 @@ class CodeGenerator {
     log.info("Performing a system call");
     insertString("FF");
   }
-  
-  void backPatch(String location, String value) {
-    
+
+  void generateStaticVariables() {
+    for (StaticTableRow row in this.staticTable.rows) {
+      String currAddress = address.toRadixString(16);
+      currAddress = toLittleEndian(currAddress, StaticTable.ADDRESS_LENGTH);
+      
+      // Update static table with real address
+      row.setAddress(currAddress);
+      
+      // Backpatch code to use real address
+      backPatch(row.location, currAddress);
+      
+      // Increment address
+      address++;
+    }
   }
 
-  void addNumToHex(int value) {
+  /**
+   * Iterates over the code and replaces one value with another
+   */
+  void backPatch(String oldValue, String newValue) {
+    
+    // Assert that values are both even and the same length
+    assert(oldValue.length % 2 == 0 && oldValue.length == newValue.length);
+    
+    num byteLength = oldValue.length / 2;
+    
+    log.info("Backpatching $oldValue with $newValue");
+    for (var i = 0; i < this.code.length; i++) {
+      String code = getCode(i, byteLength);
+      if(code != null) {
+        if(code == oldValue) {
+          setCode(i, newValue);
+        }
+      }
+    }
+  }
+  
+  /**
+   * Gets the code at the specified index with the specified length in bytes/indexes
+   */
+  String getCode(int index, num length) {
+    String code = "";
+    double end = index + length;
+    if(end < this.code.length) {
+      for(var i = index; i < end; i++) {
+        code = code + this.code[i];
+      }
+      return code;
+    } else {
+      return null;
+    }
+  }
+  
+  /**
+   * Sets the code at the specified index 
+   */
+  void setCode(int index, String value) {
+    
+    assert(value.length % 2 == 0);
+    
+    double byteLength = value.length / 2;
+    double end = index + byteLength;
+    for(var i=index; i < end; i++) {
+      String toAdd = value.substring(0,2);
+      this.code[i] = toAdd;
+      value = value.substring(2, value.length);
+    }
+  }
+
+  /**
+   * Generates a littleEndian version of the string by adding leading zeroes
+   */
+  String toLittleEndian(String value, int desiredLength) {
+    assert(value.length <= 2); // to remind me to enhance this if needed
+    value = makeEven(value);
+
+    while (value.length < desiredLength) {
+      value = value + "00";
+    }
+    
+    print("NEW EVEN VALUE BRO " + value.toUpperCase());
+    return value.toUpperCase();
+  }
+
+  String makeEven(String value) {
+    // Make string even
+    if (value.length % 2 != 0) {
+      if (value.length == 1) {
+        value = "0" + value;
+      } else {
+        value = value.substring(0, value.length - 2) + "0" + value[value.length - 1];
+      }
+    }
+    return value;
+  }
+
+  String numToHex(int value) {
     String number = value.toRadixString(16);
 
     // Make string even
@@ -279,6 +382,10 @@ class CodeGenerator {
         number = number.substring(0, number.length - 2) + "0" + number[number.length - 1];
       }
     }
+    return number;
+  }
+  void addNumToHex(int value) {
+    String number = numToHex(value);
 
     for (var i = 0; i < number.length; i = i + 2) {
       code.add(number[i] + number[i + 1]);

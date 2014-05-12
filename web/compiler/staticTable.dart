@@ -1,6 +1,8 @@
 library staticTable;
 
 class StaticTable {
+  
+  static final int ADDRESS_LENGTH = 4;
 
   List<StaticTableRow> rows;
 
@@ -8,9 +10,9 @@ class StaticTable {
     this.rows = new List<StaticTableRow>();
   }
 
-  String addRow(String name, num address) {
+  String addRow(String name, num scope) {
     String location = "T" + this.rows.length.toString() + "XX";
-    this.rows.add(new StaticTableRow(location, name, address));
+    this.rows.add(new StaticTableRow(location, name, scope));
     return location;
   }
 
@@ -42,11 +44,16 @@ class StaticTable {
 class StaticTableRow {
   String location;
   String name;
-  num address;
+  String address = "";
+  num scope;
 
-  StaticTableRow(this.location, this.name, this.address);
+  StaticTableRow(this.location, this.name, this.scope);
 
   String toString() {
-    return "Row name=${this.name} location=${this.location} address=${this.address}";
+    return "Row name=${this.name} location=${this.location} address=${this.address} scope=${this.scope}";
+  }
+  
+  void setAddress(String address) {
+    this.address = address;
   }
 }
