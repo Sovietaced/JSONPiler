@@ -20,13 +20,15 @@ class CodeGenerator {
 
   // Logging
   static Logger log = LoggerUtil.createLogger('CodeGenerator');
-
+  static num MAX_MEMORY = 255;
+  
   Tree<dynamic> ast;
   List<String> code;
   StaticTable staticTable;
   JumpTable jumpTable;
   int address = 0;
-  num scope = 0;
+  num scope = -1;
+  
 
   CodeGenerator(this.ast) {
     this.code = new List<String>();
@@ -77,13 +79,18 @@ class CodeGenerator {
     log.info("Generating code for a variable declaration");
     String type = currNode.children[0].data;
     String id = currNode.children[1].data;
-
-    // Make entry in static table
-    String location = staticTable.addRow(id, scope);
-
-    // Load accumulator with 0
-    lda_constant("0");
-    sta(location);
+    
+    if(type == StaticTable.TYPE_INT) {
+      // Make entry in static table
+      String location = staticTable.addRow(id, StaticTable.TYPE_INT, scope);
+  
+      // Load accumulator with 0
+      lda_constant("0");
+      sta(location);
+    } else if (type == StaticTable.TYPE_STRING) {
+      // Make entry in static table
+      staticTable.addRow(id, StaticTable.TYPE_STRING, scope);
+    } // FIXME: HANDLE BOOLEANS
 
   }
 
@@ -273,6 +280,48 @@ class CodeGenerator {
   void sys() {
     log.info("Performing a system call");
     insertString("FF");
+  }
+  
+  void writeDataToHeap(String value) {
+    // Assert event
+    assert(value.length % 2 == 0);
+    
+    num index = findAvailableHeapMemory();
+    
+    if(index != null) {
+      num byteLength = value.length / 2;
+      num begin = index - byteLength;
+      if(isAvailable(begin, index)) {
+        setCode(begin, value);
+      } else {
+        ExceptionUtil.logAndThrow(new CompilerOutOfMemoryError("Not enough heap memory to write ${value}."), log);
+      }
+    } else {
+      ExceptionUtil.logAndThrow(new CompilerOutOfMemoryError("Unable to find available heap memory."), log);
+    }
+  }
+  
+  num findAvailableHeapMemory() {
+    for(var i = MAX_MEMORY; i >= 0; i++) {
+      if(this.code[i] == null) {
+        return i;
+      }
+    }
+    // No available memory found
+    return null;
+  }
+  
+  /**
+   * Ensures that the range of memory is not already written to
+   */
+  bool isAvailable(num begin, num end) {
+    for(var i=begin; i <= end; i++) {
+      if(this.code[i] != null) {
+        return false;
+      }
+    }
+    // All desired addresses null
+    return true;
   }
 
   void generateStaticVariables() {

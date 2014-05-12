@@ -2,6 +2,9 @@ library staticTable;
 
 class StaticTable {
   
+  static String TYPE_INT = "int";
+  static String TYPE_STRING = "string";
+  static String TYPE_BOOLEAN = "boolean";
   static final int ADDRESS_LENGTH = 4;
 
   List<StaticTableRow> rows;
@@ -10,9 +13,9 @@ class StaticTable {
     this.rows = new List<StaticTableRow>();
   }
 
-  String addRow(String name, num scope) {
+  String addRow(String name, String type,  num scope) {
     String location = "T" + this.rows.length.toString() + "XX";
-    this.rows.add(new StaticTableRow(location, name, scope));
+    this.rows.add(new StaticTableRow(location, name, type, scope));
     return location;
   }
 
@@ -46,11 +49,12 @@ class StaticTableRow {
   String name;
   String address = "";
   num scope;
+  String type;
 
-  StaticTableRow(this.location, this.name, this.scope);
+  StaticTableRow(this.location, this.name, this.type, this.scope);
 
   String toString() {
-    return "Row name=${this.name} location=${this.location} address=${this.address} scope=${this.scope}";
+    return "Row name=${this.name} location=${this.location} address=${this.address} type=${this.type} scope=${this.scope}";
   }
   
   void setAddress(String address) {

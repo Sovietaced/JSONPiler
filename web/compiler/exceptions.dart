@@ -17,3 +17,10 @@ class CompilerTypeError implements Exception {
   
   String toString() => "Type Error: $message";
 }
+
+class CompilerOutOfMemoryError implements Exception {
+  String message = "";
+  CompilerOutOfMemoryError(this.message);
+  
+  String toString() => "Out of Memory Error: $message";
+}
