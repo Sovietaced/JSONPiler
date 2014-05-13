@@ -20,7 +20,7 @@ class CodeGenerator {
 
   // Logging
   static Logger log = LoggerUtil.createLogger('CodeGenerator');
-  static num MAX_MEMORY = 96;
+  static num MAX_MEMORY = 256;
 
   Tree<dynamic> ast;
   List<String> code;
