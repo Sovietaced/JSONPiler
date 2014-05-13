@@ -20,7 +20,7 @@ class CodeGenerator {
 
   // Logging
   static Logger log = LoggerUtil.createLogger('CodeGenerator');
-  static num MAX_MEMORY = 255;
+  static num MAX_MEMORY = 256;
   
   Tree<dynamic> ast;
   List<String> code;
@@ -31,7 +31,7 @@ class CodeGenerator {
   
 
   CodeGenerator(this.ast) {
-    this.code = new List<String>();
+    this.code = new List<String>(MAX_MEMORY);
     this.staticTable = new StaticTable();
     this.jumpTable = new JumpTable();
   }
@@ -45,9 +45,19 @@ class CodeGenerator {
     
     generateStaticVariables();
 
-    print(code.join());
+    setNullToZero();
+    
+    print(this.code.join(""));
     staticTable.dump();
     log.info("Code Generation finished...");
+  }
+  
+  void setNullToZero() {
+    for(var i=0; i < MAX_MEMORY; i++) {
+      if(this.code[i] == null) {
+        this.code[i] = "00";
+      }
+    }
   }
 
   void parseBlock(Tree<dynamic> currNode) {
@@ -100,21 +110,38 @@ class CodeGenerator {
   void generateAssignmentStatement(Tree<dynamic> currNode) {
     log.info("Generating code for an assignment statement");
     String id = currNode.children[0].data;
-    StaticTableRow leftRow = staticTable.getRow(id);
+    StaticTableRow leftRow = staticTable.getRow(id, scope);
 
     //FIXME: handle advanced statements here
     String right = currNode.children[1].data;
 
     // Check if right hand side of assignment is an id
-    if (staticTable.rowExists(right)) {
-      StaticTableRow rightRow = staticTable.getRow(right);
+    if (staticTable.rowExists(right, scope)) {
+      //FIXME: handle different possibilities of scope
+      StaticTableRow rightRow = staticTable.getRow(right, scope);
       lda_memory(rightRow.location);
       sta(leftRow.location);
     } else {
-
-      // Load accumulator with rightside of assignment
-      lda_constant(right);
-      sta(leftRow.location);
+      print(leftRow.type);
+      if(leftRow.type == StaticTable.TYPE_INT) {
+        // Load accumulator with rightside of assignment
+        lda_constant(right);
+        sta(leftRow.location);
+      } else if(leftRow.type == StaticTable.TYPE_STRING) {
+        String hexString = stringToHex(right);
+        
+        // Write the hexString to heap, get address back
+        int index = writeDataToHeap(hexString);
+        print("index of heap is " + index.toString());
+        // Convert address to hex string and store static pointer
+        String hexIndex = numToHex(index);
+        print("index of heap is " + hexIndex);
+        lda_constant(hexIndex);
+        sta(leftRow.location);
+        
+      } else if(leftRow.type == StaticTable.TYPE_BOOLEAN) {
+        //FIXME: handle booleans
+      }
     }
   }
 
@@ -127,8 +154,8 @@ class CodeGenerator {
     String value = currNode.children.first.data;
 
     // Check if print value is an id
-    if (staticTable.rowExists(value)) {
-      StaticTableRow row = staticTable.getRow(value);
+    if (staticTable.rowExists(value, scope)) {
+      StaticTableRow row = staticTable.getRow(value, scope);
       // Load the memory location of the id into Y register
       ldy_memory(row.location);
     } else {
@@ -150,8 +177,8 @@ class CodeGenerator {
     Tree<dynamic> block = currNode.children[3];
 
     // Check if print value is an id
-    if (staticTable.rowExists(left)) {
-      StaticTableRow row = staticTable.getRow(left);
+    if (staticTable.rowExists(left, scope)) {
+      StaticTableRow row = staticTable.getRow(left, scope);
       // Load the memory location of the id into Y register
       ldx_memory(row.location);
     } else {
@@ -160,8 +187,8 @@ class CodeGenerator {
     }
 
     // Check if print value is an id
-    if (staticTable.rowExists(right)) {
-      StaticTableRow row = staticTable.getRow(right);
+    if (staticTable.rowExists(right, scope)) {
+      StaticTableRow row = staticTable.getRow(right, scope);
       cpx(row.location);
     } else {
       //FIXME: other things besides integers could be here, like booleans
@@ -177,7 +204,7 @@ class CodeGenerator {
     int postBranch = address;
 
     // Calculate jump distance
-    int distance = (postBranch - preBranch) + 1;
+    int distance = (postBranch - preBranch);
     jumpTable.setDistance(location, distance);
 
     String hexDistance = numToHex(distance);
@@ -282,27 +309,31 @@ class CodeGenerator {
     insertString("FF");
   }
   
-  void writeDataToHeap(String value) {
+  int writeDataToHeap(String value) {
     // Assert event
     assert(value.length % 2 == 0);
-    
-    num index = findAvailableHeapMemory();
+    print("value " + value);
+    print(this.code);
+    int index = findAvailableHeapMemory();
     
     if(index != null) {
       num byteLength = value.length / 2;
-      num begin = index - byteLength;
+      int begin = index - byteLength.toInt()+1;
       if(isAvailable(begin, index)) {
         setCode(begin, value);
+        return begin;
       } else {
         ExceptionUtil.logAndThrow(new CompilerOutOfMemoryError("Not enough heap memory to write ${value}."), log);
       }
     } else {
       ExceptionUtil.logAndThrow(new CompilerOutOfMemoryError("Unable to find available heap memory."), log);
     }
+    // Should never happen?
+    return null;
   }
   
   num findAvailableHeapMemory() {
-    for(var i = MAX_MEMORY; i >= 0; i++) {
+    for(var i = MAX_MEMORY-1; i >= 0; i++) {
       if(this.code[i] == null) {
         return i;
       }
@@ -314,7 +345,7 @@ class CodeGenerator {
   /**
    * Ensures that the range of memory is not already written to
    */
-  bool isAvailable(num begin, num end) {
+  bool isAvailable(int begin, int end) {
     for(var i=begin; i <= end; i++) {
       if(this.code[i] != null) {
         return false;
@@ -326,17 +357,21 @@ class CodeGenerator {
 
   void generateStaticVariables() {
     for (StaticTableRow row in this.staticTable.rows) {
-      String currAddress = address.toRadixString(16);
-      currAddress = toLittleEndian(currAddress, StaticTable.ADDRESS_LENGTH);
-      
-      // Update static table with real address
-      row.setAddress(currAddress);
-      
-      // Backpatch code to use real address
-      backPatch(row.location, currAddress);
-      
-      // Increment address
-      address++;
+      if(row.type == StaticTable.TYPE_INT) {
+        String currAddress = address.toRadixString(16);
+        currAddress = toLittleEndian(currAddress, StaticTable.ADDRESS_LENGTH);
+        
+        // Update static table with real address
+        row.setAddress(currAddress);
+        
+        // Backpatch code to use real address
+        backPatch(row.location, currAddress);
+        
+        // Increment address
+        address++;
+      } else if(row.type == StaticTable.TYPE_STRING) {
+        print("meow");
+      }
     }
   }
 
@@ -352,7 +387,7 @@ class CodeGenerator {
     
     log.info("Backpatching $oldValue with $newValue");
     for (var i = 0; i < this.code.length; i++) {
-      String code = getCode(i, byteLength);
+      String code = getCode(i, byteLength.toInt());
       if(code != null) {
         if(code == oldValue) {
           setCode(i, newValue);
@@ -364,12 +399,16 @@ class CodeGenerator {
   /**
    * Gets the code at the specified index with the specified length in bytes/indexes
    */
-  String getCode(int index, num length) {
+  String getCode(int index, int length) {
     String code = "";
-    double end = index + length;
+    int end = index + length;
     if(end < this.code.length) {
-      for(var i = index; i < end; i++) {
-        code = code + this.code[i];
+      for(var i = index; i < end; i++) { 
+        if(this.code[i] != null) {
+          code = code + this.code[i];
+        } else {
+          return null;
+        }
       }
       return code;
     } else {
@@ -421,24 +460,31 @@ class CodeGenerator {
   }
 
   String numToHex(int value) {
-    String number = value.toRadixString(16);
-
-    // Make string even
-    if (number.length % 2 != 0) {
-      if (number.length == 1) {
-        number = "0" + number;
-      } else {
-        number = number.substring(0, number.length - 2) + "0" + number[number.length - 1];
-      }
-    }
-    return number;
+    String number = value.toRadixString(16).toUpperCase();
+    return makeEven(number);
   }
-  void addNumToHex(int value) {
-    String number = numToHex(value);
-
-    for (var i = 0; i < number.length; i = i + 2) {
-      code.add(number[i] + number[i + 1]);
+  
+  /**
+   * Turns a plain old string into a null terminated hex string ready for code.
+   * Iterates over the character codes and encodes the integer values into hex.
+   */
+  String stringToHex(String value) {
+    String hexString = "";
+    // Strip quotes
+    value = value.replaceAll("\"", "");
+    
+    for(int i in value.codeUnits) {
+      hexString = hexString + numToHex(i);
     }
+    
+    // Null terminate
+    hexString = hexString + "00";
+    
+    return hexString;
+  }
+  
+  void addNumToHex(int value) {
+    //
   }
 
   /**
@@ -446,18 +492,11 @@ class CodeGenerator {
    */
   void insertString(String value) {
 
-    // Make string even
-    if (value.length % 2 != 0) {
-      if (value.length == 1) {
-        value = "0" + value;
-      } else {
-        value = value.substring(0, value.length - 2) + "0" + value[value.length - 1];
-      }
-    }
+    value = makeEven(value);
 
     for (var i = 0; i < value.length; i = i + 2) {
-      code.add(value[i] + value[i + 1]);
-      address++;
+      String toAdd = value[i] + value[i + 1];
+      code[address++] = toAdd;
     }
   }
 }

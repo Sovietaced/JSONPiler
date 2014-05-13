@@ -19,18 +19,18 @@ class StaticTable {
     return location;
   }
 
-  StaticTableRow getRow(String name) {
+  StaticTableRow getRow(String name, num scope) {
     for (StaticTableRow row in this.rows) {
-      if (row.name == name) {
+      if (row.name == name && row.scope <= scope) {
         return row;
       }
     }
     return null;
   }
 
-  bool rowExists(String name) {
+  bool rowExists(String name, num scope) {
     for (StaticTableRow row in this.rows) {
-      if (row.name == name) {
+      if (row.name == name && row.scope <= scope) {
         return true;
       }
     }
