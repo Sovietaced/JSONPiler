@@ -158,13 +158,21 @@ class CodeGenerator {
       StaticTableRow row = staticTable.getRow(value, scope);
       // Load the memory location of the id into Y register
       ldy_memory(row.location);
+
+      if (row.type == StaticTable.TYPE_STRING) {
+        // Load 2 to print null terminated string
+        ldx_constant("2");
+      } else {
+        // Load 1 to print integer value
+        ldx_constant("1");
+      }
     } else {
       //FIXME: other things besides integers could be here, like booleans
       ldy_constant(value);
+      // Load 1 to print integer value
+      ldx_constant("1");
     }
 
-    // Load the X register with 1
-    ldx_constant("1");
     // System call
     sys();
   }
@@ -184,16 +192,16 @@ class CodeGenerator {
       //FIXME: other things besides integers could be here, like booleans
       ldx_constant(right);
     }
-    
-// Check if print value is an id
- if (staticTable.rowExists(left, scope)) {
-   StaticTableRow row = staticTable.getRow(left, scope);
-   // Load the memory location of the id into Y register
-   cpx(row.location);
- } else {
-   //FIXME: other things besides integers could be here, like booleans
-   cpx(left);
- }
+
+    // Check if print value is an id
+    if (staticTable.rowExists(left, scope)) {
+      StaticTableRow row = staticTable.getRow(left, scope);
+      // Load the memory location of the id into Y register
+      cpx(row.location);
+    } else {
+      //FIXME: other things besides integers could be here, like booleans
+      cpx(left);
+    }
 
     // Make new entry in the jump table
     String location = jumpTable.addRow();
