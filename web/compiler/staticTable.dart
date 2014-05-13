@@ -20,12 +20,20 @@ class StaticTable {
   }
 
   StaticTableRow getRow(String name, num scope) {
-    //FIXME: CHECK FOR HIGHER SCOPE FIRST
+    
+    List<StaticTableRow> matches = new List<StaticTableRow>();
     for (StaticTableRow row in this.rows) {
       if (row.name == name && row.scope <= scope) {
-        return row;
+        matches.add(row);
       }
     }
+    
+    if(!matches.isEmpty) {
+      matches.sort((a,b) => a.scope.compareTo(b.scope));
+      return matches.last;
+    }
+    
+    // Default case, no matches
     return null;
   }
 

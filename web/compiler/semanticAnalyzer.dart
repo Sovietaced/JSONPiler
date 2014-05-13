@@ -27,15 +27,15 @@ class SemanticAnalyzer {
 
   // Constructor
   SemanticAnalyzer(this.cst, this.symbols);
-  
-  
+
+
   /**
    *  This is the main method for the Semantic Analyzer where all the magic happens 
    */
   analyze() {
     log.info("Semantic Analyzer starting analysis...");
     if (!this.cst.children.isEmpty) {
-      
+
       drawSymbols(this.symbols);
       drawTree(this.cst, "cst");
       // Instantiate AST
@@ -63,7 +63,7 @@ class SemanticAnalyzer {
    */
   Tree<dynamic> convertBlock(Tree<dynamic> currNode, Tree<dynamic> parent) {
     log.info("Converting a block on line " + currNode.line);
-    
+
     // Increment the scope
     scope++;
 
@@ -74,9 +74,9 @@ class SemanticAnalyzer {
     for (Tree<dynamic> child in convertStatementList(statementList, ast)) {
       ast.addChild(child);
     }
-    
+
     scope--;
-    
+
     return ast;
   }
 
@@ -108,7 +108,7 @@ class SemanticAnalyzer {
    */
   Tree<dynamic> convertStatement(Tree<dynamic> currNode, Tree<dynamic> parent) {
     log.info("Converting a statement on line " + currNode.line);
-   
+
     // Statements only have one child
     Tree<dynamic> tree = currNode.children.first;
 
@@ -322,12 +322,11 @@ class SemanticAnalyzer {
     for (Tree<dynamic> tree in currNode.children) {
       if (tree.data == NonTerminal.CHAR_LIST) {
         stringTree.addChildren(convertCharList(tree, stringTree));
-      }
-      else if (tree.data == TokenType.QUOTE) {
+      } else if (tree.data == TokenType.QUOTE) {
         stringTree.addChild(new Tree<dynamic>("\"", stringTree, tree.line));
       }
     }
-    
+
     return new Tree<dynamic>(stringTree.children.join(""), parent, currNode.line);
   }
 
@@ -413,19 +412,19 @@ class SemanticAnalyzer {
     clean.removeWhere((item) => item.data == "!=");
     clean.removeWhere((item) => item.data == "+");
     clean.removeWhere((item) => item.data is NonTerminal);
-    
+
     // Need two values to do type checking
-    if(clean.length > 1) {
+    if (clean.length > 1) {
       log.info("Type checking the following values: " + clean.toString());
-      
+
       // Reset values
       Tree<dynamic> left = clean.removeAt(0);
       right = clean;
-  
+
       // Compare all values against the left most (first value)
       String type = determineType(left.data, isAssignment);
 
-      if(type == null) {
+      if (type == null) {
         ExceptionUtil.logAndThrow(new CompilerTypeError("Identifier " + left.data + " on line " + left.line + " undefined."), log);
       } else if (type == "int") {
         ensureType(right, "int");
@@ -467,10 +466,9 @@ class SemanticAnalyzer {
     if (symbolExists(value)) {
       CompilerSymbol symbol = getSymbol(value);
       return symbol.type;
-    } else if(isAssignment) {
+    } else if (isAssignment) {
       return null;
-    }
-    // Literal value
+    } // Literal value
     else {
       // Check if int
       try {
@@ -492,11 +490,14 @@ class SemanticAnalyzer {
    */
   CompilerSymbol getSymbol(String symbol) {
 
+    List<CompilerSymbol> matches = new List<CompilerSymbol>();
     for (CompilerSymbol s in this.symbols) {
       if (s.id == symbol && s.scope == scope) {
         return s;
       }
     }
+
+    // Default case
     log.warning("Compiler can't find symbol");
     return null;
   }
@@ -505,6 +506,7 @@ class SemanticAnalyzer {
    * Checks if the specified symbol exists
    */
   bool symbolExists(String symbol) {
+    List<CompilerSymbol> matches = new List<CompilerSymbol>();
     for (CompilerSymbol s in this.symbols) {
       if (s.id == symbol && s.scope == scope) {
         return true;
@@ -519,9 +521,9 @@ class SemanticAnalyzer {
   void drawTree(Tree<dynamic> tree, String id) {
     (querySelector("#$id")).appendText(tree.syntrify());
   }
-  
+
   void drawSymbols(List<CompilerSymbol> symbols) {
-    for(CompilerSymbol symbol in symbols){
+    for (CompilerSymbol symbol in symbols) {
       querySelector("#symbol-table").appendText(symbol.toString());
     }
   }

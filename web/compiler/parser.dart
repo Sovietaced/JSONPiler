@@ -459,8 +459,7 @@ class Parser {
           ExceptionUtil.logAndThrow(new CompilerSyntaxError(
                     "Identifier $symbol used out of scope on line " + getLine()), log);
         }
-      }
-      else{
+      } else{
         ExceptionUtil.logAndThrow(new CompilerSyntaxError(
                           "Identifier $symbol undefined on line " + getLine()), log);
       }
@@ -486,12 +485,18 @@ class Parser {
    */
   CompilerSymbol getSymbol(String symbol) {
     List<CompilerSymbol> instances = getSymbols(symbol);
-    for(CompilerSymbol s in instances){
-      if(s.scope == this.scope){
-        return s;
+    
+    if(!instances.isEmpty) {
+      for(CompilerSymbol s in instances){
+        if(s.scope == this.scope){
+          return s;
+        }
       }
+      
+      return instances.last;
+    } else {
+      return null;
     }
-    return instances.last;
   }
   
   /**
@@ -502,7 +507,11 @@ class Parser {
     if(token.type == TokenType.ID){
       String symbol = token.value;
       CompilerSymbol instance = getSymbol(symbol);
-      instance.inited = true;
+      
+      // Null check for assignments without declaration
+      if(instance != null) {
+        instance.inited = true;
+      }
     }
   }
   
@@ -514,7 +523,11 @@ class Parser {
       if(token.type == TokenType.ID){
         String symbol = token.value;
         CompilerSymbol instance = getSymbol(symbol);
-        instance.used = true;
+        
+        // Null check for assignments without declaration
+        if(instance != null) {
+          instance.used = true;
+        }
       }
     }
   
