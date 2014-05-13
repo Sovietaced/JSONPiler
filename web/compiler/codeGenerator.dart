@@ -44,10 +44,11 @@ class CodeGenerator {
     brk();
     
     generateStaticVariables();
-
+  
+    // Set null values in array to zero
     setNullToZero();
     
-    print(this.code.join(""));
+    print(this.code.join(" "));
     staticTable.dump();
     log.info("Code Generation finished...");
   }
@@ -481,10 +482,6 @@ class CodeGenerator {
     hexString = hexString + "00";
     
     return hexString;
-  }
-  
-  void addNumToHex(int value) {
-    //
   }
 
   /**

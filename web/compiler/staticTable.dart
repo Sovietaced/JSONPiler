@@ -20,6 +20,7 @@ class StaticTable {
   }
 
   StaticTableRow getRow(String name, num scope) {
+    //FIXME: CHECK FOR HIGHER SCOPE FIRST
     for (StaticTableRow row in this.rows) {
       if (row.name == name && row.scope <= scope) {
         return row;

@@ -167,7 +167,7 @@ class SemanticAnalyzer {
     List<Tree<dynamic>> expressionValues = convertExpression(value, assignmentStatement);
     assignmentStatement.addChildren(expressionValues);
 
-    typeCheck(assignmentStatement.children);
+    typeCheck(assignmentStatement.children, true);
 
     return assignmentStatement;
   }
@@ -403,7 +403,7 @@ class SemanticAnalyzer {
    * Checks a list of values for type contiguencey. Assumes the first vaid value is the 
    * desired value to check against.
    */
-  void typeCheck(List<Tree<dynamic>> right) {
+  void typeCheck(List<Tree<dynamic>> right, [bool isAssignment = false]) {
 
     // Merge values
     List<Tree<dynamic>> clean = new List.from(right);
@@ -423,8 +423,11 @@ class SemanticAnalyzer {
       right = clean;
   
       // Compare all values against the left most (first value)
-      String type = determineType(left.data);
-      if (type == "int") {
+      String type = determineType(left.data, isAssignment);
+
+      if(type == null) {
+        ExceptionUtil.logAndThrow(new CompilerTypeError("Identifier " + left.data + " on line " + left.line + " undefined."), log);
+      } else if (type == "int") {
         ensureType(right, "int");
       } else if (type == "boolean") {
         ensureType(right, "boolean");
@@ -458,13 +461,16 @@ class SemanticAnalyzer {
    * the value is attempted to be parsed to a number. If an exception is thrown the value
    * is either a string or a boolean.
    */
-  String determineType(String value) {
+  String determineType(String value, [bool isAssignment = false]) {
 
     // Symbol, easy
     if (symbolExists(value)) {
       CompilerSymbol symbol = getSymbol(value);
       return symbol.type;
-    } // Literal value
+    } else if(isAssignment) {
+      return null;
+    }
+    // Literal value
     else {
       // Check if int
       try {
@@ -500,7 +506,7 @@ class SemanticAnalyzer {
    */
   bool symbolExists(String symbol) {
     for (CompilerSymbol s in this.symbols) {
-      if (s.id == symbol) {
+      if (s.id == symbol && s.scope == scope) {
         return true;
       }
     }
