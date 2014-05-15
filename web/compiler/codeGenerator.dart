@@ -120,12 +120,16 @@ class CodeGenerator {
 
     // Check if right hand side of assignment is an id
     if (staticTable.rowExists(right, scope)) {
-      //FIXME: handle different possibilities of scope
       StaticTableRow rightRow = staticTable.getRow(right, scope);
       lda_memory(rightRow.location);
       sta(leftRow.location);
+
+      leftRow.setValue(rightRow.value);
     } else {
-      print(leftRow.type);
+
+      // Record value for helping later
+      leftRow.setValue(right);
+
       if (leftRow.type == StaticTable.TYPE_INT) {
         // Load accumulator with rightside of assignment
         lda_constant(right);
@@ -197,19 +201,18 @@ class CodeGenerator {
     // Check if value is an id
     if (staticTable.rowExists(right, scope)) {
       StaticTableRow row = staticTable.getRow(right, scope);
-      ldx_memory(row.location);
+
+      if (row.type == StaticTable.TYPE_BOOLEAN) {
+        String hex = booleanToHex(row.value);
+        ldx_constant(hex);
+      } else {
+        ldx_memory(row.location);
+      }
     } else {
       String type = determineType(right);
-      if (type == "string" || type == "boolean") {
-        String hexString = stringToHex(right);
-
-        // Write the hexString to heap, get address back
-        int index = writeDataToHeap(hexString);
-
-        // Convert address to hex string and store static pointer
-        String hexIndex = numToHex(index);
-        String validAddress = toLittleEndian(hexIndex, 4);
-        ldx_memory(validAddress);
+      if (type == "boolean") {
+        String hex = booleanToHex(right);
+        ldx_constant(hex);
       } else {
         ldx_constant(right);
       }
@@ -218,12 +221,9 @@ class CodeGenerator {
     // Check if print value is an id
     if (staticTable.rowExists(left, scope)) {
       StaticTableRow row = staticTable.getRow(left, scope);
-      // Load the memory location of the id into X register
-      cpx(row.location);
-    } else {
-      String type = determineType(left);
-      if (type == "string" || type == "boolean") {
-        String hexString = stringToHex(left);
+
+      if (row.type == StaticTable.TYPE_BOOLEAN) {
+        String hexString = booleanToHex(row.value);
 
         // Write the hexString to heap, get address back
         int index = writeDataToHeap(hexString);
@@ -232,6 +232,15 @@ class CodeGenerator {
         String hexIndex = numToHex(index);
         String validAddress = toLittleEndian(hexIndex, 4);
         cpx(validAddress);
+      } else {
+        // Load the memory location of the id into X register
+        cpx(row.location);
+      }
+    } else {
+      String type = determineType(left);
+      if (type == "boolean") {
+        String hex = booleanToHex(right);
+        cpx(hex);
       } else {
         cpx(left);
       }
@@ -520,6 +529,14 @@ class CodeGenerator {
     hexString = hexString + "00";
 
     return hexString;
+  }
+
+  String booleanToHex(String value) {
+    if (value == "true") {
+      return numToHex(1);
+    } else {
+      return numToHex(0);
+    }
   }
 
   /**

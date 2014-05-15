@@ -59,6 +59,7 @@ class StaticTableRow {
   String address = "";
   num scope;
   String type;
+  String value;
 
   StaticTableRow(this.location, this.name, this.type, this.scope);
 
@@ -68,5 +69,9 @@ class StaticTableRow {
   
   void setAddress(String address) {
     this.address = address;
+  }
+  
+  void setValue(String value) {
+    this.value = value;
   }
 }
