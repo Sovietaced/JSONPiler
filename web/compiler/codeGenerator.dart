@@ -20,7 +20,7 @@ class CodeGenerator {
 
   // Logging
   static Logger log = LoggerUtil.createLogger('CodeGenerator');
-  static num MAX_MEMORY = 256;
+  static num MAX_MEMORY = 96;
 
   Tree<dynamic> ast;
   List<String> code;
@@ -194,23 +194,47 @@ class CodeGenerator {
     String right = currNode.children[2].data;
     Tree<dynamic> block = currNode.children[3];
 
-    // Check if print value is an id
+    // Check if value is an id
     if (staticTable.rowExists(right, scope)) {
       StaticTableRow row = staticTable.getRow(right, scope);
       ldx_memory(row.location);
     } else {
-      //FIXME: other things besides integers could be here, like booleans
-      ldx_constant(right);
+      String type = determineType(right);
+      if (type == "string" || type == "boolean") {
+        String hexString = stringToHex(right);
+
+        // Write the hexString to heap, get address back
+        int index = writeDataToHeap(hexString);
+
+        // Convert address to hex string and store static pointer
+        String hexIndex = numToHex(index);
+        String validAddress = toLittleEndian(hexIndex, 4);
+        ldx_memory(validAddress);
+      } else {
+        ldx_constant(right);
+      }
     }
 
     // Check if print value is an id
     if (staticTable.rowExists(left, scope)) {
       StaticTableRow row = staticTable.getRow(left, scope);
-      // Load the memory location of the id into Y register
+      // Load the memory location of the id into X register
       cpx(row.location);
     } else {
-      //FIXME: other things besides integers could be here, like booleans
-      cpx(left);
+      String type = determineType(left);
+      if (type == "string" || type == "boolean") {
+        String hexString = stringToHex(left);
+
+        // Write the hexString to heap, get address back
+        int index = writeDataToHeap(hexString);
+
+        // Convert address to hex string and store static pointer
+        String hexIndex = numToHex(index);
+        String validAddress = toLittleEndian(hexIndex, 4);
+        cpx(validAddress);
+      } else {
+        cpx(left);
+      }
     }
 
     // Make new entry in the jump table
@@ -508,6 +532,22 @@ class CodeGenerator {
     for (var i = 0; i < value.length; i = i + 2) {
       String toAdd = value[i] + value[i + 1];
       code[address++] = toAdd;
+    }
+  }
+
+  String determineType(String value, [bool isAssignment = false]) {
+
+    // Check if int
+    try {
+      num.parse(value);
+      return "int";
+      // If an exception is thrown the value is either a string or a boolean
+    } on FormatException {
+      if (value == "true" || value == "false") {
+        return "boolean";
+      } else {
+        return "string";
+      }
     }
   }
 }
