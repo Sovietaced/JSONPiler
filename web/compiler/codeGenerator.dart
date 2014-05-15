@@ -8,12 +8,12 @@ library codeGenerator;
 import '../util/logger_util.dart';
 import 'package:logging/logging.dart';
 import '../lib/tree.dart';
-import 'token.dart';
 import 'symbol.dart';
 import 'staticTable.dart';
 import 'jumpTable.dart';
 import 'exceptions.dart';
 import '../util/exception_util.dart';
+import '../util/conversion_util.dart';
 
 
 class CodeGenerator {
@@ -135,24 +135,24 @@ class CodeGenerator {
         lda_constant(right);
         sta(leftRow.location);
       } else if (leftRow.type == StaticTable.TYPE_STRING) {
-        String hexString = stringToHex(right);
+        String hexString = ConversionUtil.stringToHex(right);
 
         // Write the hexString to heap, get address back
         int index = writeDataToHeap(hexString);
 
         // Convert address to hex string and store static pointer
-        String hexIndex = numToHex(index);
+        String hexIndex = ConversionUtil.numToHex(index);
         lda_constant(hexIndex);
         sta(leftRow.location);
 
       } else if (leftRow.type == StaticTable.TYPE_BOOLEAN) {
-        String hexString = stringToHex(right);
+        String hexString = ConversionUtil.stringToHex(right);
 
         // Write the hexString to heap, get address back
         int index = writeDataToHeap(hexString);
 
         // Convert address to hex string and store static pointer
-        String hexIndex = numToHex(index);
+        String hexIndex = ConversionUtil.numToHex(index);
         lda_constant(hexIndex);
         sta(leftRow.location);
       }
@@ -203,15 +203,15 @@ class CodeGenerator {
       StaticTableRow row = staticTable.getRow(right, scope);
 
       if (row.type == StaticTable.TYPE_BOOLEAN) {
-        String hex = booleanToHex(row.value);
+        String hex = ConversionUtil.booleanToHex(row.value);
         ldx_constant(hex);
       } else {
         ldx_memory(row.location);
       }
     } else {
-      String type = determineType(right);
+      String type = ConversionUtil.determineType(right);
       if (type == "boolean") {
-        String hex = booleanToHex(right);
+        String hex = ConversionUtil.booleanToHex(right);
         ldx_constant(hex);
       } else {
         ldx_constant(right);
@@ -223,23 +223,23 @@ class CodeGenerator {
       StaticTableRow row = staticTable.getRow(left, scope);
 
       if (row.type == StaticTable.TYPE_BOOLEAN) {
-        String hexString = booleanToHex(row.value);
+        String hexString = ConversionUtil.booleanToHex(row.value);
 
         // Write the hexString to heap, get address back
         int index = writeDataToHeap(hexString);
 
         // Convert address to hex string and store static pointer
-        String hexIndex = numToHex(index);
-        String validAddress = toLittleEndian(hexIndex, 4);
+        String hexIndex = ConversionUtil.numToHex(index);
+        String validAddress = ConversionUtil.toLittleEndian(hexIndex, 4);
         cpx(validAddress);
       } else {
         // Load the memory location of the id into X register
         cpx(row.location);
       }
     } else {
-      String type = determineType(left);
+      String type = ConversionUtil.determineType(left);
       if (type == "boolean") {
-        String hex = booleanToHex(right);
+        String hex = ConversionUtil.booleanToHex(right);
         cpx(hex);
       } else {
         cpx(left);
@@ -258,7 +258,7 @@ class CodeGenerator {
     int distance = (postBranch - preBranch);
     jumpTable.setDistance(location, distance);
 
-    String hexDistance = numToHex(distance);
+    String hexDistance = ConversionUtil.numToHex(distance);
     backPatch(location, hexDistance);
   }
 
@@ -363,8 +363,6 @@ class CodeGenerator {
   int writeDataToHeap(String value) {
     // Assert event
     assert(value.length % 2 == 0);
-    print("value " + value);
-    print(this.code);
     int index = findAvailableHeapMemory();
 
     if (index != null) {
@@ -410,7 +408,7 @@ class CodeGenerator {
   void generateStaticVariables() {
     for (StaticTableRow row in this.staticTable.rows) {
       String currAddress = address.toRadixString(16);
-      currAddress = toLittleEndian(currAddress, StaticTable.ADDRESS_LENGTH);
+      currAddress = ConversionUtil.toLittleEndian(currAddress, StaticTable.ADDRESS_LENGTH);
 
       // Update static table with real address
       row.setAddress(currAddress);
@@ -481,90 +479,15 @@ class CodeGenerator {
   }
 
   /**
-   * Generates a littleEndian version of the string by adding leading zeroes
-   */
-  String toLittleEndian(String value, int desiredLength) {
-    assert(value.length <= 2); // to remind me to enhance this if needed
-    value = makeEven(value);
-
-    while (value.length < desiredLength) {
-      value = value + "00";
-    }
-
-    print("NEW EVEN VALUE BRO " + value.toUpperCase());
-    return value.toUpperCase();
-  }
-
-  String makeEven(String value) {
-    // Make string even
-    if (value.length % 2 != 0) {
-      if (value.length == 1) {
-        value = "0" + value;
-      } else {
-        value = value.substring(0, value.length - 2) + "0" + value[value.length - 1];
-      }
-    }
-    return value;
-  }
-
-  String numToHex(int value) {
-    String number = value.toRadixString(16).toUpperCase();
-    return makeEven(number);
-  }
-
-  /**
-   * Turns a plain old string into a null terminated hex string ready for code.
-   * Iterates over the character codes and encodes the integer values into hex.
-   */
-  String stringToHex(String value) {
-    String hexString = "";
-    // Strip quotes
-    value = value.replaceAll("\"", "");
-
-    for (int i in value.codeUnits) {
-      hexString = hexString + numToHex(i);
-    }
-
-    // Null terminate
-    hexString = hexString + "00";
-
-    return hexString;
-  }
-
-  String booleanToHex(String value) {
-    if (value == "true") {
-      return numToHex(1);
-    } else {
-      return numToHex(0);
-    }
-  }
-
-  /**
    * Simply adds the string value to the code in byte formation.
    */
   void insertString(String value) {
 
-    value = makeEven(value);
+    value = ConversionUtil.makeEven(value);
 
     for (var i = 0; i < value.length; i = i + 2) {
       String toAdd = value[i] + value[i + 1];
       code[address++] = toAdd;
-    }
-  }
-
-  String determineType(String value, [bool isAssignment = false]) {
-
-    // Check if int
-    try {
-      num.parse(value);
-      return "int";
-      // If an exception is thrown the value is either a string or a boolean
-    } on FormatException {
-      if (value == "true" || value == "false") {
-        return "boolean";
-      } else {
-        return "string";
-      }
     }
   }
 }
