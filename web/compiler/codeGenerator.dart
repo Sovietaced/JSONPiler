@@ -101,7 +101,9 @@ class CodeGenerator {
     } else if (type == StaticTable.TYPE_STRING) {
       // Make entry in static table
       staticTable.addRow(id, StaticTable.TYPE_STRING, scope);
-    } // FIXME: HANDLE BOOLEANS
+    } else if (type == StaticTable.TYPE_BOOLEAN) {
+      staticTable.addRow(id, StaticTable.TYPE_BOOLEAN, scope);
+    }
 
   }
 
@@ -140,7 +142,15 @@ class CodeGenerator {
         sta(leftRow.location);
 
       } else if (leftRow.type == StaticTable.TYPE_BOOLEAN) {
-        //FIXME: handle booleans
+        String hexString = stringToHex(right);
+
+        // Write the hexString to heap, get address back
+        int index = writeDataToHeap(hexString);
+
+        // Convert address to hex string and store static pointer
+        String hexIndex = numToHex(index);
+        lda_constant(hexIndex);
+        sta(leftRow.location);
       }
     }
   }
@@ -159,7 +169,7 @@ class CodeGenerator {
       // Load the memory location of the id into Y register
       ldy_memory(row.location);
 
-      if (row.type == StaticTable.TYPE_STRING) {
+      if (row.type == StaticTable.TYPE_STRING || row.type == StaticTable.TYPE_BOOLEAN) {
         // Load 2 to print null terminated string
         ldx_constant("2");
       } else {
