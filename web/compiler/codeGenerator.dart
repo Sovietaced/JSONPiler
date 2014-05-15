@@ -20,7 +20,7 @@ class CodeGenerator {
 
   // Logging
   static Logger log = LoggerUtil.createLogger('CodeGenerator');
-  static num MAX_MEMORY = 96;
+  static num MAX_MEMORY = 256;
 
   Tree<dynamic> ast;
   List<String> code;
@@ -77,6 +77,8 @@ class CodeGenerator {
         generatePrintStatement(statement);
       } else if (statement.data == NonTerminal.IF_STATEMENT) {
         generateIfStatement(statement);
+      } else if (statement.data == NonTerminal.WHILE_STATEMENT) {
+        generateWhileStatement(statement);
       } else if (statement.data == NonTerminal.BLOCK) {
         parseBlock(statement);
       }
@@ -181,7 +183,6 @@ class CodeGenerator {
         ldx_constant("1");
       }
     } else {
-      //FIXME: other things besides integers could be here, like booleans
       ldy_constant(value);
       // Load 1 to print integer value
       ldx_constant("1");
@@ -193,73 +194,200 @@ class CodeGenerator {
 
   void generateIfStatement(Tree<dynamic> currNode) {
     log.info("Generating code for an if statement");
-    //FIXME: handle advanced values here...
-    String left = currNode.children[0].data;
-    String right = currNode.children[2].data;
-    Tree<dynamic> block = currNode.children[3];
 
-    // Check if value is an id
-    if (staticTable.rowExists(right, scope)) {
-      StaticTableRow row = staticTable.getRow(right, scope);
+    int len = currNode.children.length;
+    Tree<dynamic> block = null;
+    bool deadCode = false;
 
-      if (row.type == StaticTable.TYPE_BOOLEAN) {
-        String hex = ConversionUtil.booleanToHex(row.value);
-        ldx_constant(hex);
+    // Simple if, ie. if true/false
+    if (len == 2) {
+      String boolean = currNode.children[0].data;
+
+      // "if false" is dead code that we dont have to evaluate
+      if (boolean == "true") {
+        block = currNode.children[1];
       } else {
-        ldx_memory(row.location);
+        deadCode = true;
       }
+      // Complex if, ie. if (true == true)
     } else {
-      String type = ConversionUtil.determineType(right);
-      if (type == "boolean") {
-        String hex = ConversionUtil.booleanToHex(right);
-        ldx_constant(hex);
+      // TODO: Handle advanced statements.....
+      String left = currNode.children[0].data;
+      String right = currNode.children[2].data;
+      block = currNode.children[3];
+
+      // Check if value is an id
+      if (staticTable.rowExists(right, scope)) {
+        StaticTableRow row = staticTable.getRow(right, scope);
+
+        if (row.type == StaticTable.TYPE_BOOLEAN) {
+          String hex = ConversionUtil.booleanToHex(row.value);
+          ldx_constant(hex);
+        } else {
+          ldx_memory(row.location);
+        }
       } else {
-        ldx_constant(right);
+        String type = ConversionUtil.determineType(right);
+        if (type == StaticTable.TYPE_BOOLEAN) {
+          String hex = ConversionUtil.booleanToHex(right);
+          ldx_constant(hex);
+        } else {
+          ldx_constant(right);
+        }
+      }
+
+      // Check if print value is an id
+      if (staticTable.rowExists(left, scope)) {
+        StaticTableRow row = staticTable.getRow(left, scope);
+
+        if (row.type == StaticTable.TYPE_BOOLEAN) {
+          String hexString = ConversionUtil.booleanToHex(row.value);
+
+          // Write the hexString to heap, get address back
+          int index = writeDataToHeap(hexString);
+
+          // Convert address to hex string and store static pointer
+          String hexIndex = ConversionUtil.numToHex(index);
+          String validAddress = ConversionUtil.toLittleEndian(hexIndex, 4);
+          cpx(validAddress);
+        } else {
+          // Load the memory location of the id into X register
+          cpx(row.location);
+        }
+      } else {
+        String type = ConversionUtil.determineType(left);
+        if (type == StaticTable.TYPE_BOOLEAN) {
+          String hex = ConversionUtil.booleanToHex(right);
+          cpx(hex);
+        } else {
+          cpx(left);
+        }
       }
     }
 
-    // Check if print value is an id
-    if (staticTable.rowExists(left, scope)) {
-      StaticTableRow row = staticTable.getRow(left, scope);
+    if (!deadCode) {
+      // Make new entry in the jump table
+      String location = jumpTable.addRow();
+      bne(location);
 
-      if (row.type == StaticTable.TYPE_BOOLEAN) {
-        String hexString = ConversionUtil.booleanToHex(row.value);
+      int preBranch = address;
+      parseBlock(block);
+      int postBranch = address;
 
-        // Write the hexString to heap, get address back
-        int index = writeDataToHeap(hexString);
+      // Calculate jump distance
+      int distance = (postBranch - preBranch);
+      jumpTable.setDistance(location, distance);
 
-        // Convert address to hex string and store static pointer
-        String hexIndex = ConversionUtil.numToHex(index);
-        String validAddress = ConversionUtil.toLittleEndian(hexIndex, 4);
-        cpx(validAddress);
+      String hexDistance = ConversionUtil.numToHex(distance);
+      backPatch(location, hexDistance);
+    }
+  }
+
+  void generateWhileStatement(Tree<dynamic> currNode) {
+    int len = currNode.children.length;
+    Tree<dynamic> block = null;
+    bool deadCode = false;
+
+    int preWhile = address;
+
+    // Simple if, ie. if true/false
+    if (len == 2) {
+      String boolean = currNode.children[0].data;
+
+      // "if false" is dead code that we dont have to evaluate
+      if (boolean == "true") {
+        block = currNode.children[1];
       } else {
-        // Load the memory location of the id into X register
-        cpx(row.location);
+        deadCode = true;
       }
+      // Complex if, ie. if (true == true)
     } else {
-      String type = ConversionUtil.determineType(left);
-      if (type == "boolean") {
-        String hex = ConversionUtil.booleanToHex(right);
-        cpx(hex);
+      String left = currNode.children[0].data;
+      String right = currNode.children[2].data;
+      block = currNode.children[3];
+
+      // Check if value is an id
+      if (staticTable.rowExists(right, scope)) {
+        StaticTableRow row = staticTable.getRow(right, scope);
+
+        if (row.type == StaticTable.TYPE_BOOLEAN) {
+          String hex = ConversionUtil.booleanToHex(row.value);
+          ldx_constant(hex);
+        } else {
+          ldx_memory(row.location);
+        }
       } else {
-        cpx(left);
+        String type = ConversionUtil.determineType(right);
+        if (type == StaticTable.TYPE_BOOLEAN) {
+          String hex = ConversionUtil.booleanToHex(right);
+          ldx_constant(hex);
+        } else {
+          ldx_constant(right);
+        }
+      }
+
+      // Check if print value is an id
+      if (staticTable.rowExists(left, scope)) {
+        StaticTableRow row = staticTable.getRow(left, scope);
+
+        if (row.type == StaticTable.TYPE_BOOLEAN) {
+          String hexString = ConversionUtil.booleanToHex(row.value);
+
+          // Write the hexString to heap, get address back
+          int index = writeDataToHeap(hexString);
+
+          // Convert address to hex string and store static pointer
+          String hexIndex = ConversionUtil.numToHex(index);
+          String validAddress = ConversionUtil.toLittleEndian(hexIndex, 4);
+          cpx(validAddress);
+        } else {
+          // Load the memory location of the id into X register
+          cpx(row.location);
+        }
+      } else {
+        String type = ConversionUtil.determineType(left);
+        if (type == StaticTable.TYPE_BOOLEAN) {
+          String hex = ConversionUtil.booleanToHex(right);
+          cpx(hex);
+        } else {
+          cpx(left);
+        }
       }
     }
 
-    // Make new entry in the jump table
-    String location = jumpTable.addRow();
-    bne(location);
+    if (!deadCode) {
+      // Make new entry in the jump table
+      String branchForward = jumpTable.addRow();
+      bne(branchForward);
 
-    int preBranch = address;
-    parseBlock(block);
-    int postBranch = address;
+      int preBranch = address;
+      parseBlock(block);
+      
+      // Reset the Z Flag so we always branch back to the while loop
+      resetZFlag();
+      String branchBackward = jumpTable.addRow();
+      bne(branchBackward);
+      
+      int postWhile = address;
+      
+      // Calculate jump backwards distance
+      int whileDistance = (postWhile - preWhile);
+      jumpTable.setDistance(branchBackward, whileDistance);
+      
+      // Wrap around to branch backwards
+      whileDistance = MAX_MEMORY - whileDistance;
+      String backwardsDistance = ConversionUtil.numToHex(whileDistance);
+      backPatch(branchBackward, backwardsDistance);
 
-    // Calculate jump distance
-    int distance = (postBranch - preBranch);
-    jumpTable.setDistance(location, distance);
+      int postBranch = address;
 
-    String hexDistance = ConversionUtil.numToHex(distance);
-    backPatch(location, hexDistance);
+      // Calculate jump distance
+      int distance = (postBranch - preBranch);
+      jumpTable.setDistance(branchForward, distance);
+
+      String hexDistance = ConversionUtil.numToHex(distance);
+      backPatch(branchForward, hexDistance);
+    }
   }
 
   /**
@@ -381,7 +509,7 @@ class CodeGenerator {
     return null;
   }
 
-  num findAvailableHeapMemory() {
+  int findAvailableHeapMemory() {
     for (var i = MAX_MEMORY - 1; i >= 0; i--) {
       print(i.toString());
       if (this.code[i] == null) {
@@ -390,6 +518,21 @@ class CodeGenerator {
     }
     // No available memory found
     return null;
+  }
+  
+  void resetZFlag() {
+    // Load a temp value into memory
+    int tempMemory = findAvailableHeapMemory();
+    setCode(tempMemory, "02");
+    String validAddress = ConversionUtil.numToHex(tempMemory);
+    validAddress = ConversionUtil.toLittleEndian(validAddress, 4);
+    
+    // Load the x register and do a not equal comparison
+    ldx_constant("1");
+    cpx(validAddress);
+    
+    // Reset tempMemory address
+    this.code[tempMemory] = null; 
   }
 
   /**
