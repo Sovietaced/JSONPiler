@@ -36,7 +36,7 @@ class CodeGenerator {
     this.jumpTable = new JumpTable();
   }
 
-  void generateCode() {
+  String generateCode() {
     log.info("Code Generation starting...");
     // Recursively parse starting block
     parseBlock(this.ast);
@@ -51,8 +51,9 @@ class CodeGenerator {
     for(var i=0; i < this.code.length; i = i + 8) {
       print(this.code.sublist(i, i+8).join(" "));
     }
-    staticTable.dump();
     log.info("Code Generation finished...");
+    
+    return this.code.join("");
   }
 
   void setNullToZero() {
@@ -70,7 +71,6 @@ class CodeGenerator {
     scope++;
 
     for (Tree<dynamic> statement in currNode.children) {
-      print(statement.data);
       if (statement.data == NonTerminal.VARIABLE_DECLARATION) {
         generateVariableDeclaration(statement);
       } else if (statement.data == NonTerminal.ASSIGNMENT_STATEMENT) {
@@ -527,7 +527,6 @@ class CodeGenerator {
 
   int findAvailableHeapMemory() {
     for (var i = MAX_MEMORY - 1; i >= 0; i--) {
-      print(i.toString());
       if (this.code[i] == null) {
         return i;
       }

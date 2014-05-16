@@ -20,7 +20,7 @@ void main() {
 }
 
 void unhide(MouseEvent event) {
-  //querySelector("#output").hidden = false;
+  querySelector("#output").hidden = false;
 }
 
 void compile(MouseEvent event) {

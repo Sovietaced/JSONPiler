@@ -35,7 +35,7 @@ class Compiler{
       analyzer = new SemanticAnalyzer(this.cst, this.symbols);
       this.ast = analyzer.analyze();
       this.codeGenerator = new CodeGenerator(this.ast);
-      this.codeGenerator.generateCode();
+      String output = this.codeGenerator.generateCode();
       
     //}catch(e){
       // Let log and throw handle

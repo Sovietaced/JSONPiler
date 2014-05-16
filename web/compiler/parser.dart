@@ -8,7 +8,7 @@ import 'token.dart';
 import 'symbol.dart';
 import 'exceptions.dart';
 import 'package:logging/logging.dart';
-import '../lib/tree.dart'; 
+import '../lib/tree.dart';
 import '../util/logger_util.dart';
 import '../util/exception_util.dart';
 
@@ -41,15 +41,16 @@ class Parser {
       Token token = popNextToken();
 
       if (token.type != TokenType.END) {
-        ExceptionUtil.logAndThrow(new CompilerSyntaxError(
-            "Expected END token, found type " + token.type.value + " on line " +
-            token.line.toString()), log);
+        ExceptionUtil.logAndThrow(new CompilerSyntaxError("Expected END token, found type " + token.type.value + " on line " + token.line.toString()), log);
       }
-      
+
       warnSymbols();
-      
+
       log.info("Parser finished analysis...");
-      return {"cst":cst, "symbols": symbols};
+      return {
+        "cst": cst,
+        "symbols": symbols
+      };
     } else {
       log.warning("No tokens to parse, finished.");
     }
@@ -83,7 +84,7 @@ class Parser {
     // Exiting a block denotes new scope
     scope--;
   }
-  
+
   void expectBlock(Tree<dynamic> currNode) {
     index++;
     block(currNode);
@@ -118,9 +119,7 @@ class Parser {
         Tree<dynamic> temp = addChild(NonTerminal.STATEMENT, currNode);
         block(temp);
       } else {
-        ExceptionUtil.logAndThrow(new CompilerSyntaxError(
-            "Expected statement, found type " + token.type.value + " on line " +
-            token.line.toString()), log);
+        ExceptionUtil.logAndThrow(new CompilerSyntaxError("Expected statement, found type " + token.type.value + " on line " + token.line.toString()), log);
       }
 
       // Change sentinel value
@@ -133,7 +132,7 @@ class Parser {
    */
   void printStatement(Tree<dynamic> currNode) {
     log.info("Parsing print statement on line " + getLine());
-    
+
     currNode = addChild(NonTerminal.PRINT_STATEMENT, currNode);
     addChild("Print", currNode);
 
@@ -142,7 +141,7 @@ class Parser {
 
     expression(currNode);
     scopeCheck();
-    
+
     expect(TokenType.CLOSE_PAREN);
     addChild(TokenType.CLOSE_PAREN, currNode);
   }
@@ -152,7 +151,7 @@ class Parser {
    */
   void assignmentStatement(Tree<dynamic> currNode) {
     log.info("Parsing assignment statement on line " + getLine());
-    
+
     currNode = addChild(NonTerminal.ASSIGNMENT_STATEMENT, currNode);
     // Backtrack to parse id
     index--;
@@ -172,11 +171,11 @@ class Parser {
    */
   void ifStatement(Tree<dynamic> currNode) {
     log.info("Parsing if statement on line " + getLine());
-    
+
     currNode = addChild(NonTerminal.IF_STATEMENT, currNode);
 
     booleanExpression(currNode);
-    
+
     expectBlock(currNode);
   }
 
@@ -185,11 +184,11 @@ class Parser {
    */
   void whileStatement(Tree<dynamic> currNode) {
     log.info("Parsing while statement on line " + getLine());
-    
+
     currNode = addChild(NonTerminal.WHILE_STATEMENT, currNode);
 
     booleanExpression(currNode);
-    
+
     expectBlock(currNode);
   }
 
@@ -199,7 +198,7 @@ class Parser {
   void variableDeclaration(Tree<dynamic> currNode) {
     log.info("Parsing a variable declaration on line " + getLine());
     Token typeToken = getToken();
-    
+
     currNode = addChild(NonTerminal.VARIABLE_DECLARATION, currNode);
     Tree<dynamic> temp = addChild(typeToken.type, currNode);
     addChild(typeToken.value, temp);
@@ -209,9 +208,16 @@ class Parser {
     // Get the ID token
     Token token = getToken();
 
+    CompilerSymbol s = getSymbol(token.value);
+
+    if (s != null) {
+      if (s.scope == this.scope) {
+        ExceptionUtil.logAndThrow(new CompilerSyntaxError("Identifier ${token.value} already defined on line ${s.line}."), log);
+      }
+    }
+
     // Generate the symbol with both the ID and type from both tokens
-    CompilerSymbol symbol = new CompilerSymbol(token.value, this.scope,
-        token.line, typeToken.value);
+    CompilerSymbol symbol = new CompilerSymbol(token.value, this.scope, token.line, typeToken.value);
     // Add this new symbol to our list of symbols
     this.symbols.add(symbol);
   }
@@ -226,8 +232,7 @@ class Parser {
 
     if (isNextToken(TokenType.DIGIT)) {
       intExpression(currNode);
-    } else if (isNextToken(TokenType.BOOLEAN) || isNextToken(
-        TokenType.OPEN_PAREN)) {
+    } else if (isNextToken(TokenType.BOOLEAN) || isNextToken(TokenType.OPEN_PAREN)) {
       booleanExpression(currNode);
     } // Otherwise it must be a string
     else if (isNextToken(TokenType.QUOTE)) {
@@ -256,11 +261,11 @@ class Parser {
     // Handle int operations aka +
     if (isNextToken(TokenType.INT_OP)) {
       expect(TokenType.INT_OP);
-      
+
       Token token = getToken();
       Tree<dynamic> temp = addChild(token.type, currNode);
       addChild(token.value, temp);
-      
+
       expression(currNode);
       scopeCheck();
     }
@@ -297,7 +302,7 @@ class Parser {
       addChild(TokenType.CLOSE_PAREN, booleanExpr);
     } // Handles simple conditionals without parenthesis (true/false)
     else {
-      expect(TokenType.BOOLEAN); 
+      expect(TokenType.BOOLEAN);
       Token token = getToken();
       Tree<dynamic> temp = addChild(token.type, booleanExpr);
       addChild(token.value, temp);
@@ -318,8 +323,7 @@ class Parser {
 
     // Iterate over the rest of the string
     Tree<dynamic> charList = addChild(NonTerminal.CHAR_LIST, stringExpr);
-    while (peekNextToken() != null && (isNextToken(TokenType.CHAR) ||
-        isNextToken(TokenType.SPACE))) {
+    while (peekNextToken() != null && (isNextToken(TokenType.CHAR) || isNextToken(TokenType.SPACE))) {
       expectOneOf([TokenType.CHAR, TokenType.SPACE]);
 
       Token token = getToken();
@@ -337,14 +341,14 @@ class Parser {
    */
   String idExpression(Tree<dynamic> currNode) {
     log.info("Parsing an id expression on line " + getLine());
-    
+
     currNode = addChild(NonTerminal.ID_EXPRESSION, currNode);
     expect(TokenType.ID);
 
     Token token = getToken();
     currNode = addChild(TokenType.CHAR, currNode);
     addChild(token.value, currNode);
-    
+
     return token.value;
   }
 
@@ -396,9 +400,7 @@ class Parser {
     Token next = popNextToken();
 
     if (next.type != type) {
-      ExceptionUtil.logAndThrow(new CompilerSyntaxError(
-          "Expected token of type " + type.value + ", found type " + next.type.value +
-          " on line " + next.line.toString()), log);
+      ExceptionUtil.logAndThrow(new CompilerSyntaxError("Expected token of type " + type.value + ", found type " + next.type.value + " on line " + next.line.toString()), log);
     }
   }
 
@@ -414,9 +416,7 @@ class Parser {
       }
     }
     // In case not found
-    ExceptionUtil.logAndThrow(new CompilerTypeError("Expected token of type " +
-        types.toString() + ", found type " + next.type.value + " on line " +
-        next.line.toString()), log);
+    ExceptionUtil.logAndThrow(new CompilerTypeError("Expected token of type " + types.toString() + ", found type " + next.type.value + " on line " + next.line.toString()), log);
   }
 
   /**
@@ -430,113 +430,109 @@ class Parser {
     }
     return true;
   }
-  
+
   /**
    * Does scope checking on the current token. If the current token is an ID
    * it will find the occurences of the symbol and ensures
    * that the symbol being used is defined for the current scope. 
    */
-  void scopeCheck(){
-    
+  void scopeCheck() {
+
     Token token = getToken();
-    
-    if(token.type == TokenType.ID){
-      
+
+    if (token.type == TokenType.ID) {
+
       String symbol = token.value;
       List<CompilerSymbol> symbols = getSymbols(symbol);
-      
-      if(!symbols.isEmpty){
+
+      if (!symbols.isEmpty) {
         num min = symbols.first.scope;
-        for(CompilerSymbol symbol in symbols){
-          if(symbol.scope < min){
+        for (CompilerSymbol symbol in symbols) {
+          if (symbol.scope < min) {
             min = symbol.scope;
           }
         }
-        if(scope >= min) {
+        if (scope >= min) {
           log.info("Identifier $symbol on line " + getLine() + " scope OK. Current scope is $scope, min scope is $min ");
+        } else {
+          ExceptionUtil.logAndThrow(new CompilerSyntaxError("Identifier $symbol used out of scope on line " + getLine()), log);
         }
-        else{
-          ExceptionUtil.logAndThrow(new CompilerSyntaxError(
-                    "Identifier $symbol used out of scope on line " + getLine()), log);
-        }
-      } else{
-        ExceptionUtil.logAndThrow(new CompilerSyntaxError(
-                          "Identifier $symbol undefined on line " + getLine()), log);
+      } else {
+        ExceptionUtil.logAndThrow(new CompilerSyntaxError("Identifier $symbol undefined on line " + getLine()), log);
       }
     }
   }
-  
+
   /**
    * Gets all instances of a symbol from the symbol table.
    */
   List<CompilerSymbol> getSymbols(String symbol) {
     List<CompilerSymbol> instances = new List<CompilerSymbol>();
-    
-    for(CompilerSymbol s in this.symbols) {
-      if(s.id == symbol){
+
+    for (CompilerSymbol s in this.symbols) {
+      if (s.id == symbol) {
         instances.add(s);
       }
-    }  
+    }
     return instances;
   }
-  
+
   /**
    * Gets an instance of a symbol in the highest scope
    */
   CompilerSymbol getSymbol(String symbol) {
     List<CompilerSymbol> instances = getSymbols(symbol);
-    
-    if(!instances.isEmpty) {
-      for(CompilerSymbol s in instances){
-        if(s.scope == this.scope){
+
+    if (!instances.isEmpty) {
+      for (CompilerSymbol s in instances) {
+        if (s.scope == this.scope) {
           return s;
         }
       }
-      
+
       return instances.last;
     } else {
       return null;
     }
   }
-  
+
   /**
    * Marks a symbol as initialized
    */
-  void markInited(){
+  void markInited() {
     Token token = getToken();
-    if(token.type == TokenType.ID){
+    if (token.type == TokenType.ID) {
       String symbol = token.value;
       CompilerSymbol instance = getSymbol(symbol);
-      
+
       // Null check for assignments without declaration
-      if(instance != null) {
+      if (instance != null) {
         instance.inited = true;
       }
     }
   }
-  
+
   /**
    * Marks a symbol as used
    */
-  void markUsed(){
-      Token token = getToken();
-      if(token.type == TokenType.ID){
-        String symbol = token.value;
-        CompilerSymbol instance = getSymbol(symbol);
-        
-        // Null check for assignments without declaration
-        if(instance != null) {
-          instance.used = true;
-        }
+  void markUsed() {
+    Token token = getToken();
+    if (token.type == TokenType.ID) {
+      String symbol = token.value;
+      CompilerSymbol instance = getSymbol(symbol);
+
+      // Null check for assignments without declaration
+      if (instance != null) {
+        instance.used = true;
       }
     }
-  
+  }
+
   void warnSymbols() {
-    for(CompilerSymbol instance in this.symbols) {
-      if(instance.inited != true) {
+    for (CompilerSymbol instance in this.symbols) {
+      if (instance.inited != true) {
         log.warning("Symbol ${instance.id} on line ${instance.line.toString()} never initialized!");
-      }
-      else if(instance.used != true) {
+      } else if (instance.used != true) {
         log.warning("Symbol ${instance.id} on line ${instance.line.toString()} never used!");
       }
     }
