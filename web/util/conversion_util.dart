@@ -59,6 +59,14 @@ class ConversionUtil {
       return "01";
     }
   }
+  
+  static String booleanToHexString(String value) {
+    if (value == "true") {
+      return stringToHex("true");
+    } else {
+      return stringToHex("false");
+    }
+  }
 
   static String determineType(String value) {
 

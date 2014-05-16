@@ -271,9 +271,22 @@ class CodeGenerator {
     if (staticTable.rowExists(value, scope)) {
       StaticTableRow row = staticTable.getRow(value, scope);
       // Load the memory location of the id into Y register
-      ldy_memory(row.location);
 
-      if (row.type == StaticTable.TYPE_STRING) {
+      if (row.type == StaticTable.TYPE_BOOLEAN) {
+        String hexString = ConversionUtil.booleanToHexString(row.value);
+
+        // Write the hexString to heap, get address back
+        int index = writeDataToHeap(hexString);
+
+        // Convert address to hex string and store static pointer
+        String hexIndex = ConversionUtil.numToHex(index);
+        
+        ldy_constant(hexIndex);
+      } else {
+        ldy_memory(row.location);
+      }
+
+      if (row.type == StaticTable.TYPE_STRING || row.type == StaticTable.TYPE_BOOLEAN) {
         // Load 2 to print null terminated string
         ldx_constant("2");
       } else {
