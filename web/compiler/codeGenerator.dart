@@ -47,13 +47,13 @@ class CodeGenerator {
 
     // Set null values in array to zero
     setNullToZero();
-    
+
     String output = "";
-    for(var i=0; i < this.code.length; i = i + 16) {
-      output = output + this.code.sublist(i, i+16).join(" ") + "\n";
+    for (var i = 0; i < this.code.length; i = i + 16) {
+      output = output + this.code.sublist(i, i + 16).join(" ") + "\n";
     }
     log.info("Code Generation finished...");
-    
+
     print(output);
     return output;
   }
@@ -108,7 +108,12 @@ class CodeGenerator {
       // Make entry in static table
       staticTable.addRow(id, StaticTable.TYPE_STRING, scope);
     } else if (type == StaticTable.TYPE_BOOLEAN) {
-      staticTable.addRow(id, StaticTable.TYPE_BOOLEAN, scope);
+      // Make entry in static table
+      String location = staticTable.addRow(id, StaticTable.TYPE_BOOLEAN, scope);
+
+      // Load accumulator with 0
+      lda_constant("0");
+      sta(location);
     }
 
   }
@@ -143,7 +148,7 @@ class CodeGenerator {
 
         right = combineIntExpression(currNode.children);
         leftRow.setValue(right);
-        
+
         sta(leftRow.location);
 
       } else if (leftRow.type == StaticTable.TYPE_STRING) {
@@ -162,19 +167,7 @@ class CodeGenerator {
 
         right = combineBooleanExpression(currNode.children);
         leftRow.setValue(right);
-        String hexString = ConversionUtil.stringToHex(right);
-
-        // Write the hexString to heap, get address back
-        int index = writeDataToHeap(hexString);
-        
-        String currAddress = index.toRadixString(16);
-        currAddress = ConversionUtil.toLittleEndian(currAddress, StaticTable.ADDRESS_LENGTH);
-        leftRow.setAddress(currAddress);
-
-        // Convert address to hex string and store static pointer
-        String hexIndex = ConversionUtil.numToHex(index);
-        lda_constant(hexIndex);
-        print("just wrote a hex index of " + hexIndex + " in a boolean assignment");
+        lda_constant(right);
         sta(leftRow.location);
       }
     }
@@ -184,10 +177,10 @@ class CodeGenerator {
    * Shrinks integer expressions down to one value
    */
   String combineIntExpression(List<Tree<dynamic>> intExpression) {
-    
+
     intExpression.removeWhere((item) => item.data == "+");
-    
-    if(intExpression.length > 1) {
+
+    if (intExpression.length > 1) {
       int sum = 0;
       // Set sum to zero
       lda_constant("0");
@@ -196,7 +189,7 @@ class CodeGenerator {
         if (staticTable.rowExists(data, scope)) {
           StaticTableRow row = staticTable.getRow(data, scope);
           sum = sum + int.parse(row.value);
-          
+
           // Add to the accumulator!
           adc(row.location);
         } else {
@@ -205,20 +198,18 @@ class CodeGenerator {
           int index = findAvailableHeapMemory();
           String hex = ConversionUtil.numToHex(value);
           this.code[index] = ConversionUtil.numToHex(value);
-          
+
           String validAddress = ConversionUtil.numToHex(index);
           validAddress = ConversionUtil.toLittleEndian(validAddress, 4);
-          
-          print("valid address : " + validAddress);
-          
+
           // Add to the accumulator!
           adc(validAddress);
         }
-      } 
-      
+      }
+
       return ConversionUtil.numToHex(sum);
     } else {
-      
+
       String value = intExpression.first.data;
       lda_constant(value);
       return value;
@@ -229,9 +220,9 @@ class CodeGenerator {
    * Shrinks boolean expressions down to one value
    */
   String combineBooleanExpression(List<Tree<dynamic>> booleanExpression) {
-    
+
     booleanExpression.removeWhere((item) => item.data == "==");
-    
+
     if (booleanExpression.length > 1) {
       bool start = null;
 
@@ -243,27 +234,27 @@ class CodeGenerator {
 
       for (Tree<dynamic> tree in booleanExpression) {
         String data = tree.data;
-        
-        if(staticTable.rowExists(data, scope)) {
+
+        if (staticTable.rowExists(data, scope)) {
           StaticTableRow row = staticTable.getRow(data, scope);
           data = row.value;
         }
-        
+
         if (data == "true") {
           start = start == true;
         } else {
           start = start == false;
         }
       }
-      
-      if(start == true) {
-        return "true";
+
+      if (start == true) {
+        return ConversionUtil.booleanToHex("true");
       } else {
-        return "false";
+        return ConversionUtil.booleanToHex("false");
       }
-      
+
     } else {
-      return booleanExpression.first.data;
+      return ConversionUtil.booleanToHex(booleanExpression.first.data);
     }
 
   }
@@ -282,7 +273,7 @@ class CodeGenerator {
       // Load the memory location of the id into Y register
       ldy_memory(row.location);
 
-      if (row.type == StaticTable.TYPE_STRING || row.type == StaticTable.TYPE_BOOLEAN) {
+      if (row.type == StaticTable.TYPE_STRING) {
         // Load 2 to print null terminated string
         ldx_constant("2");
       } else {
@@ -394,7 +385,7 @@ class CodeGenerator {
         if (row.type == StaticTable.TYPE_BOOLEAN) {
           String hex = ConversionUtil.booleanToHex(row.value);
           ldx_constant(hex);
-        } else{
+        } else {
           ldx_memory(row.location);
         }
       } else {
@@ -410,21 +401,8 @@ class CodeGenerator {
       // Check if print value is an id
       if (staticTable.rowExists(left, scope)) {
         StaticTableRow row = staticTable.getRow(left, scope);
-
-        if (row.type == StaticTable.TYPE_BOOLEAN) {
-          String hexString = ConversionUtil.booleanToHex(row.value);
-
-          // Write the hexString to heap, get address back
-          int index = writeDataToHeap(hexString);
-
-          // Convert address to hex string and store static pointer
-          String hexIndex = ConversionUtil.numToHex(index);
-          String validAddress = ConversionUtil.toLittleEndian(hexIndex, 4);
-          cpx(validAddress);
-        } else {
-          // Load the memory location of the id into X register
-          cpx(row.location);
-        }
+        // Load the memory location of the id into X register
+        cpx(row.location);
       } else {
         String type = ConversionUtil.determineType(left);
         if (type == StaticTable.TYPE_BOOLEAN) {
@@ -519,7 +497,7 @@ class CodeGenerator {
     insertString("D0");
     insertString(numBytes);
   }
-  
+
   void adc(String location) {
     log.info("Adding contents of ${location} to the accumulator");
     insertString("6D");

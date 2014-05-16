@@ -54,9 +54,9 @@ class ConversionUtil {
 
   static String booleanToHex(String value) {
     if (value == "true") {
-      return numToHex(1);
+      return "02";
     } else {
-      return numToHex(0);
+      return "01";
     }
   }
 
