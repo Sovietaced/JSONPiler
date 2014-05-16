@@ -142,7 +142,6 @@ class CodeGenerator {
       if (leftRow.type == StaticTable.TYPE_INT) {
 
         right = combineIntExpression(currNode.children);
-        print("combined int expression : " + right);
         leftRow.setValue(right);
         
         sta(leftRow.location);
@@ -167,10 +166,15 @@ class CodeGenerator {
 
         // Write the hexString to heap, get address back
         int index = writeDataToHeap(hexString);
+        
+        String currAddress = index.toRadixString(16);
+        currAddress = ConversionUtil.toLittleEndian(currAddress, StaticTable.ADDRESS_LENGTH);
+        leftRow.setAddress(currAddress);
 
         // Convert address to hex string and store static pointer
         String hexIndex = ConversionUtil.numToHex(index);
         lda_constant(hexIndex);
+        print("just wrote a hex index of " + hexIndex + " in a boolean assignment");
         sta(leftRow.location);
       }
     }
@@ -180,7 +184,9 @@ class CodeGenerator {
    * Shrinks integer expressions down to one value
    */
   String combineIntExpression(List<Tree<dynamic>> intExpression) {
-    print(intExpression.length);
+    
+    intExpression.removeWhere((item) => item.data == "+");
+    
     if(intExpression.length > 1) {
       int sum = 0;
       // Set sum to zero
@@ -190,25 +196,32 @@ class CodeGenerator {
         if (staticTable.rowExists(data, scope)) {
           StaticTableRow row = staticTable.getRow(data, scope);
           sum = sum + int.parse(row.value);
+          
+          // Add to the accumulator!
           adc(row.location);
-          print("adding a row to the accumulator");
-        } else if (data != "+") {
-          sum = sum + int.parse(data);
+        } else {
+          int value = int.parse(data);
+          sum = sum + value;
           int index = findAvailableHeapMemory();
-          String hex = ConversionUtil.numToHex(int.parse(data));
-          this.code[index] = data;
+          String hex = ConversionUtil.numToHex(value);
+          this.code[index] = ConversionUtil.numToHex(value);
           
           String validAddress = ConversionUtil.numToHex(index);
           validAddress = ConversionUtil.toLittleEndian(validAddress, 4);
-          print("adding a constant tot he accumulator");
+          
+          print("valid address : " + validAddress);
+          
+          // Add to the accumulator!
           adc(validAddress);
         }
       } 
       
       return ConversionUtil.numToHex(sum);
     } else {
-      lda_constant(intExpression.first.data);
-      return intExpression.first.data;
+      
+      String value = intExpression.first.data;
+      lda_constant(value);
+      return value;
     }
   }
 
@@ -370,7 +383,6 @@ class CodeGenerator {
       }
       // Complex if, ie. if (true == true)
     } else {
-      // TODO: Handle advanced statements.....
       String left = currNode.children[0].data;
       String right = currNode.children[2].data;
       block = currNode.children[3];
@@ -382,7 +394,7 @@ class CodeGenerator {
         if (row.type == StaticTable.TYPE_BOOLEAN) {
           String hex = ConversionUtil.booleanToHex(row.value);
           ldx_constant(hex);
-        } else {
+        } else{
           ldx_memory(row.location);
         }
       } else {
