@@ -48,12 +48,14 @@ class CodeGenerator {
     // Set null values in array to zero
     setNullToZero();
     
-    for(var i=0; i < this.code.length; i = i + 8) {
-      print(this.code.sublist(i, i+8).join(" "));
+    String output = "";
+    for(var i=0; i < this.code.length; i = i + 16) {
+      output = output + this.code.sublist(i, i+16).join(" ") + "\n";
     }
     log.info("Code Generation finished...");
     
-    return this.code.join("");
+    print(output);
+    return output;
   }
 
   void setNullToZero() {

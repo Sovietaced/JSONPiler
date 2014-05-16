@@ -1,4 +1,5 @@
 /* compiler.dart  */
+import 'dart:html';
 import 'lexer.dart';
 import 'parser.dart';
 import 'codeGenerator.dart';
@@ -26,7 +27,7 @@ class Compiler{
   Compiler(this.source);
   
   run(){
-    //try{
+    try{
       this.tokens = Lexer.analyze(this.source);
       this.parser = new Parser(this.tokens);
       var hash = this.parser.analyse();
@@ -36,9 +37,9 @@ class Compiler{
       this.ast = analyzer.analyze();
       this.codeGenerator = new CodeGenerator(this.ast);
       String output = this.codeGenerator.generateCode();
-      
-    //}catch(e){
-      // Let log and throw handle
-    //}
+      (querySelector("#output-code") as TextAreaElement).text = output;
+    }catch(e){
+       //Let log and throw handle
+    }
   }
 }
