@@ -315,9 +315,15 @@ var $$ = {};
   },
   ConversionUtil_booleanToHex: function(value) {
     if (J.$eq(value, "true"))
-      return V.ConversionUtil_numToHex(1);
+      return "02";
     else
-      return V.ConversionUtil_numToHex(0);
+      return "01";
+  },
+  ConversionUtil_booleanToHexString: function(value) {
+    if (J.$eq(value, "true"))
+      return V.ConversionUtil_stringToHex("true");
+    else
+      return V.ConversionUtil_stringToHex("false");
   },
   ConversionUtil_determineType: function(value) {
     var exception;
@@ -3917,6 +3923,12 @@ var $$ = {};
             t4 = this.scope;
             $location = "T" + C.JSInt_methods.toString$0(t2.rows.length) + "XX";
             t2.rows.push(new D.StaticTableRow($location, id, "", t4, t3, null));
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the accumulator with constant 0", null, null);
+            this.insertString$1("A9");
+            this.insertString$1("0");
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Storing the accumulator in memory at " + $location, null, null);
+            this.insertString$1("8D");
+            this.insertString$1($location);
           }
         } else if (J.$eq(t2.get$data(statement), C.NonTerminal_ASSIGNMENT_STATEMENT)) {
           $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Generating code for an assignment statement", null, null);
@@ -3940,15 +3952,13 @@ var $$ = {};
             leftRow.setValue$1(right);
             t3 = leftRow.type;
             if (t3 === $.StaticTable_TYPE_INT) {
-              right = this.combineIntExpression$1(t2.get$children(statement));
-              $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the accumulator with constant " + H.S(right), null, null);
-              this.insertString$1("A9");
-              this.insertString$1(right);
+              leftRow.value = this.combineIntExpression$1(t2.get$children(statement));
               t2 = leftRow.location;
               $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Storing the accumulator in memory at " + t2, null, null);
               this.insertString$1("8D");
               this.insertString$1(t2);
             } else if (t3 === $.StaticTable_TYPE_STRING) {
+              leftRow.value = right;
               hexIndex = V.ConversionUtil_makeEven(J.toRadixString$1$n(this.writeDataToHeap$1(V.ConversionUtil_stringToHex(right)), 16).toUpperCase());
               $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the accumulator with constant " + H.S(hexIndex), null, null);
               this.insertString$1("A9");
@@ -3958,10 +3968,11 @@ var $$ = {};
               this.insertString$1("8D");
               this.insertString$1(t2);
             } else if (t3 === $.StaticTable_TYPE_BOOLEAN) {
-              hexIndex = V.ConversionUtil_makeEven(J.toRadixString$1$n(this.writeDataToHeap$1(V.ConversionUtil_stringToHex(this.combineBooleanExpression$1(t2.get$children(statement)))), 16).toUpperCase());
-              $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the accumulator with constant " + H.S(hexIndex), null, null);
+              right = this.combineBooleanExpression$1(t2.get$children(statement));
+              leftRow.value = right;
+              $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the accumulator with constant " + right, null, null);
               this.insertString$1("A9");
-              this.insertString$1(hexIndex);
+              this.insertString$1(right);
               t2 = leftRow.location;
               $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Storing the accumulator in memory at " + t2, null, null);
               this.insertString$1("8D");
@@ -3974,10 +3985,17 @@ var $$ = {};
           if (this.staticTable.rowExists$2(value, this.scope)) {
             row = this.staticTable.getRow$2(value, this.scope);
             t2 = J.getInterceptor$x(row);
-            t3 = t2.get$location(row);
-            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the Y register from memory at " + H.S(t3), null, null);
-            this.insertString$1("AC");
-            this.insertString$1(t3);
+            if (J.$eq(t2.get$type(row), $.StaticTable_TYPE_BOOLEAN)) {
+              hexIndex = V.ConversionUtil_makeEven(J.toRadixString$1$n(this.writeDataToHeap$1(V.ConversionUtil_booleanToHexString(t2.get$value(row))), 16).toUpperCase());
+              $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the Y register with constant " + H.S(hexIndex), null, null);
+              this.insertString$1("A0");
+              this.insertString$1(hexIndex);
+            } else {
+              t3 = t2.get$location(row);
+              $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the Y register from memory at " + H.S(t3), null, null);
+              this.insertString$1("AC");
+              this.insertString$1(t3);
+            }
             if (J.$eq(t2.get$type(row), $.StaticTable_TYPE_STRING) || J.$eq(t2.get$type(row), $.StaticTable_TYPE_BOOLEAN)) {
               $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the X register with constant 2", null, null);
               this.insertString$1("A2");
@@ -4057,22 +4075,48 @@ var $$ = {};
       this.scope = this.scope - 1;
     },
     combineIntExpression$1: function(intExpression) {
-      var t1, sum, data, t2;
-      for (t1 = J.get$iterator$ax(intExpression), sum = 0; t1.moveNext$0();) {
-        data = J.get$data$x(t1.get$current());
-        if (this.staticTable.rowExists$2(data, this.scope)) {
-          t2 = H.Primitives_parseInt(J.get$value$x(this.staticTable.getRow$2(data, this.scope)), null, null);
-          if (typeof t2 !== "number")
-            return H.iae(t2);
-          sum += t2;
-        } else if (!J.$eq(data, "+")) {
-          t2 = H.Primitives_parseInt(data, null, null);
-          if (typeof t2 !== "number")
-            return H.iae(t2);
-          sum += t2;
+      var t1, sum, data, row, t2, t3, value, index, validAddress;
+      t1 = J.getInterceptor$ax(intExpression);
+      t1.removeWhere$1(intExpression, new N.CodeGenerator_combineIntExpression_closure());
+      if (t1.get$length(intExpression) > 1) {
+        this.lda_constant$1("0");
+        for (t1 = t1.get$iterator(intExpression), sum = 0; t1.moveNext$0();) {
+          data = J.get$data$x(t1.get$current());
+          if (this.staticTable.rowExists$2(data, this.scope)) {
+            row = this.staticTable.getRow$2(data, this.scope);
+            t2 = J.getInterceptor$x(row);
+            t3 = H.Primitives_parseInt(t2.get$value(row), null, null);
+            if (typeof t3 !== "number")
+              return H.iae(t3);
+            sum += t3;
+            t2 = t2.get$location(row);
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Adding contents of " + H.S(t2) + " to the accumulator", null, null);
+            this.insertString$1("6D");
+            this.insertString$1(t2);
+          } else {
+            value = H.Primitives_parseInt(data, null, null);
+            if (typeof value !== "number")
+              return H.iae(value);
+            sum += value;
+            index = this.findAvailableHeapMemory$0();
+            V.ConversionUtil_makeEven(C.JSNumber_methods.toRadixString$1(value, 16).toUpperCase());
+            t2 = this.code;
+            t3 = V.ConversionUtil_makeEven(C.JSNumber_methods.toRadixString$1(value, 16).toUpperCase());
+            if (index >>> 0 !== index || index >= t2.length)
+              return H.ioore(t2, index);
+            t2[index] = t3;
+            validAddress = V.ConversionUtil_toLittleEndian(V.ConversionUtil_makeEven(C.JSInt_methods.toRadixString$1(index, 16).toUpperCase()), 4);
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Adding contents of " + validAddress + " to the accumulator", null, null);
+            this.insertString$1("6D");
+            this.insertString$1(validAddress);
+          }
         }
+        return V.ConversionUtil_numToHex(sum);
+      } else {
+        value = J.get$data$x(t1.get$first(intExpression));
+        this.lda_constant$1(value);
+        return value;
       }
-      return V.ConversionUtil_numToHex(sum);
     },
     combineBooleanExpression$1: function(booleanExpression) {
       var t1, start, data;
@@ -4085,11 +4129,11 @@ var $$ = {};
           start = J.$eq(this.staticTable.rowExists$2(data, this.scope) ? J.get$value$x(this.staticTable.getRow$2(data, this.scope)) : data, "true") ? start : !start;
         }
         if (start)
-          return "true";
+          return V.ConversionUtil_booleanToHex("true");
         else
-          return "false";
+          return V.ConversionUtil_booleanToHex("false");
       } else
-        return J.get$data$x(t1.get$first(booleanExpression));
+        return V.ConversionUtil_booleanToHex(J.get$data$x(t1.get$first(booleanExpression)));
     },
     handleComparison$1: function(currNode) {
       var t1, block, left, right, row;
@@ -4118,19 +4162,19 @@ var $$ = {};
           this.ldx_constant$1(V.ConversionUtil_booleanToHex(right));
         else
           this.ldx_constant$1(right);
-        if (this.staticTable.rowExists$2(left, this.scope)) {
-          row = this.staticTable.getRow$2(left, this.scope);
-          t1 = J.getInterceptor$x(row);
-          if (J.$eq(t1.get$type(row), $.StaticTable_TYPE_BOOLEAN))
-            this.cpx$1(V.ConversionUtil_toLittleEndian(V.ConversionUtil_numToHex(this.writeDataToHeap$1(V.ConversionUtil_booleanToHex(t1.get$value(row)))), 4));
-          else
-            this.cpx$1(t1.get$location(row));
-        } else if (V.ConversionUtil_determineType(left) === $.StaticTable_TYPE_BOOLEAN)
+        if (this.staticTable.rowExists$2(left, this.scope))
+          this.cpx$1(J.get$location$x(this.staticTable.getRow$2(left, this.scope)));
+        else if (V.ConversionUtil_determineType(left) === $.StaticTable_TYPE_BOOLEAN)
           this.cpx$1(V.ConversionUtil_booleanToHex(right));
         else
           this.cpx$1(left);
       }
       return block;
+    },
+    lda_constant$1: function(value) {
+      $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the accumulator with constant " + H.S(value), null, null);
+      this.insertString$1("A9");
+      this.insertString$1(value);
     },
     ldx_constant$1: function(value) {
       $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the X register with constant " + H.S(value), null, null);
@@ -4143,18 +4187,15 @@ var $$ = {};
       this.insertString$1($location);
     },
     writeDataToHeap$1: function(value) {
-      var index, t1, begin;
+      var index, begin;
       index = this.findAvailableHeapMemory$0();
       if (index != null) {
-        t1 = J.get$length$asx(value);
-        if (typeof t1 !== "number")
-          return t1.$div();
-        begin = index - C.JSInt_methods.toInt$0(t1 / 2) + 1;
+        begin = index - C.JSInt_methods.toInt$0(value.length / 2) + 1;
         if (this.isAvailable$2(begin, index)) {
           this.setCode$2(begin, value);
           return begin;
         } else
-          M.ExceptionUtil_logAndThrow(new T.CompilerOutOfMemoryError("Not enough heap memory to write " + H.S(value) + "."), $.get$CodeGenerator_log());
+          M.ExceptionUtil_logAndThrow(new T.CompilerOutOfMemoryError("Not enough heap memory to write " + value + "."), $.get$CodeGenerator_log());
       } else
         M.ExceptionUtil_logAndThrow(new T.CompilerOutOfMemoryError("Unable to find available heap memory."), $.get$CodeGenerator_log());
       return;
@@ -4266,6 +4307,12 @@ var $$ = {};
       this.jumpTable = t1;
     },
     static: {"^": "CodeGenerator_log,CodeGenerator_MAX_MEMORY"}
+  },
+  CodeGenerator_combineIntExpression_closure: {
+    "^": "Closure:11;",
+    call$1: function(item) {
+      return J.$eq(J.get$data$x(item), "+");
+    }
   },
   CodeGenerator_combineBooleanExpression_closure: {
     "^": "Closure:11;",
