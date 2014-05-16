@@ -395,50 +395,39 @@ var $$ = {};
 ["SemanticAnalyzer", "compiler/semanticAnalyzer.dart", , A, {
   "^": "",
   SemanticAnalyzer: {
-    "^": "Object;cst,symbols,scope<",
+    "^": "Object;cst,symbols",
     analyze$0: function() {
       var t1, ast;
       $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, "Semantic Analyzer starting analysis...", null, null);
-      if (this.cst.children.length !== 0) {
-        this.drawSymbols$1(this.symbols);
-        t1 = this.cst;
+      t1 = this.cst;
+      if (t1.children.length !== 0) {
         J.insertAdjacentText$2$x(document.querySelector("#cst"), "beforeend", t1.syntrify$0());
-        t1 = this.cst;
-        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, "Converting a program", null, null);
-        ast = this.convertBlock$2(C.JSArray_methods.get$first(t1.children), null);
-        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, "Semantic Analyzer finished analysis...", null, null);
+        ast = this.convertBlock$2(C.JSArray_methods.get$first(this.cst.children), null);
+        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, "Semantic Analyzer finished analysis... Dumping AST", null, null);
+        ast.dump$0();
         J.insertAdjacentText$2$x(document.querySelector("#ast"), "beforeend", ast.syntrify$0());
         return ast;
       } else
         $.get$SemanticAnalyzer_log().log$4(C.Level_WARNING_900, "CST is empty, finished analysis...", null, null);
     },
     convertBlock$2: function(currNode, $parent) {
-      var t1, t2, ast, child;
-      t1 = $.get$SemanticAnalyzer_log();
-      t2 = currNode.get$line();
-      t1.log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a block on line ", t2), null, null);
-      this.scope = this.scope + 1;
-      ast = new B.Tree(C.NonTerminal_BLOCK, t2, $parent, null);
-      t2 = [];
-      t2.$builtinTypeInfo = [B.Tree];
-      ast.children = t2;
-      t1 = currNode.get$children(currNode);
-      if (1 >= t1.length)
-        return H.ioore(t1, 1);
-      for (t1 = this.convertStatementList$2(t1[1], ast), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+      var ast, t1, child;
+      ast = new B.Tree(C.NonTerminal_BLOCK, $parent, null);
+      t1 = [];
+      t1.$builtinTypeInfo = [B.Tree];
+      ast.children = t1;
+      for (t1 = this.convertStatementList$2(J.$index$asx(J.get$children$x(currNode), 1), ast), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
         child = t1._current;
         ast.children.push(child);
       }
-      this.scope = this.scope - 1;
       return ast;
     },
     convertStatementList$2: function(currNode, $parent) {
       var subTrees, t1, tree;
-      $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a statement list on line ", currNode.get$line()), null, null);
       subTrees = [];
       subTrees.$builtinTypeInfo = [B.Tree];
-      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
-        tree = t1._current;
+      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
+        tree = t1.get$current();
         switch (J.get$data$x(tree)) {
           case C.NonTerminal_STATEMENT:
             subTrees.push(this.convertStatement$2(tree, $parent));
@@ -455,53 +444,40 @@ var $$ = {};
     },
     convertStatement$2: function(currNode, $parent) {
       var tree, t1, type, id, variableDeclaration, t2, value, assignmentStatement, idValue, expressionValues;
-      $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a statement on line ", currNode.get$line()), null, null);
-      tree = C.JSArray_methods.get$first(currNode.get$children(currNode));
+      tree = J.get$first$ax(J.get$children$x(currNode));
       t1 = J.getInterceptor$x(tree);
       if (J.$eq(t1.get$data(tree), C.NonTerminal_VARIABLE_DECLARATION)) {
-        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a variable deckaration on line ", tree.get$line()), null, null);
-        t1 = t1.get$children(tree);
-        if (0 >= t1.length)
-          return H.ioore(t1, 0);
-        type = t1[0];
-        t1 = tree.children;
-        if (1 >= t1.length)
-          return H.ioore(t1, 1);
-        id = t1[1];
-        variableDeclaration = new B.Tree(C.NonTerminal_VARIABLE_DECLARATION, tree.line, $parent, null);
+        type = J.$index$asx(t1.get$children(tree), 0);
+        id = J.$index$asx(t1.get$children(tree), 1);
+        variableDeclaration = new B.Tree(C.NonTerminal_VARIABLE_DECLARATION, $parent, null);
         t1 = [];
         t1.$builtinTypeInfo = [B.Tree];
         variableDeclaration.children = t1;
-        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a type declaration on line ", type.get$line()), null, null);
-        t1 = new B.Tree(J.get$data$x(C.JSArray_methods.get$first(type.get$children(type))), type.line, variableDeclaration, null);
+        t1 = new B.Tree(J.get$data$x(J.get$first$ax(J.get$children$x(type))), variableDeclaration, null);
         t2 = [];
         t2.$builtinTypeInfo = [B.Tree];
         t1.children = t2;
         variableDeclaration.children.push(t1);
-        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an identifier expression on line ", id.get$line()), null, null);
-        t1 = this.convertChar$2(id, variableDeclaration);
+        t1 = new B.Tree(J.get$data$x(J.get$first$ax(J.get$children$x(J.get$first$ax(J.get$children$x(id))))), variableDeclaration, null);
+        t2 = [];
+        t2.$builtinTypeInfo = [B.Tree];
+        t1.children = t2;
         variableDeclaration.children.push(t1);
         return variableDeclaration;
       } else if (J.$eq(t1.get$data(tree), C.NonTerminal_ASSIGNMENT_STATEMENT)) {
-        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an assignment statement on line ", tree.get$line()), null, null);
-        t1 = t1.get$children(tree);
-        if (0 >= t1.length)
-          return H.ioore(t1, 0);
-        id = t1[0];
-        t1 = tree.children;
-        if (2 >= t1.length)
-          return H.ioore(t1, 2);
-        value = t1[2];
-        assignmentStatement = new B.Tree(C.NonTerminal_ASSIGNMENT_STATEMENT, tree.line, $parent, null);
+        id = J.$index$asx(t1.get$children(tree), 0);
+        value = J.$index$asx(t1.get$children(tree), 2);
+        assignmentStatement = new B.Tree(C.NonTerminal_ASSIGNMENT_STATEMENT, $parent, null);
         t1 = [];
         t1.$builtinTypeInfo = [B.Tree];
         assignmentStatement.children = t1;
-        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an identifier expression on line ", id.get$line()), null, null);
-        idValue = this.convertChar$2(id, assignmentStatement);
+        idValue = new B.Tree(J.get$data$x(J.get$first$ax(J.get$children$x(J.get$first$ax(J.get$children$x(id))))), assignmentStatement, null);
+        t1 = [];
+        t1.$builtinTypeInfo = [B.Tree];
+        idValue.children = t1;
         assignmentStatement.children.push(idValue);
         expressionValues = this.convertExpression$2(value, assignmentStatement);
         C.JSArray_methods.addAll$1(assignmentStatement.children, expressionValues);
-        this.typeCheck$1(assignmentStatement.children);
         return assignmentStatement;
       } else if (J.$eq(t1.get$data(tree), C.NonTerminal_IF_STATEMENT))
         return this.convertIfStatement$2(tree, $parent);
@@ -517,14 +493,11 @@ var $$ = {};
       }
     },
     convertIfStatement$2: function(currNode, $parent) {
-      var t1, t2, ifStatement, tree;
-      t1 = $.get$SemanticAnalyzer_log();
-      t2 = currNode.get$line();
-      t1.log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an if statement on line ", t2), null, null);
-      ifStatement = new B.Tree(C.NonTerminal_IF_STATEMENT, t2, $parent, null);
+      var ifStatement, t1, tree, t2;
+      ifStatement = new B.Tree(C.NonTerminal_IF_STATEMENT, $parent, null);
       ifStatement.children = H.setRuntimeTypeInfo([], [B.Tree]);
-      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
-        tree = t1._current;
+      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
+        tree = t1.get$current();
         t2 = J.getInterceptor$x(tree);
         if (J.$eq(t2.get$data(tree), C.NonTerminal_BOOLEAN_EXPRESSION)) {
           t2 = this.convertBooleanExpression$2(tree, ifStatement);
@@ -534,17 +507,15 @@ var $$ = {};
           ifStatement.children.push(t2);
         }
       }
+      ifStatement.dump$0();
       return ifStatement;
     },
     convertWhileStatement$2: function(currNode, $parent) {
-      var t1, t2, whileStatement, tree;
-      t1 = $.get$SemanticAnalyzer_log();
-      t2 = currNode.get$line();
-      t1.log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a while statement on line ", t2), null, null);
-      whileStatement = new B.Tree(C.NonTerminal_WHILE_STATEMENT, t2, $parent, null);
+      var whileStatement, t1, tree, t2;
+      whileStatement = new B.Tree(C.NonTerminal_WHILE_STATEMENT, $parent, null);
       whileStatement.children = H.setRuntimeTypeInfo([], [B.Tree]);
-      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
-        tree = t1._current;
+      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
+        tree = t1.get$current();
         t2 = J.getInterceptor$x(tree);
         if (J.$eq(t2.get$data(tree), C.NonTerminal_BOOLEAN_EXPRESSION)) {
           t2 = this.convertBooleanExpression$2(tree, whileStatement);
@@ -557,14 +528,11 @@ var $$ = {};
       return whileStatement;
     },
     convertPrintStatement$2: function(currNode, $parent) {
-      var t1, t2, ast, tree;
-      t1 = $.get$SemanticAnalyzer_log();
-      t2 = currNode.get$line();
-      t1.log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a print statement on line ", t2), null, null);
-      ast = new B.Tree(C.NonTerminal_PRINT_STATEMENT, t2, $parent, null);
+      var ast, t1, tree, t2;
+      ast = new B.Tree(C.NonTerminal_PRINT_STATEMENT, $parent, null);
       ast.children = H.setRuntimeTypeInfo([], [B.Tree]);
-      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
-        tree = t1._current;
+      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
+        tree = t1.get$current();
         if (J.$eq(J.get$data$x(tree), C.NonTerminal_EXPRESSION)) {
           t2 = this.convertExpression$2(tree, ast);
           C.JSArray_methods.addAll$1(ast.children, t2);
@@ -573,16 +541,19 @@ var $$ = {};
       return ast;
     },
     convertExpression$2: function(currNode, $parent) {
-      var subTrees, t1, tree;
-      $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an expression on line ", currNode.get$line()), null, null);
+      var subTrees, t1, tree, t2, t3;
       subTrees = [];
       subTrees.$builtinTypeInfo = [B.Tree];
-      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
-        tree = t1._current;
-        switch (J.get$data$x(tree)) {
+      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
+        tree = t1.get$current();
+        t2 = J.getInterceptor$x(tree);
+        switch (t2.get$data(tree)) {
           case C.NonTerminal_ID_EXPRESSION:
-            $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an identifier expression on line ", tree.get$line()), null, null);
-            subTrees.push(this.convertChar$2(tree, $parent));
+            t2 = new B.Tree(J.get$data$x(J.get$first$ax(J.get$children$x(J.get$first$ax(t2.get$children(tree))))), $parent, null);
+            t3 = [];
+            t3.$builtinTypeInfo = [B.Tree];
+            t2.children = t3;
+            subTrees.push(t2);
             break;
           case C.NonTerminal_INT_EXPRESSION:
             C.JSArray_methods.addAll$1(subTrees, this.convertIntExpression$2(tree, $parent));
@@ -595,30 +566,26 @@ var $$ = {};
             break;
           default:
             $.get$SemanticAnalyzer_log().log$4(C.Level_WARNING_900, "failed to convert expression", null, null);
+            return;
         }
       }
       return subTrees;
     },
     convertIntExpression$2: function(currNode, $parent) {
-      var subTrees, t1, tree, t2, value, t3;
-      $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an int expression on line ", currNode.get$line()), null, null);
+      var subTrees, t1, tree, t2, t3;
       subTrees = [];
       subTrees.$builtinTypeInfo = [B.Tree];
-      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
-        tree = t1._current;
+      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
+        tree = t1.get$current();
         t2 = J.getInterceptor$x(tree);
         if (J.$eq(t2.get$data(tree), C.TokenType_DIGIT)) {
-          $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a digit on line ", tree.get$line()), null, null);
-          value = C.JSArray_methods.get$first(t2.get$children(tree));
-          t2 = new B.Tree(J.get$data$x(value), value.get$line(), $parent, null);
+          t2 = new B.Tree(J.get$data$x(J.get$first$ax(t2.get$children(tree))), $parent, null);
           t3 = [];
           t3.$builtinTypeInfo = [B.Tree];
           t2.children = t3;
           subTrees.push(t2);
         } else if (J.$eq(t2.get$data(tree), C.TokenType_INT_OP)) {
-          $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an integer operation on line ", tree.get$line()), null, null);
-          value = C.JSArray_methods.get$first(t2.get$children(tree));
-          t2 = new B.Tree(J.get$data$x(value), value.get$line(), $parent, null);
+          t2 = new B.Tree(J.get$data$x(J.get$first$ax(t2.get$children(tree))), $parent, null);
           t3 = [];
           t3.$builtinTypeInfo = [B.Tree];
           t2.children = t3;
@@ -626,29 +593,23 @@ var $$ = {};
         } else if (J.$eq(t2.get$data(tree), C.NonTerminal_EXPRESSION))
           C.JSArray_methods.addAll$1(subTrees, this.convertExpression$2(tree, $parent));
       }
-      this.typeCheck$1(subTrees);
       return subTrees;
     },
     convertBooleanExpression$2: function(currNode, $parent) {
-      var subTrees, t1, tree, t2, value, t3;
-      $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a boolean expression on line ", currNode.get$line()), null, null);
+      var subTrees, t1, tree, t2, t3;
       subTrees = [];
       subTrees.$builtinTypeInfo = [B.Tree];
-      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
-        tree = t1._current;
+      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
+        tree = t1.get$current();
         t2 = J.getInterceptor$x(tree);
         if (J.$eq(t2.get$data(tree), C.TokenType_BOOLEAN)) {
-          $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a boolean on line ", tree.get$line()), null, null);
-          value = C.JSArray_methods.get$first(t2.get$children(tree));
-          t2 = new B.Tree(J.get$data$x(value), value.get$line(), $parent, null);
+          t2 = new B.Tree(J.get$data$x(J.get$first$ax(t2.get$children(tree))), $parent, null);
           t3 = [];
           t3.$builtinTypeInfo = [B.Tree];
           t2.children = t3;
           subTrees.push(t2);
         } else if (J.$eq(t2.get$data(tree), C.TokenType_BOOL_OP)) {
-          $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a boolean operation on line ", tree.get$line()), null, null);
-          value = C.JSArray_methods.get$first(t2.get$children(tree));
-          t2 = new B.Tree(J.get$data$x(value), value.get$line(), $parent, null);
+          t2 = new B.Tree(J.get$data$x(J.get$first$ax(t2.get$children(tree))), $parent, null);
           t3 = [];
           t3.$builtinTypeInfo = [B.Tree];
           t2.children = t3;
@@ -656,49 +617,35 @@ var $$ = {};
         } else if (J.$eq(t2.get$data(tree), C.NonTerminal_EXPRESSION))
           C.JSArray_methods.addAll$1(subTrees, this.convertExpression$2(tree, $parent));
       }
-      this.typeCheck$1(subTrees);
       return subTrees;
     },
     convertStringExpression$2: function(currNode, $parent) {
-      var t1, t2, stringTree, tree, t3;
-      t1 = $.get$SemanticAnalyzer_log();
-      t2 = currNode.get$line();
-      t1.log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a string expression on line ", t2), null, null);
-      stringTree = new B.Tree(C.NonTerminal_STRING_EXPRESSION, t2, $parent, null);
-      t2 = [];
-      t2.$builtinTypeInfo = [B.Tree];
-      stringTree.children = t2;
-      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
-        tree = t1._current;
+      var stringTree, t1, tree, t2, line;
+      stringTree = new B.Tree(C.NonTerminal_STRING_EXPRESSION, $parent, null);
+      t1 = [];
+      t1.$builtinTypeInfo = [B.Tree];
+      stringTree.children = t1;
+      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
+        tree = t1.get$current();
         t2 = J.getInterceptor$x(tree);
+        line = H.S(t2.get$data(tree));
+        H.printString(line);
         if (J.$eq(t2.get$data(tree), C.NonTerminal_CHAR_LIST)) {
           t2 = this.convertCharList$2(tree, stringTree);
           C.JSArray_methods.addAll$1(stringTree.children, t2);
-        } else if (J.$eq(t2.get$data(tree), C.TokenType_QUOTE)) {
-          t2 = new B.Tree("\"", tree.get$line(), stringTree, null);
-          t3 = [];
-          t3.$builtinTypeInfo = [B.Tree];
-          t2.children = t3;
-          stringTree.children.push(t2);
         }
       }
-      t1 = new B.Tree(C.JSArray_methods.join$1(stringTree.children, ""), currNode.line, $parent, null);
-      t2 = [];
-      t2.$builtinTypeInfo = [B.Tree];
-      t1.children = t2;
-      return t1;
+      return stringTree;
     },
     convertCharList$2: function(currNode, $parent) {
-      var subTrees, t1, tree, t2, value, t3;
-      $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a char list on line ", currNode.get$line()), null, null);
+      var subTrees, t1, tree, t2, t3;
       subTrees = [];
       subTrees.$builtinTypeInfo = [B.Tree];
-      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
-        tree = t1._current;
+      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
+        tree = t1.get$current();
         t2 = J.getInterceptor$x(tree);
         if (J.$eq(t2.get$data(tree), C.TokenType_CHAR) || J.$eq(t2.get$data(tree), C.TokenType_SPACE)) {
-          value = J.get$first$ax(t2.get$children(tree));
-          t2 = new B.Tree(J.get$data$x(value), value.get$line(), $parent, null);
+          t2 = new B.Tree(J.get$data$x(J.get$first$ax(t2.get$children(tree))), $parent, null);
           t3 = [];
           t3.$builtinTypeInfo = [B.Tree];
           t2.children = t3;
@@ -707,124 +654,15 @@ var $$ = {};
       }
       return subTrees;
     },
-    convertChar$2: function(currNode, $parent) {
-      var value, t1;
-      $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a char on line ", currNode.get$line()), null, null);
-      value = J.get$first$ax(J.get$children$x(C.JSArray_methods.get$first(currNode.get$children(currNode))));
-      t1 = new B.Tree(J.get$data$x(value), value.get$line(), $parent, null);
-      t1.children = H.setRuntimeTypeInfo([], [B.Tree]);
-      return t1;
-    },
-    typeCheck$1: function(right) {
-      var clean, type, t1;
-      clean = P.List_List$from(right, true, null);
-      H.IterableMixinWorkaround_removeWhereList(clean, new A.SemanticAnalyzer_typeCheck_closure());
-      H.IterableMixinWorkaround_removeWhereList(clean, new A.SemanticAnalyzer_typeCheck_closure0());
-      H.IterableMixinWorkaround_removeWhereList(clean, new A.SemanticAnalyzer_typeCheck_closure1());
-      H.IterableMixinWorkaround_removeWhereList(clean, new A.SemanticAnalyzer_typeCheck_closure2());
-      if (clean.length > 1) {
-        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, "Type checking the following values: " + H.IterableMixinWorkaround_toStringIterable(clean, "[", "]"), null, null);
-        if (0 >= clean.length)
-          H.throwExpression(P.RangeError$value(0));
-        type = this.determineType$1(J.get$data$x(clean.splice(0, 1)[0]));
-        t1 = J.getInterceptor(type);
-        if (t1.$eq(type, "int"))
-          this.ensureType$2(clean, "int");
-        else if (t1.$eq(type, "boolean"))
-          this.ensureType$2(clean, "boolean");
-        else
-          this.ensureType$2(clean, "string");
-      }
-    },
-    ensureType$2: function(right, desiredType) {
-      var t1, tree, t2, value;
-      for (t1 = new H.ListIterator(right, right.length, 0, null); t1.moveNext$0();) {
-        tree = t1._current;
-        t2 = J.getInterceptor$x(tree);
-        value = J.toString$0(t2.get$data(tree));
-        if (!J.$eq(this.determineType$1(value), desiredType)) {
-          if (this.symbolExists$1(value))
-            M.ExceptionUtil_logAndThrow(new T.CompilerTypeError(C.JSString_methods.$add(C.JSString_methods.$add("Identifier ", J.get$id$x(this.getSymbol$1(value))) + " on line ", tree.get$line()) + (" is not of expected type " + desiredType + ".")), $.get$SemanticAnalyzer_log());
-          M.ExceptionUtil_logAndThrow(new T.CompilerTypeError(J.$add$ns(J.$add$ns(J.$add$ns(t2.toString$0(tree), " on line "), tree.get$line()), " is not of expected type " + desiredType + ".")), $.get$SemanticAnalyzer_log());
-        }
-      }
-    },
-    determineType$1: function(value) {
-      var exception;
-      if (this.symbolExists$1(value))
-        return J.get$type$x(this.getSymbol$1(value));
-      else
-        try {
-          P.num_parse(value, null);
-          return "int";
-        } catch (exception) {
-          if (!!J.getInterceptor(H.unwrapException(exception)).$isFormatException)
-            if (J.$eq(value, "true") || J.$eq(value, "false"))
-              return "boolean";
-            else
-              return "string";
-          else
-            throw exception;
-        }
-
-    },
-    getSymbol$1: function(symbol) {
-      var t1, s;
-      for (t1 = this.symbols, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
-        s = t1._current;
-        if (J.$eq(J.get$id$x(s), symbol) && s.get$scope() === this.scope)
-          return s;
-      }
-      $.get$SemanticAnalyzer_log().log$4(C.Level_WARNING_900, "Compiler can't find symbol", null, null);
-      return;
-    },
-    symbolExists$1: function(symbol) {
-      var t1;
-      for (t1 = this.symbols, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();)
-        if (J.$eq(J.get$id$x(t1._current), symbol))
-          return true;
-      return false;
-    },
-    drawSymbols$1: function(symbols) {
-      var t1, symbol;
-      for (t1 = new H.ListIterator(symbols, symbols.length, 0, null); t1.moveNext$0();) {
-        symbol = t1._current;
-        J.insertAdjacentText$2$x(document.querySelector("#symbol-table"), "beforeend", J.toString$0(symbol));
-      }
-    },
     static: {"^": "SemanticAnalyzer_log"}
-  },
-  SemanticAnalyzer_typeCheck_closure: {
-    "^": "Closure:10;",
-    call$1: function(item) {
-      return J.$eq(J.get$data$x(item), "==");
-    }
-  },
-  SemanticAnalyzer_typeCheck_closure0: {
-    "^": "Closure:10;",
-    call$1: function(item) {
-      return J.$eq(J.get$data$x(item), "!=");
-    }
-  },
-  SemanticAnalyzer_typeCheck_closure1: {
-    "^": "Closure:10;",
-    call$1: function(item) {
-      return J.$eq(J.get$data$x(item), "+");
-    }
-  },
-  SemanticAnalyzer_typeCheck_closure2: {
-    "^": "Closure:10;",
-    call$1: function(item) {
-      return !!J.getInterceptor(J.get$data$x(item)).$isNonTerminal;
-    }
   }
 }],
 ["Symbol", "compiler/symbol.dart", , T, {
   "^": "",
   CompilerSymbol: {
-    "^": "Object;id>,scope<,line<,type>,used?,inited@",
+    "^": "Object;id>,scope<,line,type",
     toString$0: function(_) {
-      return "Symbol: name=" + H.S(this.id) + " scope=" + this.scope + " line=" + this.line + " type=" + H.S(this.type) + " inited=" + this.inited + " used=" + this.used + " \n";
+      return "Symbol: name=" + H.S(this.id) + " scope=" + this.scope + " line=" + this.line + " type=" + H.S(this.type) + " \n";
     }
   },
   NonTerminal: {
@@ -839,7 +677,7 @@ var $$ = {};
 ["Token", "compiler/token.dart", , D, {
   "^": "",
   Token: {
-    "^": "Object;type,value,line<,symbol",
+    "^": "Object;type,value,line,symbol",
     toString$0: function(_) {
       return "Token type=" + this.type._Enum$_value + " value=" + H.S(this.value) + " line=" + C.JSInt_methods.toString$0(this.line);
     }
@@ -856,9 +694,14 @@ var $$ = {};
 ["Tree", "lib/tree.dart", , B, {
   "^": "",
   Tree: {
-    "^": "Object;data>,line<,parent,children>",
+    "^": "Object;data>,parent,children>",
     toString$0: function(_) {
       return J.toString$0(this.data);
+    },
+    dump$0: function() {
+      P.print("Dumping tree " + H.S(this) + " with parent " + H.S(this.parent));
+      for (var t1 = this.children, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();)
+        t1._current.dump$0();
     },
     syntrify$0: function() {
       var t1, t2, syntree;
@@ -990,19 +833,6 @@ var $$ = {};
     },
     forEach$1: function(receiver, f) {
       return H.IterableMixinWorkaround_forEach(receiver, f);
-    },
-    join$1: function(receiver, separator) {
-      var t1, list, i, t2;
-      t1 = receiver.length;
-      list = Array(t1);
-      list.fixed$length = init;
-      for (i = 0; i < receiver.length; ++i) {
-        t2 = H.S(receiver[i]);
-        if (i >= t1)
-          return H.ioore(list, i);
-        list[i] = t2;
-      }
-      return list.join(separator);
     },
     elementAt$1: function(receiver, index) {
       if (index < 0 || index >= receiver.length)
@@ -3683,7 +3513,7 @@ var $$ = {};
         this.cst = J.$index$asx(hash, "cst");
         t1 = J.$index$asx(hash, "symbols");
         this.symbols = t1;
-        t1 = new A.SemanticAnalyzer(this.cst, t1, 0);
+        t1 = new A.SemanticAnalyzer(this.cst, t1);
         this.analyzer = t1;
         this.ast = t1.analyze$0();
       } catch (exception) {
@@ -3699,27 +3529,6 @@ var $$ = {};
     var t1;
     for (t1 = new H.ListIterator(iterable, iterable.length, 0, null); t1.moveNext$0();)
       f.call$1(t1._current);
-  },
-  IterableMixinWorkaround_removeWhereList: function(list, test) {
-    var retained, $length, t1, i, element;
-    retained = [];
-    $length = list.length;
-    for (t1 = $length, i = 0; i < $length; ++i) {
-      if (i >= t1)
-        return H.ioore(list, i);
-      element = list[i];
-      if (test.call$1(element) !== true)
-        retained.push(element);
-      t1 = list.length;
-      if ($length !== t1)
-        throw H.wrapException(P.ConcurrentModificationError$(list));
-    }
-    t1 = retained.length;
-    if (t1 === $length)
-      return;
-    C.JSArray_methods.set$length(list, t1);
-    for (i = 0; i < retained.length; ++i)
-      C.JSArray_methods.$indexSet(list, i, retained[i]);
   },
   IterableMixinWorkaround_toStringIterable: function(iterable, leftDelimiter, rightDelimiter) {
     var result, i, t1;
@@ -5701,23 +5510,17 @@ var $$ = {};
     },
     remove$1: function(_, object) {
       var rest, bucket, index;
-      if (typeof object === "string" && object !== "__proto__")
-        return this._removeHashTableEntry$2(this._strings, object);
-      else if (typeof object === "number" && (object & 0x3ffffff) === object)
-        return this._removeHashTableEntry$2(this._nums, object);
-      else {
-        rest = this._rest;
-        if (rest == null)
-          return false;
-        bucket = rest[this._computeHashCode$1(object)];
-        index = this._findBucketIndex$2(bucket, object);
-        if (index < 0)
-          return false;
-        this._collection$_length = this._collection$_length - 1;
-        this._elements = null;
-        bucket.splice(index, 1);
-        return true;
-      }
+      rest = this._rest;
+      if (rest == null)
+        return false;
+      bucket = rest[this._computeHashCode$1(object)];
+      index = this._findBucketIndex$2(bucket, object);
+      if (index < 0)
+        return false;
+      this._collection$_length = this._collection$_length - 1;
+      this._elements = null;
+      bucket.splice(index, 1);
+      return true;
     },
     _computeElements$0: function() {
       var t1, result, strings, names, entries, index, i, nums, rest, bucket, $length, i0;
@@ -5760,15 +5563,6 @@ var $$ = {};
       }
       this._elements = result;
       return result;
-    },
-    _removeHashTableEntry$2: function(table, element) {
-      if (table != null && table[element] != null) {
-        delete table[element];
-        this._collection$_length = this._collection$_length - 1;
-        this._elements = null;
-        return true;
-      } else
-        return false;
     },
     _computeHashCode$1: function(element) {
       return J.get$hashCode$(element) & 0x3ffffff;
@@ -6583,7 +6377,6 @@ var $$ = {};
     toString$0: function(_) {
       return "FormatException: " + this.message;
     },
-    $isFormatException: true,
     static: {FormatException$: function(message) {
         return new P.FormatException(message);
       }}
@@ -6701,10 +6494,10 @@ var $$ = {};
   },
   HtmlElement: {
     "^": "Element;",
-    "%": "HTMLAppletElement|HTMLBRElement|HTMLBaseElement|HTMLBodyElement|HTMLCanvasElement|HTMLContentElement|HTMLDListElement|HTMLDataListElement|HTMLDetailsElement|HTMLDialogElement|HTMLDirectoryElement|HTMLDivElement|HTMLFontElement|HTMLFrameElement|HTMLFrameSetElement|HTMLHRElement|HTMLHeadElement|HTMLHeadingElement|HTMLHtmlElement|HTMLImageElement|HTMLLIElement|HTMLLabelElement|HTMLLegendElement|HTMLMarqueeElement|HTMLMenuElement|HTMLMeterElement|HTMLModElement|HTMLOptGroupElement|HTMLOptionElement|HTMLParagraphElement|HTMLPreElement|HTMLProgressElement|HTMLQuoteElement|HTMLShadowElement|HTMLTableCaptionElement|HTMLTableCellElement|HTMLTableColElement|HTMLTableDataCellElement|HTMLTableElement|HTMLTableHeaderCellElement|HTMLTableRowElement|HTMLTableSectionElement|HTMLTemplateElement|HTMLTitleElement|HTMLTrackElement|HTMLUListElement|HTMLUnknownElement;HTMLElement"
+    "%": "HTMLAppletElement|HTMLBRElement|HTMLBaseElement|HTMLBodyElement|HTMLCanvasElement|HTMLContentElement|HTMLDListElement|HTMLDataListElement|HTMLDetailsElement|HTMLDialogElement|HTMLDirectoryElement|HTMLDivElement|HTMLFontElement|HTMLFrameElement|HTMLFrameSetElement|HTMLHRElement|HTMLHeadElement|HTMLHeadingElement|HTMLHtmlElement|HTMLImageElement|HTMLLIElement|HTMLLabelElement|HTMLLegendElement|HTMLLinkElement|HTMLMarqueeElement|HTMLMenuElement|HTMLMeterElement|HTMLModElement|HTMLOListElement|HTMLOptGroupElement|HTMLOptionElement|HTMLParagraphElement|HTMLPreElement|HTMLProgressElement|HTMLQuoteElement|HTMLScriptElement|HTMLShadowElement|HTMLSourceElement|HTMLStyleElement|HTMLTableCaptionElement|HTMLTableCellElement|HTMLTableColElement|HTMLTableDataCellElement|HTMLTableElement|HTMLTableHeaderCellElement|HTMLTableRowElement|HTMLTableSectionElement|HTMLTemplateElement|HTMLTitleElement|HTMLTrackElement|HTMLUListElement|HTMLUnknownElement;HTMLElement"
   },
   AnchorElement: {
-    "^": "HtmlElement;type=",
+    "^": "HtmlElement;",
     toString$0: function(receiver) {
       return receiver.toString();
     },
@@ -6722,7 +6515,7 @@ var $$ = {};
     "%": ";Blob"
   },
   ButtonElement: {
-    "^": "HtmlElement;name=,type=",
+    "^": "HtmlElement;name=",
     "%": "HTMLButtonElement"
   },
   CharacterData: {
@@ -6807,7 +6600,7 @@ var $$ = {};
     "%": ";Element"
   },
   EmbedElement: {
-    "^": "HtmlElement;name=,type=",
+    "^": "HtmlElement;name=",
     "%": "HTMLEmbedElement"
   },
   ErrorEvent: {
@@ -6829,7 +6622,7 @@ var $$ = {};
     "%": ";EventTarget"
   },
   FieldSetElement: {
-    "^": "HtmlElement;name=,type=",
+    "^": "HtmlElement;name=",
     "%": "HTMLFieldSetElement"
   },
   File: {
@@ -6876,17 +6669,13 @@ var $$ = {};
     "%": "HTMLIFrameElement"
   },
   InputElement: {
-    "^": "HtmlElement;name=,type=",
+    "^": "HtmlElement;name=",
     $isElement: true,
     "%": "HTMLInputElement"
   },
   KeygenElement: {
-    "^": "HtmlElement;name=,type=",
+    "^": "HtmlElement;name=",
     "%": "HTMLKeygenElement"
-  },
-  LinkElement: {
-    "^": "HtmlElement;type=",
-    "%": "HTMLLinkElement"
   },
   MapElement: {
     "^": "HtmlElement;name=",
@@ -6976,33 +6765,21 @@ var $$ = {};
     $isJavaScriptIndexingBehavior: true,
     "%": "NodeList|RadioNodeList"
   },
-  OListElement: {
-    "^": "HtmlElement;type=",
-    "%": "HTMLOListElement"
-  },
   ObjectElement: {
-    "^": "HtmlElement;data=,name=,type=",
+    "^": "HtmlElement;data=,name=",
     "%": "HTMLObjectElement"
   },
   OutputElement: {
-    "^": "HtmlElement;name=,type=",
+    "^": "HtmlElement;name=",
     "%": "HTMLOutputElement"
   },
   ParamElement: {
     "^": "HtmlElement;name=",
     "%": "HTMLParamElement"
   },
-  ScriptElement: {
-    "^": "HtmlElement;type=",
-    "%": "HTMLScriptElement"
-  },
   SelectElement: {
-    "^": "HtmlElement;length=,name=,type=",
+    "^": "HtmlElement;length=,name=",
     "%": "HTMLSelectElement"
-  },
-  SourceElement: {
-    "^": "HtmlElement;type=",
-    "%": "HTMLSourceElement"
   },
   SpanElement: {
     "^": "HtmlElement;",
@@ -7017,12 +6794,8 @@ var $$ = {};
     "^": "Event;name=",
     "%": "SpeechSynthesisEvent"
   },
-  StyleElement: {
-    "^": "HtmlElement;type=",
-    "%": "HTMLStyleElement"
-  },
   TextAreaElement: {
-    "^": "HtmlElement;name=,type=",
+    "^": "HtmlElement;name=",
     $isTextAreaElement: true,
     "%": "HTMLTextAreaElement"
   },
@@ -7208,22 +6981,6 @@ var $$ = {};
 }],
 ["dart.dom.svg", "dart:svg", , P, {
   "^": "",
-  FEColorMatrixElement: {
-    "^": "SvgElement;type=",
-    "%": "SVGFEColorMatrixElement"
-  },
-  FETurbulenceElement: {
-    "^": "SvgElement;type=",
-    "%": "SVGFETurbulenceElement"
-  },
-  ScriptElement0: {
-    "^": "SvgElement;type=",
-    "%": "SVGScriptElement"
-  },
-  StyleElement0: {
-    "^": "SvgElement;type=",
-    "%": "SVGStyleElement"
-  },
   SvgElement: {
     "^": "Element;",
     get$children: function(receiver) {
@@ -7235,7 +6992,7 @@ var $$ = {};
     get$onClick: function(receiver) {
       return H.setRuntimeTypeInfo(new W._ElementEventStreamImpl(receiver, C.EventStreamProvider_click._eventType, false), [null]);
     },
-    "%": "SVGAElement|SVGAltGlyphDefElement|SVGAltGlyphElement|SVGAltGlyphItemElement|SVGAnimateElement|SVGAnimateMotionElement|SVGAnimateTransformElement|SVGAnimationElement|SVGCircleElement|SVGClipPathElement|SVGComponentTransferFunctionElement|SVGCursorElement|SVGDefsElement|SVGDescElement|SVGDiscardElement|SVGEllipseElement|SVGFEBlendElement|SVGFEComponentTransferElement|SVGFECompositeElement|SVGFEConvolveMatrixElement|SVGFEDiffuseLightingElement|SVGFEDisplacementMapElement|SVGFEDistantLightElement|SVGFEDropShadowElement|SVGFEFloodElement|SVGFEFuncAElement|SVGFEFuncBElement|SVGFEFuncGElement|SVGFEFuncRElement|SVGFEGaussianBlurElement|SVGFEImageElement|SVGFEMergeElement|SVGFEMergeNodeElement|SVGFEMorphologyElement|SVGFEOffsetElement|SVGFEPointLightElement|SVGFESpecularLightingElement|SVGFESpotLightElement|SVGFETileElement|SVGFilterElement|SVGFontElement|SVGFontFaceElement|SVGFontFaceFormatElement|SVGFontFaceNameElement|SVGFontFaceSrcElement|SVGFontFaceUriElement|SVGForeignObjectElement|SVGGElement|SVGGeometryElement|SVGGlyphElement|SVGGlyphRefElement|SVGGradientElement|SVGGraphicsElement|SVGHKernElement|SVGImageElement|SVGLineElement|SVGLinearGradientElement|SVGMPathElement|SVGMarkerElement|SVGMaskElement|SVGMetadataElement|SVGMissingGlyphElement|SVGPathElement|SVGPatternElement|SVGPolygonElement|SVGPolylineElement|SVGRadialGradientElement|SVGRectElement|SVGSVGElement|SVGSetElement|SVGStopElement|SVGSwitchElement|SVGSymbolElement|SVGTSpanElement|SVGTextContentElement|SVGTextElement|SVGTextPathElement|SVGTextPositioningElement|SVGTitleElement|SVGUseElement|SVGVKernElement|SVGViewElement;SVGElement"
+    "%": "SVGAElement|SVGAltGlyphDefElement|SVGAltGlyphElement|SVGAltGlyphItemElement|SVGAnimateElement|SVGAnimateMotionElement|SVGAnimateTransformElement|SVGAnimationElement|SVGCircleElement|SVGClipPathElement|SVGComponentTransferFunctionElement|SVGCursorElement|SVGDefsElement|SVGDescElement|SVGDiscardElement|SVGElement|SVGEllipseElement|SVGFEBlendElement|SVGFEColorMatrixElement|SVGFEComponentTransferElement|SVGFECompositeElement|SVGFEConvolveMatrixElement|SVGFEDiffuseLightingElement|SVGFEDisplacementMapElement|SVGFEDistantLightElement|SVGFEDropShadowElement|SVGFEFloodElement|SVGFEFuncAElement|SVGFEFuncBElement|SVGFEFuncGElement|SVGFEFuncRElement|SVGFEGaussianBlurElement|SVGFEImageElement|SVGFEMergeElement|SVGFEMergeNodeElement|SVGFEMorphologyElement|SVGFEOffsetElement|SVGFEPointLightElement|SVGFESpecularLightingElement|SVGFESpotLightElement|SVGFETileElement|SVGFETurbulenceElement|SVGFilterElement|SVGFontElement|SVGFontFaceElement|SVGFontFaceFormatElement|SVGFontFaceNameElement|SVGFontFaceSrcElement|SVGFontFaceUriElement|SVGForeignObjectElement|SVGGElement|SVGGeometryElement|SVGGlyphElement|SVGGlyphRefElement|SVGGradientElement|SVGGraphicsElement|SVGHKernElement|SVGImageElement|SVGLineElement|SVGLinearGradientElement|SVGMPathElement|SVGMarkerElement|SVGMaskElement|SVGMetadataElement|SVGMissingGlyphElement|SVGPathElement|SVGPatternElement|SVGPolygonElement|SVGPolylineElement|SVGRadialGradientElement|SVGRectElement|SVGSVGElement|SVGScriptElement|SVGSetElement|SVGStopElement|SVGStyleElement|SVGSwitchElement|SVGSymbolElement|SVGTSpanElement|SVGTextContentElement|SVGTextElement|SVGTextPathElement|SVGTextPositioningElement|SVGTitleElement|SVGUseElement|SVGVKernElement|SVGViewElement"
   }
 }],
 ["dart.isolate", "dart:isolate", , P, {
@@ -7564,7 +7321,7 @@ var $$ = {};
   CompilerTypeError: {
     "^": "Object;message",
     toString$0: function(_) {
-      return "Type Error: " + H.S(this.message);
+      return "Type Error: " + this.message;
     }
   }
 }],
@@ -7885,7 +7642,7 @@ var $$ = {};
       var t1, token;
       $.get$Parser_log().log$4(C.Level_INFO_800, "Parser starting analysis...", null, null);
       if (this.tokens.length !== 0) {
-        t1 = new B.Tree(C.NonTerminal_PROGRAM, null, null, null);
+        t1 = new B.Tree(C.NonTerminal_PROGRAM, null, null);
         t1.children = H.setRuntimeTypeInfo([], [B.Tree]);
         this.cst = t1;
         this.block$1(t1);
@@ -7893,15 +7650,15 @@ var $$ = {};
         t1 = token.type;
         if (t1 !== C.TokenType_END)
           M.ExceptionUtil_logAndThrow(new T.CompilerSyntaxError("Expected END token, found type " + t1._Enum$_value + " on line " + C.JSInt_methods.toString$0(token.line)), $.get$Parser_log());
-        this.warnSymbols$0();
-        $.get$Parser_log().log$4(C.Level_INFO_800, "Parser finished analysis...", null, null);
+        $.get$Parser_log().log$4(C.Level_INFO_800, "Parser finished analysis...Dumping CST", null, null);
+        this.cst.dump$0();
         return H.fillLiteralMap(["cst", this.cst, "symbols", this.symbols], P.LinkedHashMap_LinkedHashMap(null, null, null, null, null));
       } else
         $.get$Parser_log().log$4(C.Level_WARNING_900, "No tokens to parse, finished.", null, null);
     },
     addChild$2: function(data, root) {
       var child, t1;
-      child = new B.Tree(data, C.JSInt_methods.toString$0(this.getToken$0().line), root, null);
+      child = new B.Tree(data, root, null);
       t1 = [];
       t1.$builtinTypeInfo = [B.Tree];
       child.children = t1;
@@ -7911,19 +7668,19 @@ var $$ = {};
     block$1: function(currNode) {
       var child, t1, child0;
       $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing block on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
-      child = new B.Tree(C.NonTerminal_BLOCK, C.JSInt_methods.toString$0(this.getToken$0().line), currNode, null);
+      child = new B.Tree(C.NonTerminal_BLOCK, currNode, null);
       t1 = [];
       t1.$builtinTypeInfo = [B.Tree];
       child.children = t1;
       currNode.children.push(child);
-      child0 = new B.Tree(C.TokenType_OPEN_BRACE, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
+      child0 = new B.Tree(C.TokenType_OPEN_BRACE, child, null);
       t1 = [];
       t1.$builtinTypeInfo = [B.Tree];
       child0.children = t1;
       child.children.push(child0);
       this.scope = this.scope + 1;
       this.statementList$1(child);
-      child0 = new B.Tree(C.TokenType_CLOSE_BRACE, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
+      child0 = new B.Tree(C.TokenType_CLOSE_BRACE, child, null);
       t1 = [];
       t1.$builtinTypeInfo = [B.Tree];
       child0.children = t1;
@@ -7934,31 +7691,31 @@ var $$ = {};
       var token, t1, child, t2, child0, typeToken, child1, child2, t3, t4;
       token = this.popNextToken$0();
       for (; t1 = token.type, t1 !== C.TokenType_CLOSE_BRACE; currNode = child) {
-        child = new B.Tree(C.NonTerminal_STATEMENT_LIST, C.JSInt_methods.toString$0(this.getToken$0().line), currNode, null);
+        child = new B.Tree(C.NonTerminal_STATEMENT_LIST, currNode, null);
         t2 = [];
         t2.$builtinTypeInfo = [B.Tree];
         child.children = t2;
         currNode.children.push(child);
         if (t1 === C.TokenType_TYPE) {
-          child0 = new B.Tree(C.NonTerminal_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
+          child0 = new B.Tree(C.NonTerminal_STATEMENT, child, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child.children.push(child0);
           $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing a variable declaration on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
           typeToken = this.getToken$0();
-          child1 = new B.Tree(C.NonTerminal_VARIABLE_DECLARATION, C.JSInt_methods.toString$0(this.getToken$0().line), child0, null);
+          child1 = new B.Tree(C.NonTerminal_VARIABLE_DECLARATION, child0, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child1.children = t1;
           child0.children.push(child1);
-          child0 = new B.Tree(typeToken.type, C.JSInt_methods.toString$0(this.getToken$0().line), child1, null);
+          child0 = new B.Tree(typeToken.type, child1, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child1.children.push(child0);
           t1 = typeToken.value;
-          child2 = new B.Tree(t1, C.JSInt_methods.toString$0(this.getToken$0().line), child0, null);
+          child2 = new B.Tree(t1, child0, null);
           t2 = [];
           t2.$builtinTypeInfo = [B.Tree];
           child2.children = t2;
@@ -7968,27 +7725,25 @@ var $$ = {};
           t2 = token.value;
           t3 = this.scope;
           t4 = token.line;
-          this.symbols.push(new T.CompilerSymbol(t2, t3, t4, t1, false, false));
+          J.insertAdjacentText$2$x(document.querySelector("#symbol-table"), "beforeend", "Symbol: name=" + H.S(t2) + " scope=" + t3 + " line=" + t4 + " type=" + H.S(t1) + " \n");
+          this.symbols.push(new T.CompilerSymbol(t2, t3, t4, t1));
         } else if (t1 === C.TokenType_ID) {
-          child0 = new B.Tree(C.NonTerminal_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
+          child0 = new B.Tree(C.NonTerminal_STATEMENT, child, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child.children.push(child0);
           $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing assignment statement on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
-          child1 = new B.Tree(C.NonTerminal_ASSIGNMENT_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child0, null);
+          child1 = new B.Tree(C.NonTerminal_ASSIGNMENT_STATEMENT, child0, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child1.children = t1;
           child0.children.push(child1);
           this.index = this.index - 1;
           this.idExpression$1(child1);
-          token = this.getToken$0();
-          if (token.type === C.TokenType_ID)
-            this.getSymbol$1(token.value).set$inited(true);
           this.scopeCheck$0();
           this.expect$1(C.TokenType_EQUALS);
-          child0 = new B.Tree(C.TokenType_EQUALS, C.JSInt_methods.toString$0(this.getToken$0().line), child1, null);
+          child0 = new B.Tree(C.TokenType_EQUALS, child1, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
@@ -7996,13 +7751,13 @@ var $$ = {};
           this.expression$1(child1);
           this.scopeCheck$0();
         } else if (t1 === C.TokenType_IF) {
-          child0 = new B.Tree(C.NonTerminal_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
+          child0 = new B.Tree(C.NonTerminal_STATEMENT, child, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child.children.push(child0);
           $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing if statement on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
-          child1 = new B.Tree(C.NonTerminal_IF_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child0, null);
+          child1 = new B.Tree(C.NonTerminal_IF_STATEMENT, child0, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child1.children = t1;
@@ -8011,13 +7766,13 @@ var $$ = {};
           this.index = this.index + 1;
           this.block$1(child1);
         } else if (t1 === C.TokenType_WHILE) {
-          child0 = new B.Tree(C.NonTerminal_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
+          child0 = new B.Tree(C.NonTerminal_STATEMENT, child, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child.children.push(child0);
           $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing while statement on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
-          child1 = new B.Tree(C.NonTerminal_WHILE_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child0, null);
+          child1 = new B.Tree(C.NonTerminal_WHILE_STATEMENT, child0, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child1.children = t1;
@@ -8026,24 +7781,24 @@ var $$ = {};
           this.index = this.index + 1;
           this.block$1(child1);
         } else if (t1 === C.TokenType_PRINT) {
-          child0 = new B.Tree(C.NonTerminal_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
+          child0 = new B.Tree(C.NonTerminal_STATEMENT, child, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child.children.push(child0);
           $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing print statement on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
-          child1 = new B.Tree(C.NonTerminal_PRINT_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child0, null);
+          child1 = new B.Tree(C.NonTerminal_PRINT_STATEMENT, child0, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child1.children = t1;
           child0.children.push(child1);
-          child0 = new B.Tree("Print", C.JSInt_methods.toString$0(this.getToken$0().line), child1, null);
+          child0 = new B.Tree("Print", child1, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child1.children.push(child0);
           this.expect$1(C.TokenType_OPEN_PAREN);
-          child0 = new B.Tree(C.TokenType_OPEN_PAREN, C.JSInt_methods.toString$0(this.getToken$0().line), child1, null);
+          child0 = new B.Tree(C.TokenType_OPEN_PAREN, child1, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
@@ -8051,13 +7806,13 @@ var $$ = {};
           this.expression$1(child1);
           this.scopeCheck$0();
           this.expect$1(C.TokenType_CLOSE_PAREN);
-          child0 = new B.Tree(C.TokenType_CLOSE_PAREN, C.JSInt_methods.toString$0(this.getToken$0().line), child1, null);
+          child0 = new B.Tree(C.TokenType_CLOSE_PAREN, child1, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child1.children.push(child0);
         } else if (t1 === C.TokenType_OPEN_BRACE) {
-          child0 = new B.Tree(C.NonTerminal_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
+          child0 = new B.Tree(C.NonTerminal_STATEMENT, child, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
@@ -8090,12 +7845,9 @@ var $$ = {};
         this.booleanExpression$1(currNode);
       else if (this.isNextToken$1(C.TokenType_QUOTE))
         this.stringExpression$1(currNode);
-      else if (this.isNextToken$1(C.TokenType_ID)) {
+      else if (this.isNextToken$1(C.TokenType_ID))
         this.idExpression$1(currNode);
-        token = this.getToken$0();
-        if (token.type === C.TokenType_ID)
-          this.getSymbol$1(token.value).set$used(true);
-      } else
+      else
         P.print("idk");
     },
     booleanExpression$1: function(currNode) {
@@ -8138,12 +7890,12 @@ var $$ = {};
           break;
         this.expectOneOf$1([C.TokenType_CHAR, C.TokenType_SPACE]);
         token = this.getToken$0();
-        child = new B.Tree(token.type, C.JSInt_methods.toString$0(this.getToken$0().line), charList, null);
+        child = new B.Tree(token.type, charList, null);
         t1 = [];
         t1.$builtinTypeInfo = [B.Tree];
         child.children = t1;
         charList.children.push(child);
-        child0 = new B.Tree(token.value, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
+        child0 = new B.Tree(token.value, child, null);
         t1 = [];
         t1.$builtinTypeInfo = [B.Tree];
         child0.children = t1;
@@ -8255,26 +8007,6 @@ var $$ = {};
           instances.push(s);
       }
       return instances;
-    },
-    getSymbol$1: function(symbol) {
-      var instances, t1, s;
-      instances = this.getSymbols$1(symbol);
-      for (t1 = new H.ListIterator(instances, instances.length, 0, null); t1.moveNext$0();) {
-        s = t1._current;
-        if (s.get$scope() === this.scope)
-          return s;
-      }
-      return C.JSArray_methods.get$last(instances);
-    },
-    warnSymbols$0: function() {
-      var t1, instance;
-      for (t1 = this.symbols, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
-        instance = t1._current;
-        if (!instance.get$inited())
-          $.get$Parser_log().log$4(C.Level_WARNING_900, "Symbol " + H.S(instance.id) + " on line " + C.JSInt_methods.toString$0(instance.line) + " never initialized!", null, null);
-        else if (!instance.used)
-          $.get$Parser_log().log$4(C.Level_WARNING_900, "Symbol " + H.S(instance.id) + " on line " + C.JSInt_methods.toString$0(instance.line) + " never used!", null, null);
-      }
     },
     static: {"^": "Parser_log"}
   }
@@ -8473,9 +8205,6 @@ J.get$length$asx = function(receiver) {
 };
 J.get$name$x = function(receiver) {
   return J.getInterceptor$x(receiver).get$name(receiver);
-};
-J.get$type$x = function(receiver) {
-  return J.getInterceptor$x(receiver).get$type(receiver);
 };
 J.insertAdjacentText$2$x = function(receiver, a0, a1) {
   return J.getInterceptor$x(receiver).insertAdjacentText$2(receiver, a0, a1);
