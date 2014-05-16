@@ -264,10 +264,85 @@ var $$ = {};
   }
 })
 ([
+["ConversionUtil", "util/conversion_util.dart", , V, {
+  "^": "",
+  ConversionUtil_toLittleEndian: function(value, desiredLength) {
+    var t1, t2, line;
+    value = V.ConversionUtil_makeEven(value);
+    while (true) {
+      t1 = J.getInterceptor$asx(value);
+      t2 = t1.get$length(value);
+      if (typeof t2 !== "number")
+        return t2.$lt();
+      if (!(t2 < desiredLength))
+        break;
+      value = t1.$add(value, "00");
+    }
+    line = "NEW EVEN VALUE BRO " + t1.toUpperCase$0(value);
+    H.printString(line);
+    return value.toUpperCase();
+  },
+  ConversionUtil_makeEven: function(value) {
+    var t1, t2, t3;
+    t1 = J.getInterceptor$asx(value);
+    t2 = t1.get$length(value);
+    if (typeof t2 !== "number")
+      return t2.$mod();
+    if (C.JSInt_methods.$mod(t2, 2) !== 0)
+      if (t1.get$length(value) === 1)
+        value = C.JSString_methods.$add("0", value);
+      else {
+        t2 = t1.get$length(value);
+        if (typeof t2 !== "number")
+          return t2.$sub();
+        t2 = t1.substring$2(value, 0, t2 - 2) + "0";
+        t1 = value.length;
+        t3 = t1 - 1;
+        if (t3 < 0)
+          return H.ioore(value, t3);
+        value = t2 + value[t3];
+      }
+    return value;
+  },
+  ConversionUtil_numToHex: function(value) {
+    return V.ConversionUtil_makeEven(J.toRadixString$1$n(value, 16).toUpperCase());
+  },
+  ConversionUtil_stringToHex: function(value) {
+    var t1, hexString;
+    for (t1 = new J._CodeUnits(J.replaceAll$2$s(value, "\"", "")), t1 = t1.get$iterator(t1), hexString = ""; t1.moveNext$0();)
+      hexString = C.JSString_methods.$add(hexString, V.ConversionUtil_makeEven(J.toRadixString$1$n(t1._current, 16).toUpperCase()));
+    return hexString + "00";
+  },
+  ConversionUtil_booleanToHex: function(value) {
+    if (J.$eq(value, "true"))
+      return V.ConversionUtil_numToHex(1);
+    else
+      return V.ConversionUtil_numToHex(0);
+  },
+  ConversionUtil_determineType: function(value) {
+    var exception;
+    try {
+      P.num_parse(value, null);
+      return "int";
+    } catch (exception) {
+      if (!!J.getInterceptor(H.unwrapException(exception)).$isFormatException)
+        if (J.$eq(value, "true") || J.$eq(value, "false"))
+          return "boolean";
+        else
+          return "string";
+      else
+        throw exception;
+    }
+
+  }
+}],
 ["Enum", "lib/enum.dart", , B, {
   "^": "",
   Enum0: {
-    "^": "Object;"
+    "^": "Object;",
+    get$value: function(_) {
+      return this._Enum$_value;
+    }
   }
 }],
 ["ExceptionUtil", "util/exception_util.dart", , M, {
@@ -395,39 +470,50 @@ var $$ = {};
 ["SemanticAnalyzer", "compiler/semanticAnalyzer.dart", , A, {
   "^": "",
   SemanticAnalyzer: {
-    "^": "Object;cst,symbols",
+    "^": "Object;cst,symbols,scope<",
     analyze$0: function() {
       var t1, ast;
       $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, "Semantic Analyzer starting analysis...", null, null);
-      t1 = this.cst;
-      if (t1.children.length !== 0) {
+      if (this.cst.children.length !== 0) {
+        this.drawSymbols$1(this.symbols);
+        t1 = this.cst;
         J.insertAdjacentText$2$x(document.querySelector("#cst"), "beforeend", t1.syntrify$0());
-        ast = this.convertBlock$2(C.JSArray_methods.get$first(this.cst.children), null);
-        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, "Semantic Analyzer finished analysis... Dumping AST", null, null);
-        ast.dump$0();
+        t1 = this.cst;
+        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, "Converting a program", null, null);
+        ast = this.convertBlock$2(C.JSArray_methods.get$first(t1.children), null);
+        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, "Semantic Analyzer finished analysis...", null, null);
         J.insertAdjacentText$2$x(document.querySelector("#ast"), "beforeend", ast.syntrify$0());
         return ast;
       } else
         $.get$SemanticAnalyzer_log().log$4(C.Level_WARNING_900, "CST is empty, finished analysis...", null, null);
     },
     convertBlock$2: function(currNode, $parent) {
-      var ast, t1, child;
-      ast = new B.Tree(C.NonTerminal_BLOCK, $parent, null);
-      t1 = [];
-      t1.$builtinTypeInfo = [B.Tree];
-      ast.children = t1;
-      for (t1 = this.convertStatementList$2(J.$index$asx(J.get$children$x(currNode), 1), ast), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+      var t1, t2, ast, child;
+      t1 = $.get$SemanticAnalyzer_log();
+      t2 = currNode.get$line();
+      t1.log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a block on line ", t2), null, null);
+      this.scope = this.scope + 1;
+      ast = new B.Tree(C.NonTerminal_BLOCK, t2, $parent, null);
+      t2 = [];
+      t2.$builtinTypeInfo = [B.Tree];
+      ast.children = t2;
+      t1 = currNode.get$children(currNode);
+      if (1 >= t1.length)
+        return H.ioore(t1, 1);
+      for (t1 = this.convertStatementList$2(t1[1], ast), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
         child = t1._current;
         ast.children.push(child);
       }
+      this.scope = this.scope - 1;
       return ast;
     },
     convertStatementList$2: function(currNode, $parent) {
       var subTrees, t1, tree;
+      $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a statement list on line ", currNode.get$line()), null, null);
       subTrees = [];
       subTrees.$builtinTypeInfo = [B.Tree];
-      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
-        tree = t1.get$current();
+      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        tree = t1._current;
         switch (J.get$data$x(tree)) {
           case C.NonTerminal_STATEMENT:
             subTrees.push(this.convertStatement$2(tree, $parent));
@@ -444,40 +530,53 @@ var $$ = {};
     },
     convertStatement$2: function(currNode, $parent) {
       var tree, t1, type, id, variableDeclaration, t2, value, assignmentStatement, idValue, expressionValues;
-      tree = J.get$first$ax(J.get$children$x(currNode));
+      $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a statement on line ", currNode.get$line()), null, null);
+      tree = C.JSArray_methods.get$first(currNode.get$children(currNode));
       t1 = J.getInterceptor$x(tree);
       if (J.$eq(t1.get$data(tree), C.NonTerminal_VARIABLE_DECLARATION)) {
-        type = J.$index$asx(t1.get$children(tree), 0);
-        id = J.$index$asx(t1.get$children(tree), 1);
-        variableDeclaration = new B.Tree(C.NonTerminal_VARIABLE_DECLARATION, $parent, null);
+        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a variable deckaration on line ", tree.get$line()), null, null);
+        t1 = t1.get$children(tree);
+        if (0 >= t1.length)
+          return H.ioore(t1, 0);
+        type = t1[0];
+        t1 = tree.children;
+        if (1 >= t1.length)
+          return H.ioore(t1, 1);
+        id = t1[1];
+        variableDeclaration = new B.Tree(C.NonTerminal_VARIABLE_DECLARATION, tree.line, $parent, null);
         t1 = [];
         t1.$builtinTypeInfo = [B.Tree];
         variableDeclaration.children = t1;
-        t1 = new B.Tree(J.get$data$x(J.get$first$ax(J.get$children$x(type))), variableDeclaration, null);
+        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a type declaration on line ", type.get$line()), null, null);
+        t1 = new B.Tree(J.get$data$x(C.JSArray_methods.get$first(type.get$children(type))), type.line, variableDeclaration, null);
         t2 = [];
         t2.$builtinTypeInfo = [B.Tree];
         t1.children = t2;
         variableDeclaration.children.push(t1);
-        t1 = new B.Tree(J.get$data$x(J.get$first$ax(J.get$children$x(J.get$first$ax(J.get$children$x(id))))), variableDeclaration, null);
-        t2 = [];
-        t2.$builtinTypeInfo = [B.Tree];
-        t1.children = t2;
+        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an identifier expression on line ", id.get$line()), null, null);
+        t1 = this.convertChar$2(id, variableDeclaration);
         variableDeclaration.children.push(t1);
         return variableDeclaration;
       } else if (J.$eq(t1.get$data(tree), C.NonTerminal_ASSIGNMENT_STATEMENT)) {
-        id = J.$index$asx(t1.get$children(tree), 0);
-        value = J.$index$asx(t1.get$children(tree), 2);
-        assignmentStatement = new B.Tree(C.NonTerminal_ASSIGNMENT_STATEMENT, $parent, null);
+        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an assignment statement on line ", tree.get$line()), null, null);
+        t1 = t1.get$children(tree);
+        if (0 >= t1.length)
+          return H.ioore(t1, 0);
+        id = t1[0];
+        t1 = tree.children;
+        if (2 >= t1.length)
+          return H.ioore(t1, 2);
+        value = t1[2];
+        assignmentStatement = new B.Tree(C.NonTerminal_ASSIGNMENT_STATEMENT, tree.line, $parent, null);
         t1 = [];
         t1.$builtinTypeInfo = [B.Tree];
         assignmentStatement.children = t1;
-        idValue = new B.Tree(J.get$data$x(J.get$first$ax(J.get$children$x(J.get$first$ax(J.get$children$x(id))))), assignmentStatement, null);
-        t1 = [];
-        t1.$builtinTypeInfo = [B.Tree];
-        idValue.children = t1;
+        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an identifier expression on line ", id.get$line()), null, null);
+        idValue = this.convertChar$2(id, assignmentStatement);
         assignmentStatement.children.push(idValue);
         expressionValues = this.convertExpression$2(value, assignmentStatement);
         C.JSArray_methods.addAll$1(assignmentStatement.children, expressionValues);
+        this.typeCheck$2(assignmentStatement.children, true);
         return assignmentStatement;
       } else if (J.$eq(t1.get$data(tree), C.NonTerminal_IF_STATEMENT))
         return this.convertIfStatement$2(tree, $parent);
@@ -493,11 +592,14 @@ var $$ = {};
       }
     },
     convertIfStatement$2: function(currNode, $parent) {
-      var ifStatement, t1, tree, t2;
-      ifStatement = new B.Tree(C.NonTerminal_IF_STATEMENT, $parent, null);
+      var t1, t2, ifStatement, tree;
+      t1 = $.get$SemanticAnalyzer_log();
+      t2 = currNode.get$line();
+      t1.log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an if statement on line ", t2), null, null);
+      ifStatement = new B.Tree(C.NonTerminal_IF_STATEMENT, t2, $parent, null);
       ifStatement.children = H.setRuntimeTypeInfo([], [B.Tree]);
-      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
-        tree = t1.get$current();
+      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        tree = t1._current;
         t2 = J.getInterceptor$x(tree);
         if (J.$eq(t2.get$data(tree), C.NonTerminal_BOOLEAN_EXPRESSION)) {
           t2 = this.convertBooleanExpression$2(tree, ifStatement);
@@ -507,15 +609,17 @@ var $$ = {};
           ifStatement.children.push(t2);
         }
       }
-      ifStatement.dump$0();
       return ifStatement;
     },
     convertWhileStatement$2: function(currNode, $parent) {
-      var whileStatement, t1, tree, t2;
-      whileStatement = new B.Tree(C.NonTerminal_WHILE_STATEMENT, $parent, null);
+      var t1, t2, whileStatement, tree;
+      t1 = $.get$SemanticAnalyzer_log();
+      t2 = currNode.get$line();
+      t1.log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a while statement on line ", t2), null, null);
+      whileStatement = new B.Tree(C.NonTerminal_WHILE_STATEMENT, t2, $parent, null);
       whileStatement.children = H.setRuntimeTypeInfo([], [B.Tree]);
-      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
-        tree = t1.get$current();
+      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        tree = t1._current;
         t2 = J.getInterceptor$x(tree);
         if (J.$eq(t2.get$data(tree), C.NonTerminal_BOOLEAN_EXPRESSION)) {
           t2 = this.convertBooleanExpression$2(tree, whileStatement);
@@ -528,11 +632,14 @@ var $$ = {};
       return whileStatement;
     },
     convertPrintStatement$2: function(currNode, $parent) {
-      var ast, t1, tree, t2;
-      ast = new B.Tree(C.NonTerminal_PRINT_STATEMENT, $parent, null);
+      var t1, t2, ast, tree;
+      t1 = $.get$SemanticAnalyzer_log();
+      t2 = currNode.get$line();
+      t1.log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a print statement on line ", t2), null, null);
+      ast = new B.Tree(C.NonTerminal_PRINT_STATEMENT, t2, $parent, null);
       ast.children = H.setRuntimeTypeInfo([], [B.Tree]);
-      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
-        tree = t1.get$current();
+      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        tree = t1._current;
         if (J.$eq(J.get$data$x(tree), C.NonTerminal_EXPRESSION)) {
           t2 = this.convertExpression$2(tree, ast);
           C.JSArray_methods.addAll$1(ast.children, t2);
@@ -541,19 +648,16 @@ var $$ = {};
       return ast;
     },
     convertExpression$2: function(currNode, $parent) {
-      var subTrees, t1, tree, t2, t3;
+      var subTrees, t1, tree;
+      $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an expression on line ", currNode.get$line()), null, null);
       subTrees = [];
       subTrees.$builtinTypeInfo = [B.Tree];
-      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
-        tree = t1.get$current();
-        t2 = J.getInterceptor$x(tree);
-        switch (t2.get$data(tree)) {
+      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        tree = t1._current;
+        switch (J.get$data$x(tree)) {
           case C.NonTerminal_ID_EXPRESSION:
-            t2 = new B.Tree(J.get$data$x(J.get$first$ax(J.get$children$x(J.get$first$ax(t2.get$children(tree))))), $parent, null);
-            t3 = [];
-            t3.$builtinTypeInfo = [B.Tree];
-            t2.children = t3;
-            subTrees.push(t2);
+            $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an identifier expression on line ", tree.get$line()), null, null);
+            subTrees.push(this.convertChar$2(tree, $parent));
             break;
           case C.NonTerminal_INT_EXPRESSION:
             C.JSArray_methods.addAll$1(subTrees, this.convertIntExpression$2(tree, $parent));
@@ -566,26 +670,30 @@ var $$ = {};
             break;
           default:
             $.get$SemanticAnalyzer_log().log$4(C.Level_WARNING_900, "failed to convert expression", null, null);
-            return;
         }
       }
       return subTrees;
     },
     convertIntExpression$2: function(currNode, $parent) {
-      var subTrees, t1, tree, t2, t3;
+      var subTrees, t1, tree, t2, value, t3;
+      $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an int expression on line ", currNode.get$line()), null, null);
       subTrees = [];
       subTrees.$builtinTypeInfo = [B.Tree];
-      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
-        tree = t1.get$current();
+      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        tree = t1._current;
         t2 = J.getInterceptor$x(tree);
         if (J.$eq(t2.get$data(tree), C.TokenType_DIGIT)) {
-          t2 = new B.Tree(J.get$data$x(J.get$first$ax(t2.get$children(tree))), $parent, null);
+          $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a digit on line ", tree.get$line()), null, null);
+          value = C.JSArray_methods.get$first(t2.get$children(tree));
+          t2 = new B.Tree(J.get$data$x(value), value.get$line(), $parent, null);
           t3 = [];
           t3.$builtinTypeInfo = [B.Tree];
           t2.children = t3;
           subTrees.push(t2);
         } else if (J.$eq(t2.get$data(tree), C.TokenType_INT_OP)) {
-          t2 = new B.Tree(J.get$data$x(J.get$first$ax(t2.get$children(tree))), $parent, null);
+          $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting an integer operation on line ", tree.get$line()), null, null);
+          value = C.JSArray_methods.get$first(t2.get$children(tree));
+          t2 = new B.Tree(J.get$data$x(value), value.get$line(), $parent, null);
           t3 = [];
           t3.$builtinTypeInfo = [B.Tree];
           t2.children = t3;
@@ -593,23 +701,29 @@ var $$ = {};
         } else if (J.$eq(t2.get$data(tree), C.NonTerminal_EXPRESSION))
           C.JSArray_methods.addAll$1(subTrees, this.convertExpression$2(tree, $parent));
       }
+      this.typeCheck$1(subTrees);
       return subTrees;
     },
     convertBooleanExpression$2: function(currNode, $parent) {
-      var subTrees, t1, tree, t2, t3;
+      var subTrees, t1, tree, t2, value, t3;
+      $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a boolean expression on line ", currNode.get$line()), null, null);
       subTrees = [];
       subTrees.$builtinTypeInfo = [B.Tree];
-      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
-        tree = t1.get$current();
+      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        tree = t1._current;
         t2 = J.getInterceptor$x(tree);
         if (J.$eq(t2.get$data(tree), C.TokenType_BOOLEAN)) {
-          t2 = new B.Tree(J.get$data$x(J.get$first$ax(t2.get$children(tree))), $parent, null);
+          $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a boolean on line ", tree.get$line()), null, null);
+          value = C.JSArray_methods.get$first(t2.get$children(tree));
+          t2 = new B.Tree(J.get$data$x(value), value.get$line(), $parent, null);
           t3 = [];
           t3.$builtinTypeInfo = [B.Tree];
           t2.children = t3;
           subTrees.push(t2);
         } else if (J.$eq(t2.get$data(tree), C.TokenType_BOOL_OP)) {
-          t2 = new B.Tree(J.get$data$x(J.get$first$ax(t2.get$children(tree))), $parent, null);
+          $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a boolean operation on line ", tree.get$line()), null, null);
+          value = C.JSArray_methods.get$first(t2.get$children(tree));
+          t2 = new B.Tree(J.get$data$x(value), value.get$line(), $parent, null);
           t3 = [];
           t3.$builtinTypeInfo = [B.Tree];
           t2.children = t3;
@@ -617,35 +731,49 @@ var $$ = {};
         } else if (J.$eq(t2.get$data(tree), C.NonTerminal_EXPRESSION))
           C.JSArray_methods.addAll$1(subTrees, this.convertExpression$2(tree, $parent));
       }
+      this.typeCheck$1(subTrees);
       return subTrees;
     },
     convertStringExpression$2: function(currNode, $parent) {
-      var stringTree, t1, tree, t2, line;
-      stringTree = new B.Tree(C.NonTerminal_STRING_EXPRESSION, $parent, null);
-      t1 = [];
-      t1.$builtinTypeInfo = [B.Tree];
-      stringTree.children = t1;
-      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
-        tree = t1.get$current();
+      var t1, t2, stringTree, tree, t3;
+      t1 = $.get$SemanticAnalyzer_log();
+      t2 = currNode.get$line();
+      t1.log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a string expression on line ", t2), null, null);
+      stringTree = new B.Tree(C.NonTerminal_STRING_EXPRESSION, t2, $parent, null);
+      t2 = [];
+      t2.$builtinTypeInfo = [B.Tree];
+      stringTree.children = t2;
+      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        tree = t1._current;
         t2 = J.getInterceptor$x(tree);
-        line = H.S(t2.get$data(tree));
-        H.printString(line);
         if (J.$eq(t2.get$data(tree), C.NonTerminal_CHAR_LIST)) {
           t2 = this.convertCharList$2(tree, stringTree);
           C.JSArray_methods.addAll$1(stringTree.children, t2);
+        } else if (J.$eq(t2.get$data(tree), C.TokenType_QUOTE)) {
+          t2 = new B.Tree("\"", tree.get$line(), stringTree, null);
+          t3 = [];
+          t3.$builtinTypeInfo = [B.Tree];
+          t2.children = t3;
+          stringTree.children.push(t2);
         }
       }
-      return stringTree;
+      t1 = new B.Tree(C.JSArray_methods.join$1(stringTree.children, ""), currNode.line, $parent, null);
+      t2 = [];
+      t2.$builtinTypeInfo = [B.Tree];
+      t1.children = t2;
+      return t1;
     },
     convertCharList$2: function(currNode, $parent) {
-      var subTrees, t1, tree, t2, t3;
+      var subTrees, t1, tree, t2, value, t3;
+      $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a char list on line ", currNode.get$line()), null, null);
       subTrees = [];
       subTrees.$builtinTypeInfo = [B.Tree];
-      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
-        tree = t1.get$current();
+      for (t1 = currNode.get$children(currNode), t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        tree = t1._current;
         t2 = J.getInterceptor$x(tree);
         if (J.$eq(t2.get$data(tree), C.TokenType_CHAR) || J.$eq(t2.get$data(tree), C.TokenType_SPACE)) {
-          t2 = new B.Tree(J.get$data$x(J.get$first$ax(t2.get$children(tree))), $parent, null);
+          value = J.get$first$ax(t2.get$children(tree));
+          t2 = new B.Tree(J.get$data$x(value), value.get$line(), $parent, null);
           t3 = [];
           t3.$builtinTypeInfo = [B.Tree];
           t2.children = t3;
@@ -654,15 +782,145 @@ var $$ = {};
       }
       return subTrees;
     },
+    convertChar$2: function(currNode, $parent) {
+      var value, t1;
+      $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, C.JSString_methods.$add("Converting a char on line ", currNode.get$line()), null, null);
+      value = J.get$first$ax(J.get$children$x(C.JSArray_methods.get$first(currNode.get$children(currNode))));
+      t1 = new B.Tree(J.get$data$x(value), value.get$line(), $parent, null);
+      t1.children = H.setRuntimeTypeInfo([], [B.Tree]);
+      return t1;
+    },
+    typeCheck$2: function(right, isAssignment) {
+      var clean, left, t1, type;
+      clean = P.List_List$from(right, true, null);
+      H.IterableMixinWorkaround_removeWhereList(clean, new A.SemanticAnalyzer_typeCheck_closure());
+      H.IterableMixinWorkaround_removeWhereList(clean, new A.SemanticAnalyzer_typeCheck_closure0());
+      H.IterableMixinWorkaround_removeWhereList(clean, new A.SemanticAnalyzer_typeCheck_closure1());
+      H.IterableMixinWorkaround_removeWhereList(clean, new A.SemanticAnalyzer_typeCheck_closure2());
+      if (clean.length > 1) {
+        $.get$SemanticAnalyzer_log().log$4(C.Level_INFO_800, "Type checking the following values: " + H.IterableMixinWorkaround_toStringIterable(clean, "[", "]"), null, null);
+        left = C.JSArray_methods.removeAt$1(clean, 0);
+        t1 = J.getInterceptor$x(left);
+        type = this.determineType$3(t1.get$data(left), left.get$line(), isAssignment);
+        if (type == null)
+          M.ExceptionUtil_logAndThrow(new T.CompilerTypeError(C.JSString_methods.$add(C.JSString_methods.$add("Identifier ", t1.get$data(left)) + " on line ", left.line) + " undefined."), $.get$SemanticAnalyzer_log());
+        else {
+          t1 = J.getInterceptor(type);
+          if (t1.$eq(type, "int"))
+            this.ensureType$2(clean, "int");
+          else if (t1.$eq(type, "boolean"))
+            this.ensureType$2(clean, "boolean");
+          else
+            this.ensureType$2(clean, "string");
+        }
+      }
+    },
+    typeCheck$1: function(right) {
+      return this.typeCheck$2(right, false);
+    },
+    ensureType$2: function(right, desiredType) {
+      var t1, tree, t2, value, t3;
+      for (t1 = new H.ListIterator(right, right.length, 0, null); t1.moveNext$0();) {
+        tree = t1._current;
+        t2 = J.getInterceptor$x(tree);
+        value = J.toString$0(t2.get$data(tree));
+        t3 = tree.get$line();
+        if (!J.$eq(this.determineType$2(value, t3), desiredType)) {
+          if (this.symbolExists$1(value))
+            M.ExceptionUtil_logAndThrow(new T.CompilerTypeError(C.JSString_methods.$add(C.JSString_methods.$add("Identifier ", J.get$id$x(this.getSymbol$2(value, t3))) + " on line ", t3) + (" is not of expected type " + desiredType + ".")), $.get$SemanticAnalyzer_log());
+          M.ExceptionUtil_logAndThrow(new T.CompilerTypeError(J.$add$ns(J.$add$ns(J.$add$ns(t2.toString$0(tree), " on line "), t3), " is not of expected type " + desiredType + ".")), $.get$SemanticAnalyzer_log());
+        }
+      }
+    },
+    determineType$3: function(value, line, isAssignment) {
+      if (this.symbolExists$1(value))
+        return J.get$type$x(this.getSymbol$2(value, line));
+      else if (isAssignment)
+        return;
+      else
+        return V.ConversionUtil_determineType(value);
+    },
+    determineType$2: function(value, line) {
+      return this.determineType$3(value, line, false);
+    },
+    getSymbol$2: function(symbol, line) {
+      var matches, t1, s, t2, t3;
+      matches = [];
+      matches.$builtinTypeInfo = [T.CompilerSymbol];
+      for (t1 = this.symbols, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        s = t1._current;
+        if (J.$eq(J.get$id$x(s), symbol))
+          if (s.get$scope() <= this.scope) {
+            t2 = C.JSInt_methods.toInt$0(s.line);
+            t3 = H.Primitives_parseInt(line, null, null);
+            if (typeof t3 !== "number")
+              return H.iae(t3);
+            t3 = t2 <= t3;
+            t2 = t3;
+          } else
+            t2 = false;
+        else
+          t2 = false;
+        if (t2)
+          matches.push(s);
+      }
+      if (matches.length !== 0)
+        return C.JSArray_methods.get$last(matches);
+      else {
+        $.get$SemanticAnalyzer_log().log$4(C.Level_WARNING_900, "Compiler can't find symbol", null, null);
+        return;
+      }
+    },
+    symbolExists$1: function(symbol) {
+      var t1, s;
+      [].$builtinTypeInfo = [T.CompilerSymbol];
+      for (t1 = this.symbols, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        s = t1._current;
+        if (J.$eq(J.get$id$x(s), symbol) && s.get$scope() <= this.scope)
+          return true;
+      }
+      return false;
+    },
+    drawSymbols$1: function(symbols) {
+      var t1, symbol;
+      for (t1 = new H.ListIterator(symbols, symbols.length, 0, null); t1.moveNext$0();) {
+        symbol = t1._current;
+        J.insertAdjacentText$2$x(document.querySelector("#symbol-table"), "beforeend", J.toString$0(symbol));
+      }
+    },
     static: {"^": "SemanticAnalyzer_log"}
+  },
+  SemanticAnalyzer_typeCheck_closure: {
+    "^": "Closure:11;",
+    call$1: function(item) {
+      return J.$eq(J.get$data$x(item), "+");
+    }
+  },
+  SemanticAnalyzer_typeCheck_closure0: {
+    "^": "Closure:11;",
+    call$1: function(item) {
+      return J.$eq(J.get$data$x(item), "==");
+    }
+  },
+  SemanticAnalyzer_typeCheck_closure1: {
+    "^": "Closure:11;",
+    call$1: function(item) {
+      return J.$eq(J.get$data$x(item), "!=");
+    }
+  },
+  SemanticAnalyzer_typeCheck_closure2: {
+    "^": "Closure:11;",
+    call$1: function(item) {
+      return !!J.getInterceptor(J.get$data$x(item)).$isNonTerminal;
+    }
   }
 }],
 ["Symbol", "compiler/symbol.dart", , T, {
   "^": "",
   CompilerSymbol: {
-    "^": "Object;id>,scope<,line,type",
+    "^": "Object;id>,scope<,line<,type>,used?,inited@",
     toString$0: function(_) {
-      return "Symbol: name=" + H.S(this.id) + " scope=" + this.scope + " line=" + this.line + " type=" + H.S(this.type) + " \n";
+      return "Symbol: name=" + H.S(this.id) + " scope=" + this.scope + " line=" + this.line + " type=" + H.S(this.type) + " inited=" + this.inited + " used=" + this.used + " \n";
     }
   },
   NonTerminal: {
@@ -677,7 +935,7 @@ var $$ = {};
 ["Token", "compiler/token.dart", , D, {
   "^": "",
   Token: {
-    "^": "Object;type,value,line,symbol",
+    "^": "Object;type>,value>,line<,symbol",
     toString$0: function(_) {
       return "Token type=" + this.type._Enum$_value + " value=" + H.S(this.value) + " line=" + C.JSInt_methods.toString$0(this.line);
     }
@@ -694,14 +952,9 @@ var $$ = {};
 ["Tree", "lib/tree.dart", , B, {
   "^": "",
   Tree: {
-    "^": "Object;data>,parent,children>",
+    "^": "Object;data>,line<,parent,children>",
     toString$0: function(_) {
       return J.toString$0(this.data);
-    },
-    dump$0: function() {
-      P.print("Dumping tree " + H.S(this) + " with parent " + H.S(this.parent));
-      for (var t1 = this.children, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();)
-        t1._current.dump$0();
     },
     syntrify$0: function() {
       var t1, t2, syntree;
@@ -815,6 +1068,13 @@ var $$ = {};
         H.throwExpression(P.UnsupportedError$("add"));
       receiver.push(value);
     },
+    removeAt$1: function(receiver, index) {
+      if (index >= receiver.length)
+        throw H.wrapException(P.RangeError$value(index));
+      if (!!receiver.fixed$length)
+        H.throwExpression(P.UnsupportedError$("removeAt"));
+      return receiver.splice(index, 1)[0];
+    },
     remove$1: function(receiver, element) {
       var i;
       if (!!receiver.fixed$length)
@@ -826,6 +1086,9 @@ var $$ = {};
         }
       return false;
     },
+    removeWhere$1: function(receiver, test) {
+      H.IterableMixinWorkaround_removeWhereList(receiver, test);
+    },
     addAll$1: function(receiver, collection) {
       var t1;
       for (t1 = new H.ListIterator(collection, collection.length, 0, null); t1.moveNext$0();)
@@ -834,10 +1097,32 @@ var $$ = {};
     forEach$1: function(receiver, f) {
       return H.IterableMixinWorkaround_forEach(receiver, f);
     },
+    join$1: function(receiver, separator) {
+      var t1, list, i, t2;
+      t1 = receiver.length;
+      list = Array(t1);
+      list.fixed$length = init;
+      for (i = 0; i < receiver.length; ++i) {
+        t2 = H.S(receiver[i]);
+        if (i >= t1)
+          return H.ioore(list, i);
+        list[i] = t2;
+      }
+      return list.join(separator);
+    },
     elementAt$1: function(receiver, index) {
       if (index < 0 || index >= receiver.length)
         return H.ioore(receiver, index);
       return receiver[index];
+    },
+    sublist$2: function(receiver, start, end) {
+      if (start < 0 || start > receiver.length)
+        throw H.wrapException(P.RangeError$range(start, 0, receiver.length));
+      if (end < start || end > receiver.length)
+        throw H.wrapException(P.RangeError$range(end, start, receiver.length));
+      if (start === end)
+        return H.setRuntimeTypeInfo([], [H.getTypeArgumentByIndex(receiver, 0)]);
+      return H.setRuntimeTypeInfo(receiver.slice(start, end), [H.getTypeArgumentByIndex(receiver, 0)]);
     },
     get$first: function(receiver) {
       if (receiver.length > 0)
@@ -906,6 +1191,37 @@ var $$ = {};
   },
   JSNumber: {
     "^": "num/Interceptor;",
+    compareTo$1: function(receiver, b) {
+      var bIsNegative;
+      if (typeof b !== "number")
+        throw H.wrapException(new P.ArgumentError(b));
+      if (receiver < b)
+        return -1;
+      else if (receiver > b)
+        return 1;
+      else if (receiver === b) {
+        if (receiver === 0) {
+          bIsNegative = this.get$isNegative(b);
+          if (this.get$isNegative(receiver) === bIsNegative)
+            return 0;
+          if (this.get$isNegative(receiver))
+            return -1;
+          return 1;
+        }
+        return 0;
+      } else if (isNaN(receiver)) {
+        if (this.get$isNaN(b))
+          return 0;
+        return 1;
+      } else
+        return -1;
+    },
+    get$isNegative: function(receiver) {
+      return receiver === 0 ? 1 / receiver < 0 : receiver < 0;
+    },
+    get$isNaN: function(receiver) {
+      return isNaN(receiver);
+    },
     remainder$1: function(receiver, b) {
       return receiver % b;
     },
@@ -918,6 +1234,11 @@ var $$ = {};
         return t1 + 0;
       }
       throw H.wrapException(P.UnsupportedError$('' + receiver));
+    },
+    toRadixString$1: function(receiver, radix) {
+      if (radix < 2 || radix > 36)
+        throw H.wrapException(P.RangeError$(radix));
+      return receiver.toString(radix);
     },
     toString$0: function(receiver) {
       if (receiver === 0 && 1 / receiver < 0)
@@ -932,6 +1253,17 @@ var $$ = {};
       if (typeof other !== "number")
         throw H.wrapException(new P.ArgumentError(other));
       return receiver + other;
+    },
+    $mod: function(receiver, other) {
+      var result = receiver % other;
+      if (result === 0)
+        return 0;
+      if (result > 0)
+        return result;
+      if (other < 0)
+        return result - other;
+      else
+        return result + other;
     },
     _tdivFast$1: function(receiver, other) {
       return (receiver | 0) === receiver ? receiver / other | 0 : this.toInt$0(receiver / other);
@@ -950,6 +1282,11 @@ var $$ = {};
       if (typeof other !== "number")
         throw H.wrapException(new P.ArgumentError(other));
       return receiver < other;
+    },
+    $gt: function(receiver, other) {
+      if (typeof other !== "number")
+        throw H.wrapException(new P.ArgumentError(other));
+      return receiver > other;
     },
     $ge: function(receiver, other) {
       if (typeof other !== "number")
@@ -1017,6 +1354,9 @@ var $$ = {};
     substring$1: function($receiver, startIndex) {
       return this.substring$2($receiver, startIndex, null);
     },
+    toUpperCase$0: function(receiver) {
+      return receiver.toUpperCase();
+    },
     trim$0: function(receiver) {
       var result, endIndex, startIndex, t1, endIndex0;
       result = receiver.trim();
@@ -1062,6 +1402,16 @@ var $$ = {};
     },
     get$isEmpty: function(receiver) {
       return receiver.length === 0;
+    },
+    compareTo$1: function(receiver, other) {
+      var t1;
+      if (typeof other !== "string")
+        throw H.wrapException(new P.ArgumentError(other));
+      if (receiver === other)
+        t1 = 0;
+      else
+        t1 = receiver < other ? -1 : 1;
+      return t1;
     },
     toString$0: function(receiver) {
       return receiver;
@@ -1392,13 +1742,13 @@ var $$ = {};
     return x == null || typeof x === "string" || typeof x === "number" || typeof x === "boolean";
   },
   startRootIsolate_closure: {
-    "^": "Closure:12;box_0,entry_1",
+    "^": "Closure:13;box_0,entry_1",
     call$0: function() {
       this.entry_1.call$1(this.box_0.args_0);
     }
   },
   startRootIsolate_closure0: {
-    "^": "Closure:12;box_0,entry_2",
+    "^": "Closure:13;box_0,entry_2",
     call$0: function() {
       this.entry_2.call$2(this.box_0.args_0, null);
     }
@@ -1535,7 +1885,7 @@ var $$ = {};
     }
   },
   _IsolateContext_handlePing_closure: {
-    "^": "Closure:12;responsePort_0",
+    "^": "Closure:13;responsePort_0",
     call$0: function() {
       this.responsePort_0.send$1(null);
     }
@@ -1625,7 +1975,7 @@ var $$ = {};
     "^": "Object;"
   },
   IsolateNatives__processWorkerMessage_closure: {
-    "^": "Closure:12;entryPoint_0,args_1,message_2,isSpawnUri_3,startPaused_4,replyTo_5",
+    "^": "Closure:13;entryPoint_0,args_1,message_2,isSpawnUri_3,startPaused_4,replyTo_5",
     call$0: function() {
       H.IsolateNatives__startIsolate(this.entryPoint_0, this.args_1, this.message_2, this.isSpawnUri_3, this.startPaused_4, this.replyTo_5);
     }
@@ -1720,7 +2070,7 @@ var $$ = {};
     $isCapability: true
   },
   _NativeJsSendPort_send_closure: {
-    "^": "Closure:12;box_0,this_1,shouldSerialize_2",
+    "^": "Closure:13;box_0,this_1,shouldSerialize_2",
     call$0: function() {
       var t1, t2;
       t1 = this.this_1._receivePort;
@@ -1943,7 +2293,7 @@ var $$ = {};
     }
   },
   _Copier_visitMap_closure: {
-    "^": "Closure:13;box_0,this_1",
+    "^": "Closure:14;box_0,this_1",
     call$2: function(key, val) {
       var t1 = this.this_1;
       J.$indexSet$ax(this.box_0.copy_0, t1._dispatch$1(key), t1._dispatch$1(val));
@@ -2180,6 +2530,10 @@ var $$ = {};
   }, "call$1", "Primitives__throwFormatException$closure", 2, 0, 1],
   Primitives_parseInt: function(source, radix, handleError) {
     var match, t1;
+    if (handleError == null)
+      handleError = H.Primitives__throwFormatException$closure();
+    if (typeof source !== "string")
+      H.throwExpression(new P.ArgumentError(source));
     match = /^\s*[+-]?((0x[a-f0-9]+)|(\d+)|([a-z0-9]+))\s*$/i.exec(source);
     if (match != null) {
       t1 = match.length;
@@ -3132,7 +3486,7 @@ var $$ = {};
     }
   },
   unwrapException_saveStackTrace: {
-    "^": "Closure:10;ex_0",
+    "^": "Closure:11;ex_0",
     call$1: function(error) {
       if (!!J.getInterceptor(error).$isError)
         if (error.$thrownJsError == null)
@@ -3155,31 +3509,31 @@ var $$ = {};
     }
   },
   invokeClosure_closure: {
-    "^": "Closure:12;closure_0",
+    "^": "Closure:13;closure_0",
     call$0: function() {
       return this.closure_0.call$0();
     }
   },
   invokeClosure_closure0: {
-    "^": "Closure:12;closure_1,arg1_2",
+    "^": "Closure:13;closure_1,arg1_2",
     call$0: function() {
       return this.closure_1.call$1(this.arg1_2);
     }
   },
   invokeClosure_closure1: {
-    "^": "Closure:12;closure_3,arg1_4,arg2_5",
+    "^": "Closure:13;closure_3,arg1_4,arg2_5",
     call$0: function() {
       return this.closure_3.call$2(this.arg1_4, this.arg2_5);
     }
   },
   invokeClosure_closure2: {
-    "^": "Closure:12;closure_6,arg1_7,arg2_8,arg3_9",
+    "^": "Closure:13;closure_6,arg1_7,arg2_8,arg3_9",
     call$0: function() {
       return this.closure_6.call$3(this.arg1_7, this.arg2_8, this.arg3_9);
     }
   },
   invokeClosure_closure3: {
-    "^": "Closure:12;closure_10,arg1_11,arg2_12,arg3_13,arg4_14",
+    "^": "Closure:13;closure_10,arg1_11,arg2_12,arg3_13,arg4_14",
     call$0: function() {
       return this.closure_10.call$4(this.arg1_11, this.arg2_12, this.arg3_13, this.arg4_14);
     }
@@ -3360,13 +3714,13 @@ var $$ = {};
     $isDynamicRuntimeType: true
   },
   initHooks_closure: {
-    "^": "Closure:10;getTag_0",
+    "^": "Closure:11;getTag_0",
     call$1: function(o) {
       return this.getTag_0(o);
     }
   },
   initHooks_closure0: {
-    "^": "Closure:14;getUnknownTag_1",
+    "^": "Closure:15;getUnknownTag_1",
     call$2: function(o, tag) {
       return this.getUnknownTag_1(o, tag);
     }
@@ -3498,12 +3852,434 @@ var $$ = {};
     }
   }
 }],
+["codeGenerator", "compiler/codeGenerator.dart", , N, {
+  "^": "",
+  CodeGenerator: {
+    "^": "Object;ast,code,staticTable,jumpTable,address,scope<",
+    generateCode$0: function() {
+      var output, i, t1, i0;
+      $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Code Generation starting...", null, null);
+      this.parseBlock$1(this.ast);
+      $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Breaking", null, null);
+      this.insertString$1("00");
+      this.generateStaticVariables$0();
+      this.setNullToZero$0();
+      for (output = "", i = 0; t1 = this.code, i < t1.length; i = i0) {
+        i0 = i + 16;
+        output = output + C.JSArray_methods.join$1(C.JSArray_methods.sublist$2(t1, i, i0), " ") + "\n";
+      }
+      $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Code Generation finished...", null, null);
+      P.print(output);
+      return output;
+    },
+    setNullToZero$0: function() {
+      var t1, t2, t3, i;
+      for (t1 = $.CodeGenerator_MAX_MEMORY, t2 = this.code, t3 = t2.length, i = 0; i < t1; ++i) {
+        if (i >= t3)
+          return H.ioore(t2, i);
+        if (t2[i] == null)
+          t2[i] = "00";
+      }
+    },
+    parseBlock$1: function(currNode) {
+      var t1, statement, t2, type, id, t3, t4, $location, leftRow, right, rightRow, hexIndex, value, row, block, preBranch, distance, preWhile, tempMemory, validAddress, location0, whileDistance;
+      $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Parsing a block", null, null);
+      this.scope = this.scope + 1;
+      for (t1 = J.get$iterator$ax(J.get$children$x(currNode)); t1.moveNext$0();) {
+        statement = t1.get$current();
+        t2 = J.getInterceptor$x(statement);
+        if (J.$eq(t2.get$data(statement), C.NonTerminal_VARIABLE_DECLARATION)) {
+          $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Generating code for a variable declaration", null, null);
+          type = J.get$data$x(J.$index$asx(t2.get$children(statement), 0));
+          id = J.get$data$x(J.$index$asx(t2.get$children(statement), 1));
+          t2 = J.getInterceptor(type);
+          if (t2.$eq(type, $.StaticTable_TYPE_INT)) {
+            t2 = this.staticTable;
+            t3 = $.StaticTable_TYPE_INT;
+            t4 = this.scope;
+            $location = "T" + C.JSInt_methods.toString$0(t2.rows.length) + "XX";
+            t2.rows.push(new D.StaticTableRow($location, id, "", t4, t3, null));
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the accumulator with constant 0", null, null);
+            this.insertString$1("A9");
+            this.insertString$1("0");
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Storing the accumulator in memory at " + $location, null, null);
+            this.insertString$1("8D");
+            this.insertString$1($location);
+          } else if (t2.$eq(type, $.StaticTable_TYPE_STRING)) {
+            t2 = this.staticTable;
+            t3 = $.StaticTable_TYPE_STRING;
+            t4 = this.scope;
+            $location = "T" + C.JSInt_methods.toString$0(t2.rows.length) + "XX";
+            t2.rows.push(new D.StaticTableRow($location, id, "", t4, t3, null));
+          } else if (t2.$eq(type, $.StaticTable_TYPE_BOOLEAN)) {
+            t2 = this.staticTable;
+            t3 = $.StaticTable_TYPE_BOOLEAN;
+            t4 = this.scope;
+            $location = "T" + C.JSInt_methods.toString$0(t2.rows.length) + "XX";
+            t2.rows.push(new D.StaticTableRow($location, id, "", t4, t3, null));
+          }
+        } else if (J.$eq(t2.get$data(statement), C.NonTerminal_ASSIGNMENT_STATEMENT)) {
+          $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Generating code for an assignment statement", null, null);
+          id = J.get$data$x(J.$index$asx(t2.get$children(statement), 0));
+          leftRow = this.staticTable.getRow$2(id, this.scope);
+          J.removeAt$1$ax(t2.get$children(statement), 0);
+          right = J.get$data$x(J.$index$asx(t2.get$children(statement), 0));
+          if (this.staticTable.rowExists$2(right, this.scope)) {
+            rightRow = this.staticTable.getRow$2(right, this.scope);
+            t2 = J.getInterceptor$x(rightRow);
+            t3 = t2.get$location(rightRow);
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the accumulator from memory at " + H.S(t3), null, null);
+            this.insertString$1("AD");
+            this.insertString$1(t3);
+            t3 = J.get$location$x(leftRow);
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Storing the accumulator in memory at " + H.S(t3), null, null);
+            this.insertString$1("8D");
+            this.insertString$1(t3);
+            leftRow.setValue$1(t2.get$value(rightRow));
+          } else {
+            leftRow.setValue$1(right);
+            t3 = leftRow.type;
+            if (t3 === $.StaticTable_TYPE_INT) {
+              right = this.combineIntExpression$1(t2.get$children(statement));
+              $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the accumulator with constant " + H.S(right), null, null);
+              this.insertString$1("A9");
+              this.insertString$1(right);
+              t2 = leftRow.location;
+              $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Storing the accumulator in memory at " + t2, null, null);
+              this.insertString$1("8D");
+              this.insertString$1(t2);
+            } else if (t3 === $.StaticTable_TYPE_STRING) {
+              hexIndex = V.ConversionUtil_makeEven(J.toRadixString$1$n(this.writeDataToHeap$1(V.ConversionUtil_stringToHex(right)), 16).toUpperCase());
+              $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the accumulator with constant " + H.S(hexIndex), null, null);
+              this.insertString$1("A9");
+              this.insertString$1(hexIndex);
+              t2 = leftRow.location;
+              $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Storing the accumulator in memory at " + t2, null, null);
+              this.insertString$1("8D");
+              this.insertString$1(t2);
+            } else if (t3 === $.StaticTable_TYPE_BOOLEAN) {
+              hexIndex = V.ConversionUtil_makeEven(J.toRadixString$1$n(this.writeDataToHeap$1(V.ConversionUtil_stringToHex(this.combineBooleanExpression$1(t2.get$children(statement)))), 16).toUpperCase());
+              $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the accumulator with constant " + H.S(hexIndex), null, null);
+              this.insertString$1("A9");
+              this.insertString$1(hexIndex);
+              t2 = leftRow.location;
+              $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Storing the accumulator in memory at " + t2, null, null);
+              this.insertString$1("8D");
+              this.insertString$1(t2);
+            }
+          }
+        } else if (J.$eq(t2.get$data(statement), C.NonTerminal_PRINT_STATEMENT)) {
+          $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Generating code for a print statement", null, null);
+          value = J.get$data$x(J.get$first$ax(t2.get$children(statement)));
+          if (this.staticTable.rowExists$2(value, this.scope)) {
+            row = this.staticTable.getRow$2(value, this.scope);
+            t2 = J.getInterceptor$x(row);
+            t3 = t2.get$location(row);
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the Y register from memory at " + H.S(t3), null, null);
+            this.insertString$1("AC");
+            this.insertString$1(t3);
+            if (J.$eq(t2.get$type(row), $.StaticTable_TYPE_STRING) || J.$eq(t2.get$type(row), $.StaticTable_TYPE_BOOLEAN)) {
+              $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the X register with constant 2", null, null);
+              this.insertString$1("A2");
+              this.insertString$1("2");
+            } else {
+              $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the X register with constant 1", null, null);
+              this.insertString$1("A2");
+              this.insertString$1("1");
+            }
+          } else {
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the Y register with constant " + H.S(value), null, null);
+            this.insertString$1("A0");
+            this.insertString$1(value);
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the X register with constant 1", null, null);
+            this.insertString$1("A2");
+            this.insertString$1("1");
+          }
+          $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Performing a system call", null, null);
+          this.insertString$1("FF");
+        } else if (J.$eq(t2.get$data(statement), C.NonTerminal_IF_STATEMENT)) {
+          $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Generating code for an if statement", null, null);
+          block = this.handleComparison$1(statement);
+          if (block != null) {
+            t2 = this.jumpTable;
+            $location = "J" + C.JSInt_methods.toString$0(t2.rows.length);
+            t2.rows.push(new V.JumpTableRow($location, null));
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Branching " + $location + " if Z flag = 0", null, null);
+            this.insertString$1("D0");
+            this.insertString$1($location);
+            preBranch = this.address;
+            this.parseBlock$1(block);
+            distance = this.address - preBranch;
+            this.jumpTable.getRow$1($location).set$distance(distance);
+            this.backPatch$2($location, V.ConversionUtil_makeEven(C.JSInt_methods.toRadixString$1(distance, 16).toUpperCase()));
+          }
+        } else if (J.$eq(t2.get$data(statement), C.NonTerminal_WHILE_STATEMENT)) {
+          preWhile = this.address;
+          block = this.handleComparison$1(statement);
+          if (block != null) {
+            t2 = this.jumpTable;
+            $location = "J" + C.JSInt_methods.toString$0(t2.rows.length);
+            t2.rows.push(new V.JumpTableRow($location, null));
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Branching " + $location + " if Z flag = 0", null, null);
+            this.insertString$1("D0");
+            this.insertString$1($location);
+            preBranch = this.address;
+            this.parseBlock$1(block);
+            tempMemory = this.findAvailableHeapMemory$0();
+            this.setCode$2(tempMemory, "02");
+            validAddress = V.ConversionUtil_toLittleEndian(V.ConversionUtil_makeEven(J.toRadixString$1$n(tempMemory, 16).toUpperCase()), 4);
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the X register with constant 1", null, null);
+            this.insertString$1("A2");
+            this.insertString$1("1");
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Comparing a byte in memory at " + validAddress + " to the X register", null, null);
+            this.insertString$1("EC");
+            this.insertString$1(validAddress);
+            t2 = this.code;
+            if (tempMemory >>> 0 !== tempMemory || tempMemory >= t2.length)
+              return H.ioore(t2, tempMemory);
+            t2[tempMemory] = null;
+            t2 = this.jumpTable;
+            location0 = "J" + C.JSInt_methods.toString$0(t2.rows.length);
+            t2.rows.push(new V.JumpTableRow(location0, null));
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Branching " + location0 + " if Z flag = 0", null, null);
+            this.insertString$1("D0");
+            this.insertString$1(location0);
+            whileDistance = this.address - preWhile;
+            this.jumpTable.getRow$1(location0).set$distance(whileDistance);
+            this.backPatch$2(location0, V.ConversionUtil_makeEven(C.JSInt_methods.toRadixString$1($.CodeGenerator_MAX_MEMORY - whileDistance, 16).toUpperCase()));
+            distance = this.address - preBranch;
+            this.jumpTable.getRow$1($location).set$distance(distance);
+            this.backPatch$2($location, V.ConversionUtil_makeEven(C.JSInt_methods.toRadixString$1(distance, 16).toUpperCase()));
+          }
+        } else if (J.$eq(t2.get$data(statement), C.NonTerminal_BLOCK))
+          this.parseBlock$1(statement);
+      }
+      this.scope = this.scope - 1;
+    },
+    combineIntExpression$1: function(intExpression) {
+      var t1, sum, data, t2;
+      for (t1 = J.get$iterator$ax(intExpression), sum = 0; t1.moveNext$0();) {
+        data = J.get$data$x(t1.get$current());
+        if (this.staticTable.rowExists$2(data, this.scope)) {
+          t2 = H.Primitives_parseInt(J.get$value$x(this.staticTable.getRow$2(data, this.scope)), null, null);
+          if (typeof t2 !== "number")
+            return H.iae(t2);
+          sum += t2;
+        } else if (!J.$eq(data, "+")) {
+          t2 = H.Primitives_parseInt(data, null, null);
+          if (typeof t2 !== "number")
+            return H.iae(t2);
+          sum += t2;
+        }
+      }
+      return V.ConversionUtil_numToHex(sum);
+    },
+    combineBooleanExpression$1: function(booleanExpression) {
+      var t1, start, data;
+      t1 = J.getInterceptor$ax(booleanExpression);
+      t1.removeWhere$1(booleanExpression, new N.CodeGenerator_combineBooleanExpression_closure());
+      if (t1.get$length(booleanExpression) > 1) {
+        start = J.$eq(J.get$data$x(t1.get$first(booleanExpression)), "true") && true;
+        for (t1 = t1.get$iterator(booleanExpression); t1.moveNext$0();) {
+          data = J.get$data$x(t1.get$current());
+          start = J.$eq(this.staticTable.rowExists$2(data, this.scope) ? J.get$value$x(this.staticTable.getRow$2(data, this.scope)) : data, "true") ? start : !start;
+        }
+        if (start)
+          return "true";
+        else
+          return "false";
+      } else
+        return J.get$data$x(t1.get$first(booleanExpression));
+    },
+    handleComparison$1: function(currNode) {
+      var t1, block, left, right, row;
+      t1 = J.getInterceptor$x(currNode);
+      if (J.get$length$asx(t1.get$children(currNode)) === 2)
+        if (J.$eq(J.get$data$x(J.$index$asx(t1.get$children(currNode), 0)), "true"))
+          block = J.$index$asx(t1.get$children(currNode), 1);
+        else
+          return;
+      else {
+        left = J.get$data$x(J.$index$asx(t1.get$children(currNode), 0));
+        right = J.get$data$x(J.$index$asx(t1.get$children(currNode), 2));
+        block = J.$index$asx(t1.get$children(currNode), 3);
+        if (this.staticTable.rowExists$2(right, this.scope)) {
+          row = this.staticTable.getRow$2(right, this.scope);
+          t1 = J.getInterceptor$x(row);
+          if (J.$eq(t1.get$type(row), $.StaticTable_TYPE_BOOLEAN))
+            this.ldx_constant$1(V.ConversionUtil_booleanToHex(t1.get$value(row)));
+          else {
+            t1 = t1.get$location(row);
+            $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the X register from memory at " + H.S(t1), null, null);
+            this.insertString$1("AE");
+            this.insertString$1(t1);
+          }
+        } else if (V.ConversionUtil_determineType(right) === $.StaticTable_TYPE_BOOLEAN)
+          this.ldx_constant$1(V.ConversionUtil_booleanToHex(right));
+        else
+          this.ldx_constant$1(right);
+        if (this.staticTable.rowExists$2(left, this.scope)) {
+          row = this.staticTable.getRow$2(left, this.scope);
+          t1 = J.getInterceptor$x(row);
+          if (J.$eq(t1.get$type(row), $.StaticTable_TYPE_BOOLEAN))
+            this.cpx$1(V.ConversionUtil_toLittleEndian(V.ConversionUtil_numToHex(this.writeDataToHeap$1(V.ConversionUtil_booleanToHex(t1.get$value(row)))), 4));
+          else
+            this.cpx$1(t1.get$location(row));
+        } else if (V.ConversionUtil_determineType(left) === $.StaticTable_TYPE_BOOLEAN)
+          this.cpx$1(V.ConversionUtil_booleanToHex(right));
+        else
+          this.cpx$1(left);
+      }
+      return block;
+    },
+    ldx_constant$1: function(value) {
+      $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Loading the X register with constant " + H.S(value), null, null);
+      this.insertString$1("A2");
+      this.insertString$1(value);
+    },
+    cpx$1: function($location) {
+      $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Comparing a byte in memory at " + H.S($location) + " to the X register", null, null);
+      this.insertString$1("EC");
+      this.insertString$1($location);
+    },
+    writeDataToHeap$1: function(value) {
+      var index, t1, begin;
+      index = this.findAvailableHeapMemory$0();
+      if (index != null) {
+        t1 = J.get$length$asx(value);
+        if (typeof t1 !== "number")
+          return t1.$div();
+        begin = index - C.JSInt_methods.toInt$0(t1 / 2) + 1;
+        if (this.isAvailable$2(begin, index)) {
+          this.setCode$2(begin, value);
+          return begin;
+        } else
+          M.ExceptionUtil_logAndThrow(new T.CompilerOutOfMemoryError("Not enough heap memory to write " + H.S(value) + "."), $.get$CodeGenerator_log());
+      } else
+        M.ExceptionUtil_logAndThrow(new T.CompilerOutOfMemoryError("Unable to find available heap memory."), $.get$CodeGenerator_log());
+      return;
+    },
+    findAvailableHeapMemory$0: function() {
+      var i, t1, t2;
+      for (i = $.CodeGenerator_MAX_MEMORY - 1, t1 = this.code, t2 = t1.length; i >= 0; --i) {
+        if (i >= t2)
+          return H.ioore(t1, i);
+        if (t1[i] == null)
+          return i;
+      }
+      return;
+    },
+    isAvailable$2: function(begin, end) {
+      var t1, t2, i;
+      for (t1 = this.code, t2 = t1.length, i = begin; i <= end; ++i) {
+        if (i < 0 || i >= t2)
+          return H.ioore(t1, i);
+        if (t1[i] != null)
+          return false;
+      }
+      return true;
+    },
+    generateStaticVariables$0: function() {
+      var t1, row, t2, currAddress;
+      for (t1 = this.staticTable.rows, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        row = t1._current;
+        t2 = this.address;
+        currAddress = V.ConversionUtil_toLittleEndian(t2.toString(16), 4);
+        row.setAddress$1(currAddress);
+        this.backPatch$2(row.location, currAddress);
+        this.address = this.address + 1;
+      }
+    },
+    backPatch$2: function(oldValue, newValue) {
+      var byteLength, i, code;
+      byteLength = oldValue.length / 2;
+      $.get$CodeGenerator_log().log$4(C.Level_INFO_800, "Backpatching " + oldValue + " with " + H.S(newValue), null, null);
+      for (i = 0; i < this.code.length; ++i) {
+        code = this.getCode$2(i, C.JSInt_methods.toInt$0(byteLength));
+        if (code != null)
+          if (code === oldValue)
+            this.setCode$2(i, newValue);
+      }
+    },
+    getCode$2: function(index, $length) {
+      var end, t1, i, code, t2;
+      end = index + $length;
+      t1 = this.code;
+      if (end < t1.length) {
+        for (i = index, code = ""; i < end; ++i) {
+          t2 = t1[i];
+          if (t2 != null)
+            code = C.JSString_methods.$add(code, t2);
+          else
+            return;
+        }
+        return code;
+      } else
+        return;
+    },
+    setCode$2: function(index, value) {
+      var t1, end, i, toAdd;
+      t1 = J.get$length$asx(value);
+      if (typeof t1 !== "number")
+        return t1.$div();
+      if (typeof index !== "number")
+        return index.$add();
+      end = index + t1 / 2;
+      for (i = index; i < end; ++i) {
+        toAdd = J.getInterceptor$s(value).substring$2(value, 0, 2);
+        t1 = this.code;
+        if (i < 0 || i >= t1.length)
+          return H.ioore(t1, i);
+        t1[i] = toAdd;
+        value = C.JSString_methods.substring$2(value, 2, value.length);
+      }
+    },
+    insertString$1: function(value) {
+      var t1, i, t2, toAdd, t3;
+      value = V.ConversionUtil_makeEven(value);
+      t1 = J.getInterceptor$asx(value);
+      i = 0;
+      while (true) {
+        t2 = t1.get$length(value);
+        if (typeof t2 !== "number")
+          return H.iae(t2);
+        if (!(i < t2))
+          break;
+        toAdd = J.$add$ns(t1.$index(value, i), t1.$index(value, i + 1));
+        t2 = this.code;
+        t3 = this.address;
+        this.address = t3 + 1;
+        if (t3 >= t2.length)
+          return H.ioore(t2, t3);
+        t2[t3] = toAdd;
+        i += 2;
+      }
+    },
+    CodeGenerator$1: function(ast) {
+      var t1;
+      this.code = H.setRuntimeTypeInfo(Array($.CodeGenerator_MAX_MEMORY), [J.JSString]);
+      t1 = new D.StaticTable(null);
+      t1.rows = H.setRuntimeTypeInfo([], [D.StaticTableRow]);
+      this.staticTable = t1;
+      t1 = new V.JumpTable(null);
+      t1.rows = H.setRuntimeTypeInfo([], [V.JumpTableRow]);
+      this.jumpTable = t1;
+    },
+    static: {"^": "CodeGenerator_log,CodeGenerator_MAX_MEMORY"}
+  },
+  CodeGenerator_combineBooleanExpression_closure: {
+    "^": "Closure:11;",
+    call$1: function(item) {
+      return J.$eq(J.get$data$x(item), "==");
+    }
+  }
+}],
 ["", "compiler/compiler.dart", , X, {
   "^": "",
   Compiler: {
-    "^": "Object;log,source,tokens,symbols,cst,ast,parser,analyzer",
+    "^": "Object;log,source,tokens,symbols,cst,ast,parser,analyzer,codeGenerator",
     run$0: function() {
-      var hash, t1, exception;
+      var hash, output, t1, t2, exception;
       try {
         t1 = L.Lexer_analyze(this.source);
         this.tokens = t1;
@@ -3513,9 +4289,15 @@ var $$ = {};
         this.cst = J.$index$asx(hash, "cst");
         t1 = J.$index$asx(hash, "symbols");
         this.symbols = t1;
-        t1 = new A.SemanticAnalyzer(this.cst, t1);
+        t1 = new A.SemanticAnalyzer(this.cst, t1, 0);
         this.analyzer = t1;
-        this.ast = t1.analyze$0();
+        t1 = t1.analyze$0();
+        this.ast = t1;
+        t2 = new N.CodeGenerator(t1, null, null, null, 0, -1);
+        t2.CodeGenerator$1(t1);
+        this.codeGenerator = t2;
+        output = t2.generateCode$0();
+        H.interceptedTypeCast(document.querySelector("#output-code"), "$isTextAreaElement").textContent = output;
       } catch (exception) {
         H.unwrapException(exception);
       }
@@ -3529,6 +4311,27 @@ var $$ = {};
     var t1;
     for (t1 = new H.ListIterator(iterable, iterable.length, 0, null); t1.moveNext$0();)
       f.call$1(t1._current);
+  },
+  IterableMixinWorkaround_removeWhereList: function(list, test) {
+    var retained, $length, t1, i, element;
+    retained = [];
+    $length = list.length;
+    for (t1 = $length, i = 0; i < $length; ++i) {
+      if (i >= t1)
+        return H.ioore(list, i);
+      element = list[i];
+      if (test.call$1(element) !== true)
+        retained.push(element);
+      t1 = list.length;
+      if ($length !== t1)
+        throw H.wrapException(P.ConcurrentModificationError$(list));
+    }
+    t1 = retained.length;
+    if (t1 === $length)
+      return;
+    C.JSArray_methods.set$length(list, t1);
+    for (i = 0; i < retained.length; ++i)
+      C.JSArray_methods.$indexSet(list, i, retained[i]);
   },
   IterableMixinWorkaround_toStringIterable: function(iterable, leftDelimiter, rightDelimiter) {
     var result, i, t1;
@@ -3590,6 +4393,219 @@ var $$ = {};
         return i;
     }
     return -1;
+  },
+  Sort__doSort: function(a, left, right, compare) {
+    if (right - left <= 32)
+      H.Sort__insertionSort(a, left, right, compare);
+    else
+      H.Sort__dualPivotQuicksort(a, left, right, compare);
+  },
+  Sort__insertionSort: function(a, left, right, compare) {
+    var i, t1, el, j, j0;
+    for (i = left + 1, t1 = J.getInterceptor$asx(a); i <= right; ++i) {
+      el = t1.$index(a, i);
+      j = i;
+      while (true) {
+        if (!(j > left && J.$gt$n(compare.call$2(t1.$index(a, j - 1), el), 0)))
+          break;
+        j0 = j - 1;
+        t1.$indexSet(a, j, t1.$index(a, j0));
+        j = j0;
+      }
+      t1.$indexSet(a, j, el);
+    }
+  },
+  Sort__dualPivotQuicksort: function(a, left, right, compare) {
+    var sixth, index1, index5, index3, index2, index4, t1, el1, el2, el3, el4, el5, t0, less, great, k, ak, comp, t2, great0, less0, pivots_are_equal;
+    sixth = C.JSInt_methods._tdivFast$1(right - left + 1, 6);
+    index1 = left + sixth;
+    index5 = right - sixth;
+    index3 = C.JSInt_methods._tdivFast$1(left + right, 2);
+    index2 = index3 - sixth;
+    index4 = index3 + sixth;
+    t1 = J.getInterceptor$asx(a);
+    el1 = t1.$index(a, index1);
+    el2 = t1.$index(a, index2);
+    el3 = t1.$index(a, index3);
+    el4 = t1.$index(a, index4);
+    el5 = t1.$index(a, index5);
+    if (J.$gt$n(compare.call$2(el1, el2), 0)) {
+      t0 = el2;
+      el2 = el1;
+      el1 = t0;
+    }
+    if (J.$gt$n(compare.call$2(el4, el5), 0)) {
+      t0 = el5;
+      el5 = el4;
+      el4 = t0;
+    }
+    if (J.$gt$n(compare.call$2(el1, el3), 0)) {
+      t0 = el3;
+      el3 = el1;
+      el1 = t0;
+    }
+    if (J.$gt$n(compare.call$2(el2, el3), 0)) {
+      t0 = el3;
+      el3 = el2;
+      el2 = t0;
+    }
+    if (J.$gt$n(compare.call$2(el1, el4), 0)) {
+      t0 = el4;
+      el4 = el1;
+      el1 = t0;
+    }
+    if (J.$gt$n(compare.call$2(el3, el4), 0)) {
+      t0 = el4;
+      el4 = el3;
+      el3 = t0;
+    }
+    if (J.$gt$n(compare.call$2(el2, el5), 0)) {
+      t0 = el5;
+      el5 = el2;
+      el2 = t0;
+    }
+    if (J.$gt$n(compare.call$2(el2, el3), 0)) {
+      t0 = el3;
+      el3 = el2;
+      el2 = t0;
+    }
+    if (J.$gt$n(compare.call$2(el4, el5), 0)) {
+      t0 = el5;
+      el5 = el4;
+      el4 = t0;
+    }
+    t1.$indexSet(a, index1, el1);
+    t1.$indexSet(a, index3, el3);
+    t1.$indexSet(a, index5, el5);
+    t1.$indexSet(a, index2, t1.$index(a, left));
+    t1.$indexSet(a, index4, t1.$index(a, right));
+    less = left + 1;
+    great = right - 1;
+    if (J.$eq(compare.call$2(el2, el4), 0)) {
+      for (k = less; k <= great; ++k) {
+        ak = t1.$index(a, k);
+        comp = compare.call$2(ak, el2);
+        t2 = J.getInterceptor(comp);
+        if (t2.$eq(comp, 0))
+          continue;
+        if (t2.$lt(comp, 0)) {
+          if (k !== less) {
+            t1.$indexSet(a, k, t1.$index(a, less));
+            t1.$indexSet(a, less, ak);
+          }
+          ++less;
+        } else
+          for (; true;) {
+            comp = compare.call$2(t1.$index(a, great), el2);
+            t2 = J.getInterceptor$n(comp);
+            if (t2.$gt(comp, 0)) {
+              --great;
+              continue;
+            } else {
+              great0 = great - 1;
+              if (t2.$lt(comp, 0)) {
+                t1.$indexSet(a, k, t1.$index(a, less));
+                less0 = less + 1;
+                t1.$indexSet(a, less, t1.$index(a, great));
+                t1.$indexSet(a, great, ak);
+                great = great0;
+                less = less0;
+                break;
+              } else {
+                t1.$indexSet(a, k, t1.$index(a, great));
+                t1.$indexSet(a, great, ak);
+                great = great0;
+                break;
+              }
+            }
+          }
+      }
+      pivots_are_equal = true;
+    } else {
+      for (k = less; k <= great; ++k) {
+        ak = t1.$index(a, k);
+        if (J.$lt$n(compare.call$2(ak, el2), 0)) {
+          if (k !== less) {
+            t1.$indexSet(a, k, t1.$index(a, less));
+            t1.$indexSet(a, less, ak);
+          }
+          ++less;
+        } else if (J.$gt$n(compare.call$2(ak, el4), 0))
+          for (; true;)
+            if (J.$gt$n(compare.call$2(t1.$index(a, great), el4), 0)) {
+              --great;
+              if (great < k)
+                break;
+              continue;
+            } else {
+              great0 = great - 1;
+              if (J.$lt$n(compare.call$2(t1.$index(a, great), el2), 0)) {
+                t1.$indexSet(a, k, t1.$index(a, less));
+                less0 = less + 1;
+                t1.$indexSet(a, less, t1.$index(a, great));
+                t1.$indexSet(a, great, ak);
+                great = great0;
+                less = less0;
+              } else {
+                t1.$indexSet(a, k, t1.$index(a, great));
+                t1.$indexSet(a, great, ak);
+                great = great0;
+              }
+              break;
+            }
+      }
+      pivots_are_equal = false;
+    }
+    t2 = less - 1;
+    t1.$indexSet(a, left, t1.$index(a, t2));
+    t1.$indexSet(a, t2, el2);
+    t2 = great + 1;
+    t1.$indexSet(a, right, t1.$index(a, t2));
+    t1.$indexSet(a, t2, el4);
+    H.Sort__doSort(a, left, less - 2, compare);
+    H.Sort__doSort(a, great + 2, right, compare);
+    if (pivots_are_equal)
+      return;
+    if (less < index1 && great > index5) {
+      for (; J.$eq(compare.call$2(t1.$index(a, less), el2), 0);)
+        ++less;
+      for (; J.$eq(compare.call$2(t1.$index(a, great), el4), 0);)
+        --great;
+      for (k = less; k <= great; ++k) {
+        ak = t1.$index(a, k);
+        if (J.$eq(compare.call$2(ak, el2), 0)) {
+          if (k !== less) {
+            t1.$indexSet(a, k, t1.$index(a, less));
+            t1.$indexSet(a, less, ak);
+          }
+          ++less;
+        } else if (J.$eq(compare.call$2(ak, el4), 0))
+          for (; true;)
+            if (J.$eq(compare.call$2(t1.$index(a, great), el4), 0)) {
+              --great;
+              if (great < k)
+                break;
+              continue;
+            } else {
+              great0 = great - 1;
+              if (J.$lt$n(compare.call$2(t1.$index(a, great), el2), 0)) {
+                t1.$indexSet(a, k, t1.$index(a, less));
+                less0 = less + 1;
+                t1.$indexSet(a, less, t1.$index(a, great));
+                t1.$indexSet(a, great, ak);
+                great = great0;
+                less = less0;
+              } else {
+                t1.$indexSet(a, k, t1.$index(a, great));
+                t1.$indexSet(a, great, ak);
+                great = great0;
+              }
+              break;
+            }
+      }
+      H.Sort__doSort(a, less, great, compare);
+    } else
+      H.Sort__doSort(a, less, great, compare);
   },
   Symbol_getName: function(symbol) {
     return symbol.get$_name();
@@ -3680,12 +4696,36 @@ var $$ = {};
     }
   },
   FixedLengthListMixin: {
-    "^": "Object;"
+    "^": "Object;",
+    set$length: function(receiver, newLength) {
+      throw H.wrapException(P.UnsupportedError$("Cannot change the length of a fixed-length list"));
+    },
+    removeWhere$1: function(receiver, test) {
+      throw H.wrapException(P.UnsupportedError$("Cannot remove from a fixed-length list"));
+    },
+    removeAt$1: function(receiver, index) {
+      throw H.wrapException(P.UnsupportedError$("Cannot remove from a fixed-length list"));
+    }
   },
   UnmodifiableListMixin: {
     "^": "Object;",
     $indexSet: function(_, index, value) {
       throw H.wrapException(P.UnsupportedError$("Cannot modify an unmodifiable list"));
+    },
+    set$length: function(_, newLength) {
+      throw H.wrapException(P.UnsupportedError$("Cannot change the length of an unmodifiable list"));
+    },
+    removeWhere$1: function(_, test) {
+      throw H.wrapException(P.UnsupportedError$("Cannot remove from an unmodifiable list"));
+    },
+    removeAt$1: function(_, index) {
+      throw H.wrapException(P.UnsupportedError$("Cannot remove from an unmodifiable list"));
+    },
+    setRange$4: function(_, start, end, iterable, skipCount) {
+      throw H.wrapException(P.UnsupportedError$("Cannot modify an unmodifiable list"));
+    },
+    setRange$3: function($receiver, start, end, iterable) {
+      return this.setRange$4($receiver, start, end, iterable, 0);
     },
     $isList: true,
     $asList: null
@@ -4235,19 +5275,19 @@ var $$ = {};
       }}
   },
   _Future__addListener_closure: {
-    "^": "Closure:12;this_0,listener_1",
+    "^": "Closure:13;this_0,listener_1",
     call$0: function() {
       P._Future__propagateToListeners(this.this_0, this.listener_1);
     }
   },
   _Future__chainForeignFuture_closure: {
-    "^": "Closure:10;target_0",
+    "^": "Closure:11;target_0",
     call$1: function(value) {
       this.target_0._completeWithValue$1(value);
     }
   },
   _Future__chainForeignFuture_closure0: {
-    "^": "Closure:15;target_1",
+    "^": "Closure:16;target_1",
     call$2: function(error, stackTrace) {
       this.target_1._completeError$2(error, stackTrace);
     },
@@ -4256,7 +5296,7 @@ var $$ = {};
     }
   },
   _Future__propagateToListeners_handleValueCallback: {
-    "^": "Closure:16;box_1,listener_3,sourceValue_4,zone_5",
+    "^": "Closure:17;box_1,listener_3,sourceValue_4,zone_5",
     call$0: function() {
       var e, s, t1, t2, exception;
       try {
@@ -4382,13 +5422,13 @@ var $$ = {};
     }
   },
   _Future__propagateToListeners_handleWhenCompleteCallback_closure: {
-    "^": "Closure:10;box_2,listener_11",
+    "^": "Closure:11;box_2,listener_11",
     call$1: function(ignored) {
       P._Future__propagateToListeners(this.box_2.source_4, this.listener_11);
     }
   },
   _Future__propagateToListeners_handleWhenCompleteCallback_closure0: {
-    "^": "Closure:15;box_0,listener_12",
+    "^": "Closure:16;box_0,listener_12",
     call$2: function(error, stackTrace) {
       var t1, completeResult;
       t1 = this.box_0;
@@ -4440,31 +5480,31 @@ var $$ = {};
     }
   },
   Stream_forEach__closure: {
-    "^": "Closure:12;action_4,element_5",
+    "^": "Closure:13;action_4,element_5",
     call$0: function() {
       return this.action_4.call$1(this.element_5);
     }
   },
   Stream_forEach__closure0: {
-    "^": "Closure:10;",
+    "^": "Closure:11;",
     call$1: function(_) {
     }
   },
   Stream_forEach_closure0: {
-    "^": "Closure:12;future_6",
+    "^": "Closure:13;future_6",
     call$0: function() {
       this.future_6._complete$1(null);
     }
   },
   Stream_length_closure: {
-    "^": "Closure:10;box_0",
+    "^": "Closure:11;box_0",
     call$1: function(_) {
       var t1 = this.box_0;
       t1.count_0 = t1.count_0 + 1;
     }
   },
   Stream_length_closure0: {
-    "^": "Closure:12;box_0,future_1",
+    "^": "Closure:13;box_0,future_1",
     call$0: function() {
       this.future_1._complete$1(this.box_0.count_0);
     }
@@ -4669,7 +5709,7 @@ var $$ = {};
     "^": "Object;next@"
   },
   _DelayedData: {
-    "^": "_DelayedEvent;value,next",
+    "^": "_DelayedEvent;value>,next",
     perform$1: function(dispatch) {
       dispatch._sendData$1(this.value);
     }
@@ -4689,7 +5729,7 @@ var $$ = {};
     }
   },
   _PendingEvents_schedule_closure: {
-    "^": "Closure:12;this_0,dispatch_1",
+    "^": "Closure:13;this_0,dispatch_1",
     call$0: function() {
       var t1, oldState;
       t1 = this.this_0;
@@ -4713,13 +5753,13 @@ var $$ = {};
     }
   },
   _cancelAndError_closure: {
-    "^": "Closure:12;future_0,error_1,stackTrace_2",
+    "^": "Closure:13;future_0,error_1,stackTrace_2",
     call$0: function() {
       return this.future_0._completeError$2(this.error_1, this.stackTrace_2);
     }
   },
   _cancelAndErrorClosure_closure: {
-    "^": "Closure:17;subscription_0,future_1",
+    "^": "Closure:18;subscription_0,future_1",
     call$2: function(error, stackTrace) {
       return P._cancelAndError(this.subscription_0, this.future_1, error, stackTrace);
     }
@@ -4771,37 +5811,37 @@ var $$ = {};
     }
   },
   _BaseZone_bindCallback_closure: {
-    "^": "Closure:12;this_0,registered_1",
+    "^": "Closure:13;this_0,registered_1",
     call$0: function() {
       return this.this_0.runGuarded$1(this.registered_1);
     }
   },
   _BaseZone_bindCallback_closure0: {
-    "^": "Closure:12;this_2,registered_3",
+    "^": "Closure:13;this_2,registered_3",
     call$0: function() {
       return this.this_2.run$1(this.registered_3);
     }
   },
   _BaseZone_bindUnaryCallback_closure: {
-    "^": "Closure:10;this_0,registered_1",
+    "^": "Closure:11;this_0,registered_1",
     call$1: function(arg) {
       return this.this_0.runUnaryGuarded$2(this.registered_1, arg);
     }
   },
   _BaseZone_bindUnaryCallback_closure0: {
-    "^": "Closure:10;this_2,registered_3",
+    "^": "Closure:11;this_2,registered_3",
     call$1: function(arg) {
       return this.this_2.runUnary$2(this.registered_3, arg);
     }
   },
   _rootHandleUncaughtError_closure: {
-    "^": "Closure:12;error_0,stackTrace_1",
+    "^": "Closure:13;error_0,stackTrace_1",
     call$0: function() {
       P._scheduleAsyncCallback(new P._rootHandleUncaughtError__closure(this.error_0, this.stackTrace_1));
     }
   },
   _rootHandleUncaughtError__closure: {
-    "^": "Closure:12;error_2,stackTrace_3",
+    "^": "Closure:13;error_2,stackTrace_3",
     call$0: function() {
       var t1, trace;
       t1 = this.error_2;
@@ -4953,6 +5993,23 @@ var $$ = {};
   },
   LinkedHashSet_LinkedHashSet: function(equals, hashCode, isValidKey, $E) {
     return H.setRuntimeTypeInfo(new P._LinkedHashSet(0, null, null, null, null, null, 0), [$E]);
+  },
+  ListMixin__filter: function(source, test, retainMatching) {
+    var retained, t1, $length, i, element;
+    retained = [];
+    t1 = J.getInterceptor$asx(source);
+    $length = t1.get$length(source);
+    for (i = 0; i < $length; ++i) {
+      element = t1.$index(source, i);
+      if (J.$eq(test.call$1(element), retainMatching))
+        retained.push(element);
+      if ($length !== t1.get$length(source))
+        throw H.wrapException(P.ConcurrentModificationError$(source));
+    }
+    if (retained.length !== t1.get$length(source)) {
+      t1.setRange$3(source, 0, retained.length, retained);
+      t1.set$length(source, retained.length);
+    }
   },
   Maps_mapToString: function(m) {
     var t1, result, i, t2;
@@ -5141,7 +6198,7 @@ var $$ = {};
       }}
   },
   _HashMap_values_closure: {
-    "^": "Closure:10;this_0",
+    "^": "Closure:11;this_0",
     call$1: function(each) {
       return this.this_0.$index(0, each);
     }
@@ -5390,7 +6447,7 @@ var $$ = {};
       }}
   },
   _LinkedHashMap_values_closure: {
-    "^": "Closure:10;this_0",
+    "^": "Closure:11;this_0",
     call$1: function(each) {
       return this.this_0.$index(0, each);
     }
@@ -5510,17 +6567,23 @@ var $$ = {};
     },
     remove$1: function(_, object) {
       var rest, bucket, index;
-      rest = this._rest;
-      if (rest == null)
-        return false;
-      bucket = rest[this._computeHashCode$1(object)];
-      index = this._findBucketIndex$2(bucket, object);
-      if (index < 0)
-        return false;
-      this._collection$_length = this._collection$_length - 1;
-      this._elements = null;
-      bucket.splice(index, 1);
-      return true;
+      if (typeof object === "string" && object !== "__proto__")
+        return this._removeHashTableEntry$2(this._strings, object);
+      else if (typeof object === "number" && (object & 0x3ffffff) === object)
+        return this._removeHashTableEntry$2(this._nums, object);
+      else {
+        rest = this._rest;
+        if (rest == null)
+          return false;
+        bucket = rest[this._computeHashCode$1(object)];
+        index = this._findBucketIndex$2(bucket, object);
+        if (index < 0)
+          return false;
+        this._collection$_length = this._collection$_length - 1;
+        this._elements = null;
+        bucket.splice(index, 1);
+        return true;
+      }
     },
     _computeElements$0: function() {
       var t1, result, strings, names, entries, index, i, nums, rest, bucket, $length, i0;
@@ -5563,6 +6626,15 @@ var $$ = {};
       }
       this._elements = result;
       return result;
+    },
+    _removeHashTableEntry$2: function(table, element) {
+      if (table != null && table[element] != null) {
+        delete table[element];
+        this._collection$_length = this._collection$_length - 1;
+        this._elements = null;
+        return true;
+      } else
+        return false;
     },
     _computeHashCode$1: function(element) {
       return J.get$hashCode$(element) & 0x3ffffff;
@@ -5919,6 +6991,37 @@ var $$ = {};
     toList$0: function($receiver) {
       return this.toList$1$growable($receiver, true);
     },
+    removeWhere$1: function(receiver, test) {
+      P.ListMixin__filter(receiver, test, false);
+    },
+    setRange$4: function(receiver, start, end, iterable, skipCount) {
+      var $length, t1, i;
+      if (start > this.get$length(receiver))
+        H.throwExpression(P.RangeError$range(start, 0, this.get$length(receiver)));
+      if (end < start || end > this.get$length(receiver))
+        H.throwExpression(P.RangeError$range(end, start, this.get$length(receiver)));
+      $length = end - start;
+      if ($length === 0)
+        return;
+      t1 = J.getInterceptor$asx(iterable);
+      if (skipCount + $length > t1.get$length(iterable))
+        throw H.wrapException(P.StateError$("Not enough elements"));
+      if (skipCount < start)
+        for (i = $length - 1; i >= 0; --i)
+          this.$indexSet(receiver, start + i, t1.$index(iterable, skipCount + i));
+      else
+        for (i = 0; i < $length; ++i)
+          this.$indexSet(receiver, start + i, t1.$index(iterable, skipCount + i));
+    },
+    setRange$3: function($receiver, start, end, iterable) {
+      return this.setRange$4($receiver, start, end, iterable, 0);
+    },
+    removeAt$1: function(receiver, index) {
+      var result = this.$index(receiver, index);
+      this.setRange$4(receiver, index, this.get$length(receiver) - 1, receiver, index + 1);
+      this.set$length(receiver, this.get$length(receiver) - 1);
+      return result;
+    },
     toString$0: function(receiver) {
       var result;
       if ($.get$_toStringVisiting().contains$1(0, receiver))
@@ -5938,7 +7041,7 @@ var $$ = {};
     $asList: null
   },
   Maps_mapToString_closure: {
-    "^": "Closure:13;box_0,result_1",
+    "^": "Closure:14;box_0,result_1",
     call$2: function(k, v) {
       var t1 = this.box_0;
       if (!t1.first_0)
@@ -6040,6 +7143,9 @@ var $$ = {};
   _symbolToString: function(symbol) {
     return H.Symbol_getName(symbol);
   },
+  Comparable_compare: [function(a, b) {
+    return J.compareTo$1$ns(a, b);
+  }, "call$2", "Comparable_compare$closure", 4, 0, 8],
   Error_safeToString: function(object) {
     var buffer, t1, i, t2, codeUnit, charCodes;
     if (typeof object === "number" || typeof object === "boolean" || null == object)
@@ -6098,10 +7204,10 @@ var $$ = {};
   },
   identical: [function(a, b) {
     return a == null ? b == null : a === b;
-  }, "call$2", "identical$closure", 4, 0, 8],
+  }, "call$2", "identical$closure", 4, 0, 9],
   identityHashCode: [function(object) {
     return H.objectHashCode(object);
-  }, "call$1", "identityHashCode$closure", 2, 0, 9],
+  }, "call$1", "identityHashCode$closure", 2, 0, 10],
   List_List$filled: function($length, fill, $E) {
     var result, t1, i;
     result = J.JSArray_JSArray$fixed($length, $E);
@@ -6133,13 +7239,13 @@ var $$ = {};
   },
   num__returnNull: [function(_) {
     return;
-  }, "call$1", "num__returnNull$closure", 2, 0, 10],
+  }, "call$1", "num__returnNull$closure", 2, 0, 11],
   print: function(object) {
     var line = H.S(object);
     H.printString(line);
   },
   NoSuchMethodError_toString_closure: {
-    "^": "Closure:18;box_0",
+    "^": "Closure:19;box_0",
     call$2: function(key, value) {
       var t1 = this.box_0;
       if (t1.i_1 > 0)
@@ -6147,14 +7253,20 @@ var $$ = {};
       t1.sb_0.write$1(P._symbolToString(key));
     }
   },
+  Comparable: {
+    "^": "Object;"
+  },
   DateTime: {
-    "^": "Object;millisecondsSinceEpoch,isUtc",
+    "^": "Object;millisecondsSinceEpoch<,isUtc",
     $eq: function(_, other) {
       if (other == null)
         return false;
       if (!J.getInterceptor(other).$isDateTime)
         return false;
       return this.millisecondsSinceEpoch === other.millisecondsSinceEpoch && this.isUtc === other.isUtc;
+    },
+    compareTo$1: function(_, other) {
+      return C.JSNumber_methods.compareTo$1(this.millisecondsSinceEpoch, other.get$millisecondsSinceEpoch());
     },
     get$hashCode: function(_) {
       return this.millisecondsSinceEpoch;
@@ -6210,12 +7322,15 @@ var $$ = {};
       }}
   },
   Duration: {
-    "^": "Object;_duration",
+    "^": "Object;_duration<",
     $add: function(_, other) {
-      return P.Duration$(0, 0, C.JSInt_methods.$add(this._duration, other.get$_duration()), 0, 0, 0);
+      return P.Duration$(0, 0, this._duration + other.get$_duration(), 0, 0, 0);
     },
     $lt: function(_, other) {
       return C.JSInt_methods.$lt(this._duration, other.get$_duration());
+    },
+    $gt: function(_, other) {
+      return C.JSInt_methods.$gt(this._duration, other.get$_duration());
     },
     $ge: function(_, other) {
       return C.JSInt_methods.$ge(this._duration, other.get$_duration());
@@ -6229,6 +7344,9 @@ var $$ = {};
     },
     get$hashCode: function(_) {
       return this._duration & 0x1FFFFFFF;
+    },
+    compareTo$1: function(_, other) {
+      return C.JSInt_methods.compareTo$1(this._duration, other.get$_duration());
     },
     toString$0: function(_) {
       var t1, t2, twoDigitMinutes, twoDigitSeconds, sixDigitUs;
@@ -6247,7 +7365,7 @@ var $$ = {};
       }}
   },
   Duration_toString_sixDigits: {
-    "^": "Closure:19;",
+    "^": "Closure:20;",
     call$1: function(n) {
       if (n >= 100000)
         return "" + n;
@@ -6263,7 +7381,7 @@ var $$ = {};
     }
   },
   Duration_toString_twoDigits: {
-    "^": "Closure:19;",
+    "^": "Closure:20;",
     call$1: function(n) {
       if (n >= 10)
         return "" + n;
@@ -6297,7 +7415,9 @@ var $$ = {};
     toString$0: function(_) {
       return "RangeError: " + H.S(this.message);
     },
-    static: {RangeError$value: function(value) {
+    static: {RangeError$: function(message) {
+        return new P.RangeError(message);
+      }, RangeError$value: function(value) {
         return new P.RangeError("value " + H.S(value));
       }, RangeError$range: function(value, start, end) {
         return new P.RangeError("value " + H.S(value) + " not in range " + start + ".." + H.S(end));
@@ -6375,8 +7495,9 @@ var $$ = {};
   FormatException: {
     "^": "Object;message",
     toString$0: function(_) {
-      return "FormatException: " + this.message;
+      return "FormatException: " + H.S(this.message);
     },
+    $isFormatException: true,
     static: {FormatException$: function(message) {
         return new P.FormatException(message);
       }}
@@ -6486,6 +7607,16 @@ var $$ = {};
 }],
 ["dart.dom.html", "dart:html", , W, {
   "^": "",
+  Window__isDartLocation: function(thing) {
+    var exception;
+    try {
+      return !!J.getInterceptor(thing).$isLocation;
+    } catch (exception) {
+      H.unwrapException(exception);
+      return false;
+    }
+
+  },
   _wrapZone: function(callback) {
     var t1 = $.Zone__current;
     if (t1 === C.C__RootZone)
@@ -6494,10 +7625,10 @@ var $$ = {};
   },
   HtmlElement: {
     "^": "Element;",
-    "%": "HTMLAppletElement|HTMLBRElement|HTMLBaseElement|HTMLBodyElement|HTMLCanvasElement|HTMLContentElement|HTMLDListElement|HTMLDataListElement|HTMLDetailsElement|HTMLDialogElement|HTMLDirectoryElement|HTMLDivElement|HTMLFontElement|HTMLFrameElement|HTMLFrameSetElement|HTMLHRElement|HTMLHeadElement|HTMLHeadingElement|HTMLHtmlElement|HTMLImageElement|HTMLLIElement|HTMLLabelElement|HTMLLegendElement|HTMLLinkElement|HTMLMarqueeElement|HTMLMenuElement|HTMLMeterElement|HTMLModElement|HTMLOListElement|HTMLOptGroupElement|HTMLOptionElement|HTMLParagraphElement|HTMLPreElement|HTMLProgressElement|HTMLQuoteElement|HTMLScriptElement|HTMLShadowElement|HTMLSourceElement|HTMLStyleElement|HTMLTableCaptionElement|HTMLTableCellElement|HTMLTableColElement|HTMLTableDataCellElement|HTMLTableElement|HTMLTableHeaderCellElement|HTMLTableRowElement|HTMLTableSectionElement|HTMLTemplateElement|HTMLTitleElement|HTMLTrackElement|HTMLUListElement|HTMLUnknownElement;HTMLElement"
+    "%": "HTMLAppletElement|HTMLBRElement|HTMLBaseElement|HTMLBodyElement|HTMLCanvasElement|HTMLContentElement|HTMLDListElement|HTMLDataListElement|HTMLDetailsElement|HTMLDialogElement|HTMLDirectoryElement|HTMLDivElement|HTMLFontElement|HTMLFrameElement|HTMLFrameSetElement|HTMLHRElement|HTMLHeadElement|HTMLHeadingElement|HTMLHtmlElement|HTMLImageElement|HTMLLabelElement|HTMLLegendElement|HTMLMarqueeElement|HTMLMenuElement|HTMLModElement|HTMLOptGroupElement|HTMLParagraphElement|HTMLPreElement|HTMLQuoteElement|HTMLShadowElement|HTMLTableCaptionElement|HTMLTableCellElement|HTMLTableColElement|HTMLTableDataCellElement|HTMLTableElement|HTMLTableHeaderCellElement|HTMLTableRowElement|HTMLTableSectionElement|HTMLTemplateElement|HTMLTitleElement|HTMLTrackElement|HTMLUListElement|HTMLUnknownElement;HTMLElement"
   },
   AnchorElement: {
-    "^": "HtmlElement;",
+    "^": "HtmlElement;type=",
     toString$0: function(receiver) {
       return receiver.toString();
     },
@@ -6511,11 +7642,11 @@ var $$ = {};
     "%": "HTMLAreaElement"
   },
   Blob: {
-    "^": "Interceptor;",
+    "^": "Interceptor;type=",
     "%": ";Blob"
   },
   ButtonElement: {
-    "^": "HtmlElement;name=",
+    "^": "HtmlElement;name=,type=,value=",
     "%": "HTMLButtonElement"
   },
   CharacterData: {
@@ -6600,7 +7731,7 @@ var $$ = {};
     "%": ";Element"
   },
   EmbedElement: {
-    "^": "HtmlElement;name=",
+    "^": "HtmlElement;name=,type=",
     "%": "HTMLEmbedElement"
   },
   ErrorEvent: {
@@ -6608,7 +7739,7 @@ var $$ = {};
     "%": "ErrorEvent"
   },
   Event: {
-    "^": "Interceptor;",
+    "^": "Interceptor;type=",
     "%": "AudioProcessingEvent|AutocompleteErrorEvent|BeforeLoadEvent|BeforeUnloadEvent|CSSFontFaceLoadEvent|CloseEvent|CustomEvent|DeviceMotionEvent|DeviceOrientationEvent|HashChangeEvent|IDBVersionChangeEvent|MIDIConnectionEvent|MediaKeyEvent|MediaKeyMessageEvent|MediaKeyNeededEvent|MediaStreamEvent|MediaStreamTrackEvent|MutationEvent|OfflineAudioCompletionEvent|OverflowEvent|PageTransitionEvent|PopStateEvent|ProgressEvent|RTCDTMFToneChangeEvent|RTCDataChannelEvent|RTCIceCandidateEvent|ResourceProgressEvent|SecurityPolicyViolationEvent|SpeechInputEvent|SpeechRecognitionEvent|StorageEvent|TrackEvent|TransitionEvent|WebGLContextEvent|WebKitAnimationEvent|WebKitTransitionEvent|XMLHttpRequestProgressEvent;Event"
   },
   EventTarget: {
@@ -6622,7 +7753,7 @@ var $$ = {};
     "%": ";EventTarget"
   },
   FieldSetElement: {
-    "^": "HtmlElement;name=",
+    "^": "HtmlElement;name=,type=",
     "%": "HTMLFieldSetElement"
   },
   File: {
@@ -6647,6 +7778,9 @@ var $$ = {};
     $indexSet: function(receiver, index, value) {
       throw H.wrapException(P.UnsupportedError$("Cannot assign element of immutable List."));
     },
+    set$length: function(receiver, value) {
+      throw H.wrapException(P.UnsupportedError$("Cannot resize immutable List."));
+    },
     get$first: function(receiver) {
       if (receiver.length > 0)
         return receiver[0];
@@ -6669,13 +7803,33 @@ var $$ = {};
     "%": "HTMLIFrameElement"
   },
   InputElement: {
-    "^": "HtmlElement;name=",
+    "^": "HtmlElement;name=,type=,value=",
     $isElement: true,
     "%": "HTMLInputElement"
   },
+  KeyboardEvent: {
+    "^": "UIEvent;location=",
+    "%": "KeyboardEvent"
+  },
   KeygenElement: {
-    "^": "HtmlElement;name=",
+    "^": "HtmlElement;name=,type=",
     "%": "HTMLKeygenElement"
+  },
+  LIElement: {
+    "^": "HtmlElement;value=",
+    "%": "HTMLLIElement"
+  },
+  LinkElement: {
+    "^": "HtmlElement;type=",
+    "%": "HTMLLinkElement"
+  },
+  Location: {
+    "^": "Interceptor;",
+    toString$0: function(receiver) {
+      return receiver.toString();
+    },
+    $isLocation: true,
+    "%": "Location"
   },
   MapElement: {
     "^": "HtmlElement;name=",
@@ -6700,6 +7854,10 @@ var $$ = {};
     "^": "HtmlElement;name=",
     "%": "HTMLMetaElement"
   },
+  MeterElement: {
+    "^": "HtmlElement;value=",
+    "%": "HTMLMeterElement"
+  },
   MidiMessageEvent: {
     "^": "Event;data=",
     "%": "MIDIMessageEvent"
@@ -6714,6 +7872,11 @@ var $$ = {};
   },
   Node: {
     "^": "EventTarget;",
+    remove$0: function(receiver) {
+      var t1 = receiver.parentNode;
+      if (t1 != null)
+        t1.removeChild(receiver);
+    },
     replaceWith$1: function(receiver, otherNode) {
       var $parent, exception;
       try {
@@ -6748,6 +7911,9 @@ var $$ = {};
     $indexSet: function(receiver, index, value) {
       throw H.wrapException(P.UnsupportedError$("Cannot assign element of immutable List."));
     },
+    set$length: function(receiver, value) {
+      throw H.wrapException(P.UnsupportedError$("Cannot resize immutable List."));
+    },
     get$first: function(receiver) {
       if (receiver.length > 0)
         return receiver[0];
@@ -6765,21 +7931,41 @@ var $$ = {};
     $isJavaScriptIndexingBehavior: true,
     "%": "NodeList|RadioNodeList"
   },
+  OListElement: {
+    "^": "HtmlElement;type=",
+    "%": "HTMLOListElement"
+  },
   ObjectElement: {
-    "^": "HtmlElement;data=,name=",
+    "^": "HtmlElement;data=,name=,type=",
     "%": "HTMLObjectElement"
   },
+  OptionElement: {
+    "^": "HtmlElement;value=",
+    "%": "HTMLOptionElement"
+  },
   OutputElement: {
-    "^": "HtmlElement;name=",
+    "^": "HtmlElement;name=,type=,value=",
     "%": "HTMLOutputElement"
   },
   ParamElement: {
-    "^": "HtmlElement;name=",
+    "^": "HtmlElement;name=,value=",
     "%": "HTMLParamElement"
   },
+  ProgressElement: {
+    "^": "HtmlElement;value=",
+    "%": "HTMLProgressElement"
+  },
+  ScriptElement: {
+    "^": "HtmlElement;type=",
+    "%": "HTMLScriptElement"
+  },
   SelectElement: {
-    "^": "HtmlElement;length=,name=",
+    "^": "HtmlElement;length=,name=,type=,value=",
     "%": "HTMLSelectElement"
+  },
+  SourceElement: {
+    "^": "HtmlElement;type=",
+    "%": "HTMLSourceElement"
   },
   SpanElement: {
     "^": "HtmlElement;",
@@ -6794,8 +7980,12 @@ var $$ = {};
     "^": "Event;name=",
     "%": "SpeechSynthesisEvent"
   },
+  StyleElement: {
+    "^": "HtmlElement;type=",
+    "%": "HTMLStyleElement"
+  },
   TextAreaElement: {
-    "^": "HtmlElement;name=",
+    "^": "HtmlElement;name=,type=,value=",
     $isTextAreaElement: true,
     "%": "HTMLTextAreaElement"
   },
@@ -6805,17 +7995,25 @@ var $$ = {};
   },
   UIEvent: {
     "^": "Event;",
-    "%": "FocusEvent|KeyboardEvent|SVGZoomEvent|TouchEvent;UIEvent"
+    "%": "FocusEvent|SVGZoomEvent|TouchEvent;UIEvent"
   },
   Window: {
     "^": "EventTarget;name=",
+    get$location: function(receiver) {
+      var result = receiver.location;
+      if (W.Window__isDartLocation(result) === true)
+        return result;
+      if (null == receiver._location_wrapper)
+        receiver._location_wrapper = new W._LocationWrapper(result);
+      return receiver._location_wrapper;
+    },
     toString$0: function(receiver) {
       return receiver.toString();
     },
     "%": "DOMWindow|Window"
   },
   _Attr: {
-    "^": "Node;name=",
+    "^": "Node;name=,value=",
     "%": "Attr"
   },
   _ChildrenElementList: {
@@ -6835,9 +8033,43 @@ var $$ = {};
         return H.ioore(t1, index);
       this._element.replaceChild(value, t1[index]);
     },
+    set$length: function(_, newLength) {
+      throw H.wrapException(P.UnsupportedError$("Cannot resize element lists"));
+    },
     get$iterator: function(_) {
       var t1 = this.toList$0(this);
       return new H.ListIterator(t1, t1.length, 0, null);
+    },
+    removeWhere$1: function(_, test) {
+      this._filter$2(test, false);
+    },
+    _filter$2: function(test, retainMatching) {
+      var t1, removed, t2;
+      t1 = this._element;
+      if (retainMatching) {
+        t1 = J.get$children$x(t1);
+        removed = t1.where$1(t1, new W._ChildrenElementList__filter_closure(test));
+      } else {
+        t1 = J.get$children$x(t1);
+        removed = t1.where$1(t1, test);
+      }
+      for (t1 = H.setRuntimeTypeInfo(new H.WhereIterator(J.get$iterator$ax(removed._iterable), removed._f), [H.getTypeArgumentByIndex(removed, 0)]), t2 = t1._iterator; t1.moveNext$0();)
+        J.remove$0$ax(t2.get$current());
+    },
+    setRange$4: function(_, start, end, iterable, skipCount) {
+      throw H.wrapException(P.UnimplementedError$(null));
+    },
+    setRange$3: function($receiver, start, end, iterable) {
+      return this.setRange$4($receiver, start, end, iterable, 0);
+    },
+    removeAt$1: function(_, index) {
+      var t1, result;
+      t1 = this._childElements;
+      if (index >= t1.length)
+        return H.ioore(t1, index);
+      result = t1[index];
+      this._element.removeChild(result);
+      return result;
     },
     get$first: function(_) {
       var result = this._element.firstElementChild;
@@ -6850,6 +8082,12 @@ var $$ = {};
     },
     $asList: function() {
       return [W.Element];
+    }
+  },
+  _ChildrenElementList__filter_closure: {
+    "^": "Closure:11;test_0",
+    call$1: function(e) {
+      return this.test_0.call$1(e) !== true;
     }
   },
   Interceptor_ListMixin: {
@@ -6874,6 +8112,29 @@ var $$ = {};
         throw H.wrapException(P.StateError$("No elements"));
       return result;
     },
+    removeAt$1: function(_, index) {
+      var t1, t2, result;
+      t1 = this._this;
+      t2 = t1.childNodes;
+      if (index >= t2.length)
+        return H.ioore(t2, index);
+      result = t2[index];
+      t1.removeChild(result);
+      return result;
+    },
+    _filter$2: function(test, removeMatching) {
+      var t1, child, nextChild;
+      t1 = this._this;
+      child = t1.firstChild;
+      for (; child != null; child = nextChild) {
+        nextChild = child.nextSibling;
+        if (J.$eq(test.call$1(child), removeMatching))
+          t1.removeChild(child);
+      }
+    },
+    removeWhere$1: function(_, test) {
+      this._filter$2(test, true);
+    },
     $indexSet: function(_, index, value) {
       var t1, t2;
       t1 = this._this;
@@ -6885,8 +8146,17 @@ var $$ = {};
     get$iterator: function(_) {
       return C.NodeList_methods.get$iterator(this._this.childNodes);
     },
+    setRange$4: function(_, start, end, iterable, skipCount) {
+      throw H.wrapException(P.UnsupportedError$("Cannot setRange on Node list"));
+    },
+    setRange$3: function($receiver, start, end, iterable) {
+      return this.setRange$4($receiver, start, end, iterable, 0);
+    },
     get$length: function(_) {
       return this._this.childNodes.length;
+    },
+    set$length: function(_, value) {
+      throw H.wrapException(P.UnsupportedError$("Cannot set length on immutable List."));
     },
     $index: function(_, index) {
       var t1 = this._this.childNodes;
@@ -6956,6 +8226,18 @@ var $$ = {};
     get$iterator: function(receiver) {
       return new W.FixedSizeListIterator(receiver, this.get$length(receiver), -1, null);
     },
+    removeAt$1: function(receiver, pos) {
+      throw H.wrapException(P.UnsupportedError$("Cannot remove from immutable List."));
+    },
+    removeWhere$1: function(receiver, test) {
+      throw H.wrapException(P.UnsupportedError$("Cannot remove from immutable List."));
+    },
+    setRange$4: function(receiver, start, end, iterable, skipCount) {
+      throw H.wrapException(P.UnsupportedError$("Cannot setRange on immutable List."));
+    },
+    setRange$3: function($receiver, start, end, iterable) {
+      return this.setRange$4($receiver, start, end, iterable, 0);
+    },
     $isList: true,
     $asList: null
   },
@@ -6977,10 +8259,33 @@ var $$ = {};
     get$current: function() {
       return this._html$_current;
     }
+  },
+  _LocationWrapper: {
+    "^": "Object;_ptr",
+    toString$0: function(_) {
+      return this._ptr.toString();
+    },
+    $isLocation: true
   }
 }],
 ["dart.dom.svg", "dart:svg", , P, {
   "^": "",
+  FEColorMatrixElement: {
+    "^": "SvgElement;type=",
+    "%": "SVGFEColorMatrixElement"
+  },
+  FETurbulenceElement: {
+    "^": "SvgElement;type=",
+    "%": "SVGFETurbulenceElement"
+  },
+  ScriptElement0: {
+    "^": "SvgElement;type=",
+    "%": "SVGScriptElement"
+  },
+  StyleElement0: {
+    "^": "SvgElement;type=",
+    "%": "SVGStyleElement"
+  },
   SvgElement: {
     "^": "Element;",
     get$children: function(receiver) {
@@ -6992,7 +8297,7 @@ var $$ = {};
     get$onClick: function(receiver) {
       return H.setRuntimeTypeInfo(new W._ElementEventStreamImpl(receiver, C.EventStreamProvider_click._eventType, false), [null]);
     },
-    "%": "SVGAElement|SVGAltGlyphDefElement|SVGAltGlyphElement|SVGAltGlyphItemElement|SVGAnimateElement|SVGAnimateMotionElement|SVGAnimateTransformElement|SVGAnimationElement|SVGCircleElement|SVGClipPathElement|SVGComponentTransferFunctionElement|SVGCursorElement|SVGDefsElement|SVGDescElement|SVGDiscardElement|SVGElement|SVGEllipseElement|SVGFEBlendElement|SVGFEColorMatrixElement|SVGFEComponentTransferElement|SVGFECompositeElement|SVGFEConvolveMatrixElement|SVGFEDiffuseLightingElement|SVGFEDisplacementMapElement|SVGFEDistantLightElement|SVGFEDropShadowElement|SVGFEFloodElement|SVGFEFuncAElement|SVGFEFuncBElement|SVGFEFuncGElement|SVGFEFuncRElement|SVGFEGaussianBlurElement|SVGFEImageElement|SVGFEMergeElement|SVGFEMergeNodeElement|SVGFEMorphologyElement|SVGFEOffsetElement|SVGFEPointLightElement|SVGFESpecularLightingElement|SVGFESpotLightElement|SVGFETileElement|SVGFETurbulenceElement|SVGFilterElement|SVGFontElement|SVGFontFaceElement|SVGFontFaceFormatElement|SVGFontFaceNameElement|SVGFontFaceSrcElement|SVGFontFaceUriElement|SVGForeignObjectElement|SVGGElement|SVGGeometryElement|SVGGlyphElement|SVGGlyphRefElement|SVGGradientElement|SVGGraphicsElement|SVGHKernElement|SVGImageElement|SVGLineElement|SVGLinearGradientElement|SVGMPathElement|SVGMarkerElement|SVGMaskElement|SVGMetadataElement|SVGMissingGlyphElement|SVGPathElement|SVGPatternElement|SVGPolygonElement|SVGPolylineElement|SVGRadialGradientElement|SVGRectElement|SVGSVGElement|SVGScriptElement|SVGSetElement|SVGStopElement|SVGStyleElement|SVGSwitchElement|SVGSymbolElement|SVGTSpanElement|SVGTextContentElement|SVGTextElement|SVGTextPathElement|SVGTextPositioningElement|SVGTitleElement|SVGUseElement|SVGVKernElement|SVGViewElement"
+    "%": "SVGAElement|SVGAltGlyphDefElement|SVGAltGlyphElement|SVGAltGlyphItemElement|SVGAnimateElement|SVGAnimateMotionElement|SVGAnimateTransformElement|SVGAnimationElement|SVGCircleElement|SVGClipPathElement|SVGComponentTransferFunctionElement|SVGCursorElement|SVGDefsElement|SVGDescElement|SVGDiscardElement|SVGEllipseElement|SVGFEBlendElement|SVGFEComponentTransferElement|SVGFECompositeElement|SVGFEConvolveMatrixElement|SVGFEDiffuseLightingElement|SVGFEDisplacementMapElement|SVGFEDistantLightElement|SVGFEDropShadowElement|SVGFEFloodElement|SVGFEFuncAElement|SVGFEFuncBElement|SVGFEFuncGElement|SVGFEFuncRElement|SVGFEGaussianBlurElement|SVGFEImageElement|SVGFEMergeElement|SVGFEMergeNodeElement|SVGFEMorphologyElement|SVGFEOffsetElement|SVGFEPointLightElement|SVGFESpecularLightingElement|SVGFESpotLightElement|SVGFETileElement|SVGFilterElement|SVGFontElement|SVGFontFaceElement|SVGFontFaceFormatElement|SVGFontFaceNameElement|SVGFontFaceSrcElement|SVGFontFaceUriElement|SVGForeignObjectElement|SVGGElement|SVGGeometryElement|SVGGlyphElement|SVGGlyphRefElement|SVGGradientElement|SVGGraphicsElement|SVGHKernElement|SVGImageElement|SVGLineElement|SVGLinearGradientElement|SVGMPathElement|SVGMarkerElement|SVGMaskElement|SVGMetadataElement|SVGMissingGlyphElement|SVGPathElement|SVGPatternElement|SVGPolygonElement|SVGPolylineElement|SVGRadialGradientElement|SVGRectElement|SVGSVGElement|SVGSetElement|SVGStopElement|SVGSwitchElement|SVGSymbolElement|SVGTSpanElement|SVGTextContentElement|SVGTextElement|SVGTextPathElement|SVGTextPositioningElement|SVGTitleElement|SVGUseElement|SVGVKernElement|SVGViewElement;SVGElement"
   }
 }],
 ["dart.isolate", "dart:isolate", , P, {
@@ -7059,6 +8364,10 @@ var $$ = {};
         throw H.wrapException(P.RangeError$range(index, 0, $length));
       else
         throw H.wrapException(new P.ArgumentError("Invalid list index " + H.S(index)));
+    },
+    _checkIndex$2: function(receiver, index, $length) {
+      if (index >>> 0 !== index || index >= $length)
+        this._invalidIndex$2(receiver, index, $length);
     },
     "%": "DataView;ArrayBufferView;NativeTypedArray|NativeTypedArray_ListMixin|NativeTypedArray_ListMixin_FixedLengthListMixin|NativeTypedArrayOfDouble|NativeTypedArray_ListMixin0|NativeTypedArray_ListMixin_FixedLengthListMixin0|NativeTypedArrayOfInt"
   },
@@ -7253,10 +8562,36 @@ var $$ = {};
     get$length: function(receiver) {
       return receiver.length;
     },
+    _setRangeFast$4: function(receiver, start, end, source, skipCount) {
+      var t1, count, sourceLength;
+      t1 = receiver.length + 1;
+      this._checkIndex$2(receiver, start, t1);
+      this._checkIndex$2(receiver, end, t1);
+      if (start > end)
+        throw H.wrapException(P.RangeError$range(start, 0, end));
+      count = end - start;
+      sourceLength = source.length;
+      if (sourceLength - skipCount < count)
+        throw H.wrapException(P.StateError$("Not enough elements"));
+      if (skipCount !== 0 || sourceLength !== count)
+        source = source.subarray(skipCount, skipCount + count);
+      receiver.set(source, start);
+    },
     $isJavaScriptIndexingBehavior: true
   },
   NativeTypedArrayOfDouble: {
     "^": "NativeTypedArray_ListMixin_FixedLengthListMixin;",
+    setRange$4: function(receiver, start, end, iterable, skipCount) {
+      if (!!J.getInterceptor(iterable).$isNativeTypedArrayOfDouble) {
+        this._setRangeFast$4(receiver, start, end, iterable, skipCount);
+        return;
+      }
+      P.ListMixin.prototype.setRange$4.call(this, receiver, start, end, iterable, skipCount);
+    },
+    setRange$3: function($receiver, start, end, iterable) {
+      return this.setRange$4($receiver, start, end, iterable, 0);
+    },
+    $isNativeTypedArrayOfDouble: true,
     $isList: true,
     $asList: function() {
       return [J.JSDouble];
@@ -7274,6 +8609,17 @@ var $$ = {};
   },
   NativeTypedArrayOfInt: {
     "^": "NativeTypedArray_ListMixin_FixedLengthListMixin0;",
+    setRange$4: function(receiver, start, end, iterable, skipCount) {
+      if (!!J.getInterceptor(iterable).$isNativeTypedArrayOfInt) {
+        this._setRangeFast$4(receiver, start, end, iterable, skipCount);
+        return;
+      }
+      P.ListMixin.prototype.setRange$4.call(this, receiver, start, end, iterable, skipCount);
+    },
+    setRange$3: function($receiver, start, end, iterable) {
+      return this.setRange$4($receiver, start, end, iterable, 0);
+    },
+    $isNativeTypedArrayOfInt: true,
     $isList: true,
     $asList: function() {
       return [J.JSInt];
@@ -7321,7 +8667,13 @@ var $$ = {};
   CompilerTypeError: {
     "^": "Object;message",
     toString$0: function(_) {
-      return "Type Error: " + this.message;
+      return "Type Error: " + H.S(this.message);
+    }
+  },
+  CompilerOutOfMemoryError: {
+    "^": "Object;message",
+    toString$0: function(_) {
+      return "Out of Memory Error: " + this.message;
     }
   }
 }],
@@ -7361,7 +8713,7 @@ var $$ = {};
     }
   },
   convertNativeToDart_AcceptStructuredClone_readSlot: {
-    "^": "Closure:20;copies_2",
+    "^": "Closure:21;copies_2",
     call$1: function(i) {
       var t1 = this.copies_2;
       if (i >= t1.length)
@@ -7370,7 +8722,7 @@ var $$ = {};
     }
   },
   convertNativeToDart_AcceptStructuredClone_writeSlot: {
-    "^": "Closure:21;copies_3",
+    "^": "Closure:22;copies_3",
     call$2: function(i, x) {
       var t1 = this.copies_3;
       if (i >= t1.length)
@@ -7379,7 +8731,7 @@ var $$ = {};
     }
   },
   convertNativeToDart_AcceptStructuredClone_walk: {
-    "^": "Closure:10;mustCopy_4,findSlot_5,readSlot_6,writeSlot_7",
+    "^": "Closure:11;mustCopy_4,findSlot_5,readSlot_6,writeSlot_7",
     call$1: function(e) {
       var slot, copy, t1, key, $length, t2, i;
       if (e == null)
@@ -7442,6 +8794,32 @@ var $$ = {};
         return H.ioore(t1, index);
       J.replaceWith$1$x(t1[index], value);
     },
+    set$length: function(_, newLength) {
+      var len = this.get$_filtered().length;
+      if (newLength >= len)
+        return;
+      else if (newLength < 0)
+        throw H.wrapException(new P.ArgumentError("Invalid list length"));
+      this.removeRange$2(0, newLength, len);
+    },
+    setRange$4: function(_, start, end, iterable, skipCount) {
+      throw H.wrapException(P.UnsupportedError$("Cannot setRange on filtered list"));
+    },
+    setRange$3: function($receiver, start, end, iterable) {
+      return this.setRange$4($receiver, start, end, iterable, 0);
+    },
+    removeRange$2: function(_, start, end) {
+      H.IterableMixinWorkaround_forEach(C.JSArray_methods.sublist$2(this.get$_filtered(), start, end), new P.FilteredElementList_removeRange_closure());
+    },
+    removeAt$1: function(_, index) {
+      var t1, result;
+      t1 = this.get$_filtered();
+      if (index >= t1.length)
+        return H.ioore(t1, index);
+      result = t1[index];
+      J.remove$0$ax(result);
+      return result;
+    },
     get$length: function(_) {
       return this.get$_filtered().length;
     },
@@ -7457,10 +8835,34 @@ var $$ = {};
     }
   },
   FilteredElementList__filtered_closure: {
-    "^": "Closure:10;",
+    "^": "Closure:11;",
     call$1: function(n) {
       return !!J.getInterceptor(n).$isElement;
     }
+  },
+  FilteredElementList_removeRange_closure: {
+    "^": "Closure:11;",
+    call$1: function(el) {
+      return J.remove$0$ax(el);
+    }
+  }
+}],
+["jumpTable", "compiler/jumpTable.dart", , V, {
+  "^": "",
+  JumpTable: {
+    "^": "Object;rows",
+    getRow$1: function($location) {
+      var t1, row;
+      for (t1 = this.rows, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        row = t1._current;
+        if (J.$eq(J.get$location$x(row), $location))
+          return row;
+      }
+      return;
+    }
+  },
+  JumpTableRow: {
+    "^": "Object;location>,distance?"
   }
 }],
 ["logging", "package:logging/logging.dart", , N, {
@@ -7470,7 +8872,7 @@ var $$ = {};
     get$fullName: function() {
       var t1, t2, t3;
       t1 = this.parent;
-      t2 = t1 == null || J.get$name$x(t1) === "";
+      t2 = t1 == null || J.$eq(J.get$name$x(t1), "");
       t3 = this.name;
       return t2 ? t3 : t1.get$fullName() + "." + t3;
     },
@@ -7547,7 +8949,7 @@ var $$ = {};
       }}
   },
   Logger_Logger_closure: {
-    "^": "Closure:12;name_0",
+    "^": "Closure:13;name_0",
     call$0: function() {
       var thisName, dot, $parent, t1, t2;
       thisName = this.name_0;
@@ -7576,8 +8978,17 @@ var $$ = {};
     $lt: function(_, other) {
       return C.JSInt_methods.$lt(this.value, other.get$value(other));
     },
+    $gt: function(_, other) {
+      return C.JSInt_methods.$gt(this.value, other.get$value(other));
+    },
     $ge: function(_, other) {
       return this.value >= other.get$value(other);
+    },
+    compareTo$1: function(_, other) {
+      var t1 = J.get$value$x(other);
+      if (typeof t1 !== "number")
+        return H.iae(t1);
+      return this.value - t1;
     },
     get$hashCode: function(_) {
       return this.value;
@@ -7611,7 +9022,8 @@ var $$ = {};
     H.setRuntimeTypeInfo(new W._EventStreamSubscription(0, t1._target, t1._eventType, W._wrapZone(F.compile$closure()), t1._useCapture), [H.getTypeArgumentByIndex(t1, 0)])._tryResume$0();
   }, "call$0", "main$closure", 0, 0, 2],
   unhide: [function($event) {
-  }, "call$1", "unhide$closure", 2, 0, 11],
+    document.querySelector("#output").hidden = false;
+  }, "call$1", "unhide$closure", 2, 0, 12],
   compile: [function($event) {
     var source;
     H.interceptedTypeCast(document.querySelector("#symbol-table"), "$isTextAreaElement").textContent = "";
@@ -7624,10 +9036,10 @@ var $$ = {};
     H.interceptedTypeCast(document.querySelector("#log-severe"), "$isTextAreaElement").textContent = "";
     H.interceptedTypeCast(document.querySelector("#badge-severe"), "$isSpanElement").textContent = "0";
     source = H.interceptedTypeCast(document.querySelector("#input-code"), "$isTextAreaElement").value;
-    new X.Compiler(K.LoggerUtil_createLogger("Compiler"), source, H.setRuntimeTypeInfo([], [D.Token]), null, null, null, null, null).run$0();
-  }, "call$1", "compile$closure", 2, 0, 11],
+    new X.Compiler(K.LoggerUtil_createLogger("Compiler"), source, H.setRuntimeTypeInfo([], [D.Token]), null, null, null, null, null, null).run$0();
+  }, "call$1", "compile$closure", 2, 0, 12],
   main_closure: {
-    "^": "Closure:22;",
+    "^": "Closure:23;",
     call$1: function(rec) {
       P.print(rec.get$level().name + ": " + H.S(rec.get$time()) + ": " + H.S(rec.message));
     }
@@ -7642,7 +9054,7 @@ var $$ = {};
       var t1, token;
       $.get$Parser_log().log$4(C.Level_INFO_800, "Parser starting analysis...", null, null);
       if (this.tokens.length !== 0) {
-        t1 = new B.Tree(C.NonTerminal_PROGRAM, null, null);
+        t1 = new B.Tree(C.NonTerminal_PROGRAM, null, null, null);
         t1.children = H.setRuntimeTypeInfo([], [B.Tree]);
         this.cst = t1;
         this.block$1(t1);
@@ -7650,15 +9062,15 @@ var $$ = {};
         t1 = token.type;
         if (t1 !== C.TokenType_END)
           M.ExceptionUtil_logAndThrow(new T.CompilerSyntaxError("Expected END token, found type " + t1._Enum$_value + " on line " + C.JSInt_methods.toString$0(token.line)), $.get$Parser_log());
-        $.get$Parser_log().log$4(C.Level_INFO_800, "Parser finished analysis...Dumping CST", null, null);
-        this.cst.dump$0();
+        this.warnSymbols$0();
+        $.get$Parser_log().log$4(C.Level_INFO_800, "Parser finished analysis...", null, null);
         return H.fillLiteralMap(["cst", this.cst, "symbols", this.symbols], P.LinkedHashMap_LinkedHashMap(null, null, null, null, null));
       } else
         $.get$Parser_log().log$4(C.Level_WARNING_900, "No tokens to parse, finished.", null, null);
     },
     addChild$2: function(data, root) {
       var child, t1;
-      child = new B.Tree(data, root, null);
+      child = new B.Tree(data, C.JSInt_methods.toString$0(this.getToken$0().line), root, null);
       t1 = [];
       t1.$builtinTypeInfo = [B.Tree];
       child.children = t1;
@@ -7668,19 +9080,19 @@ var $$ = {};
     block$1: function(currNode) {
       var child, t1, child0;
       $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing block on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
-      child = new B.Tree(C.NonTerminal_BLOCK, currNode, null);
+      child = new B.Tree(C.NonTerminal_BLOCK, C.JSInt_methods.toString$0(this.getToken$0().line), currNode, null);
       t1 = [];
       t1.$builtinTypeInfo = [B.Tree];
       child.children = t1;
       currNode.children.push(child);
-      child0 = new B.Tree(C.TokenType_OPEN_BRACE, child, null);
+      child0 = new B.Tree(C.TokenType_OPEN_BRACE, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
       t1 = [];
       t1.$builtinTypeInfo = [B.Tree];
       child0.children = t1;
       child.children.push(child0);
       this.scope = this.scope + 1;
       this.statementList$1(child);
-      child0 = new B.Tree(C.TokenType_CLOSE_BRACE, child, null);
+      child0 = new B.Tree(C.TokenType_CLOSE_BRACE, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
       t1 = [];
       t1.$builtinTypeInfo = [B.Tree];
       child0.children = t1;
@@ -7688,62 +9100,71 @@ var $$ = {};
       this.scope = this.scope - 1;
     },
     statementList$1: function(currNode) {
-      var token, t1, child, t2, child0, typeToken, child1, child2, t3, t4;
+      var token, t1, child, t2, child0, typeToken, child1, child2, s, t3, t4, instance;
       token = this.popNextToken$0();
       for (; t1 = token.type, t1 !== C.TokenType_CLOSE_BRACE; currNode = child) {
-        child = new B.Tree(C.NonTerminal_STATEMENT_LIST, currNode, null);
+        child = new B.Tree(C.NonTerminal_STATEMENT_LIST, C.JSInt_methods.toString$0(this.getToken$0().line), currNode, null);
         t2 = [];
         t2.$builtinTypeInfo = [B.Tree];
         child.children = t2;
         currNode.children.push(child);
         if (t1 === C.TokenType_TYPE) {
-          child0 = new B.Tree(C.NonTerminal_STATEMENT, child, null);
+          child0 = new B.Tree(C.NonTerminal_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child.children.push(child0);
           $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing a variable declaration on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
           typeToken = this.getToken$0();
-          child1 = new B.Tree(C.NonTerminal_VARIABLE_DECLARATION, child0, null);
+          child1 = new B.Tree(C.NonTerminal_VARIABLE_DECLARATION, C.JSInt_methods.toString$0(this.getToken$0().line), child0, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child1.children = t1;
           child0.children.push(child1);
-          child0 = new B.Tree(typeToken.type, child1, null);
+          child0 = new B.Tree(typeToken.type, C.JSInt_methods.toString$0(this.getToken$0().line), child1, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child1.children.push(child0);
-          t1 = typeToken.value;
-          child2 = new B.Tree(t1, child0, null);
-          t2 = [];
-          t2.$builtinTypeInfo = [B.Tree];
-          child2.children = t2;
+          child2 = new B.Tree(typeToken.value, C.JSInt_methods.toString$0(this.getToken$0().line), child0, null);
+          t1 = [];
+          t1.$builtinTypeInfo = [B.Tree];
+          child2.children = t1;
           child0.children.push(child2);
           this.idExpression$1(child1);
           token = this.getToken$0();
-          t2 = token.value;
-          t3 = this.scope;
-          t4 = token.line;
-          J.insertAdjacentText$2$x(document.querySelector("#symbol-table"), "beforeend", "Symbol: name=" + H.S(t2) + " scope=" + t3 + " line=" + t4 + " type=" + H.S(t1) + " \n");
-          this.symbols.push(new T.CompilerSymbol(t2, t3, t4, t1));
+          s = this.getSymbol$1(token.value);
+          if (s != null)
+            if (s.get$scope() === this.scope)
+              M.ExceptionUtil_logAndThrow(new T.CompilerSyntaxError("Identifier " + H.S(token.value) + " already defined on line " + H.S(s.get$line()) + "."), $.get$Parser_log());
+          t1 = token.value;
+          t2 = this.scope;
+          t3 = token.line;
+          t4 = typeToken.value;
+          this.symbols.push(new T.CompilerSymbol(t1, t2, t3, t4, false, false));
         } else if (t1 === C.TokenType_ID) {
-          child0 = new B.Tree(C.NonTerminal_STATEMENT, child, null);
+          child0 = new B.Tree(C.NonTerminal_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child.children.push(child0);
           $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing assignment statement on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
-          child1 = new B.Tree(C.NonTerminal_ASSIGNMENT_STATEMENT, child0, null);
+          child1 = new B.Tree(C.NonTerminal_ASSIGNMENT_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child0, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child1.children = t1;
           child0.children.push(child1);
           this.index = this.index - 1;
           this.idExpression$1(child1);
+          token = this.getToken$0();
+          if (token.type === C.TokenType_ID) {
+            instance = this.getSymbol$1(token.value);
+            if (instance != null)
+              instance.set$inited(true);
+          }
           this.scopeCheck$0();
           this.expect$1(C.TokenType_EQUALS);
-          child0 = new B.Tree(C.TokenType_EQUALS, child1, null);
+          child0 = new B.Tree(C.TokenType_EQUALS, C.JSInt_methods.toString$0(this.getToken$0().line), child1, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
@@ -7751,13 +9172,13 @@ var $$ = {};
           this.expression$1(child1);
           this.scopeCheck$0();
         } else if (t1 === C.TokenType_IF) {
-          child0 = new B.Tree(C.NonTerminal_STATEMENT, child, null);
+          child0 = new B.Tree(C.NonTerminal_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child.children.push(child0);
           $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing if statement on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
-          child1 = new B.Tree(C.NonTerminal_IF_STATEMENT, child0, null);
+          child1 = new B.Tree(C.NonTerminal_IF_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child0, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child1.children = t1;
@@ -7766,13 +9187,13 @@ var $$ = {};
           this.index = this.index + 1;
           this.block$1(child1);
         } else if (t1 === C.TokenType_WHILE) {
-          child0 = new B.Tree(C.NonTerminal_STATEMENT, child, null);
+          child0 = new B.Tree(C.NonTerminal_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child.children.push(child0);
           $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing while statement on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
-          child1 = new B.Tree(C.NonTerminal_WHILE_STATEMENT, child0, null);
+          child1 = new B.Tree(C.NonTerminal_WHILE_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child0, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child1.children = t1;
@@ -7781,24 +9202,24 @@ var $$ = {};
           this.index = this.index + 1;
           this.block$1(child1);
         } else if (t1 === C.TokenType_PRINT) {
-          child0 = new B.Tree(C.NonTerminal_STATEMENT, child, null);
+          child0 = new B.Tree(C.NonTerminal_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child.children.push(child0);
           $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing print statement on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
-          child1 = new B.Tree(C.NonTerminal_PRINT_STATEMENT, child0, null);
+          child1 = new B.Tree(C.NonTerminal_PRINT_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child0, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child1.children = t1;
           child0.children.push(child1);
-          child0 = new B.Tree("Print", child1, null);
+          child0 = new B.Tree("Print", C.JSInt_methods.toString$0(this.getToken$0().line), child1, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child1.children.push(child0);
           this.expect$1(C.TokenType_OPEN_PAREN);
-          child0 = new B.Tree(C.TokenType_OPEN_PAREN, child1, null);
+          child0 = new B.Tree(C.TokenType_OPEN_PAREN, C.JSInt_methods.toString$0(this.getToken$0().line), child1, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
@@ -7806,13 +9227,13 @@ var $$ = {};
           this.expression$1(child1);
           this.scopeCheck$0();
           this.expect$1(C.TokenType_CLOSE_PAREN);
-          child0 = new B.Tree(C.TokenType_CLOSE_PAREN, child1, null);
+          child0 = new B.Tree(C.TokenType_CLOSE_PAREN, C.JSInt_methods.toString$0(this.getToken$0().line), child1, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
           child1.children.push(child0);
         } else if (t1 === C.TokenType_OPEN_BRACE) {
-          child0 = new B.Tree(C.NonTerminal_STATEMENT, child, null);
+          child0 = new B.Tree(C.NonTerminal_STATEMENT, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
           t1 = [];
           t1.$builtinTypeInfo = [B.Tree];
           child0.children = t1;
@@ -7824,7 +9245,7 @@ var $$ = {};
       }
     },
     expression$1: function(currNode) {
-      var temp, token;
+      var temp, token, instance;
       $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing an expression on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
       currNode = this.addChild$2(C.NonTerminal_EXPRESSION, currNode);
       if (this.isNextToken$1(C.TokenType_DIGIT)) {
@@ -7845,9 +9266,15 @@ var $$ = {};
         this.booleanExpression$1(currNode);
       else if (this.isNextToken$1(C.TokenType_QUOTE))
         this.stringExpression$1(currNode);
-      else if (this.isNextToken$1(C.TokenType_ID))
+      else if (this.isNextToken$1(C.TokenType_ID)) {
         this.idExpression$1(currNode);
-      else
+        token = this.getToken$0();
+        if (token.type === C.TokenType_ID) {
+          instance = this.getSymbol$1(token.value);
+          if (instance != null)
+            instance.set$used(true);
+        }
+      } else
         P.print("idk");
     },
     booleanExpression$1: function(currNode) {
@@ -7890,12 +9317,12 @@ var $$ = {};
           break;
         this.expectOneOf$1([C.TokenType_CHAR, C.TokenType_SPACE]);
         token = this.getToken$0();
-        child = new B.Tree(token.type, charList, null);
+        child = new B.Tree(token.type, C.JSInt_methods.toString$0(this.getToken$0().line), charList, null);
         t1 = [];
         t1.$builtinTypeInfo = [B.Tree];
         child.children = t1;
         charList.children.push(child);
-        child0 = new B.Tree(token.value, child, null);
+        child0 = new B.Tree(token.value, C.JSInt_methods.toString$0(this.getToken$0().line), child, null);
         t1 = [];
         t1.$builtinTypeInfo = [B.Tree];
         child0.children = t1;
@@ -7905,15 +9332,14 @@ var $$ = {};
       this.addChild$2(C.TokenType_QUOTE, stringExpr);
     },
     idExpression$1: function(currNode) {
-      var token, t1;
+      var token;
       $.get$Parser_log().log$4(C.Level_INFO_800, "Parsing an id expression on line " + C.JSInt_methods.toString$0(this.getToken$0().line), null, null);
       currNode = this.addChild$2(C.NonTerminal_ID_EXPRESSION, currNode);
       this.expect$1(C.TokenType_ID);
       token = this.getToken$0();
       currNode = this.addChild$2(C.TokenType_CHAR, currNode);
-      t1 = token.value;
-      this.addChild$2(t1, currNode);
-      return t1;
+      this.addChild$2(token.value, currNode);
+      return token.value;
     },
     popNextToken$0: function() {
       var t1, t2, t3;
@@ -8008,7 +9434,80 @@ var $$ = {};
       }
       return instances;
     },
+    getSymbol$1: function(symbol) {
+      var instances, t1, s;
+      instances = this.getSymbols$1(symbol);
+      t1 = instances.length;
+      if (t1 !== 0) {
+        for (t1 = new H.ListIterator(instances, t1, 0, null); t1.moveNext$0();) {
+          s = t1._current;
+          if (s.get$scope() === this.scope)
+            return s;
+        }
+        return C.JSArray_methods.get$last(instances);
+      } else
+        return;
+    },
+    warnSymbols$0: function() {
+      var t1, instance;
+      for (t1 = this.symbols, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        instance = t1._current;
+        if (!instance.get$inited())
+          $.get$Parser_log().log$4(C.Level_WARNING_900, "Symbol " + H.S(instance.id) + " on line " + C.JSInt_methods.toString$0(instance.line) + " never initialized!", null, null);
+        else if (!instance.used)
+          $.get$Parser_log().log$4(C.Level_WARNING_900, "Symbol " + H.S(instance.id) + " on line " + C.JSInt_methods.toString$0(instance.line) + " never used!", null, null);
+      }
+    },
     static: {"^": "Parser_log"}
+  }
+}],
+["staticTable", "compiler/staticTable.dart", , D, {
+  "^": "",
+  StaticTable: {
+    "^": "Object;rows",
+    getRow$2: function($name, scope) {
+      var matches, t1, row;
+      matches = H.setRuntimeTypeInfo([], [D.StaticTableRow]);
+      for (t1 = this.rows, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        row = t1._current;
+        if (J.$eq(J.get$name$x(row), $name) && row.get$scope() <= scope)
+          matches.push(row);
+      }
+      t1 = matches.length;
+      if (t1 !== 0) {
+        H.Sort__doSort(matches, 0, t1 - 1, new D.StaticTable_getRow_closure());
+        return C.JSArray_methods.get$last(matches);
+      }
+      return;
+    },
+    rowExists$2: function($name, scope) {
+      var t1, row;
+      for (t1 = this.rows, t1 = new H.ListIterator(t1, t1.length, 0, null); t1.moveNext$0();) {
+        row = t1._current;
+        if (J.$eq(J.get$name$x(row), $name) && row.get$scope() <= scope)
+          return true;
+      }
+      return false;
+    },
+    static: {"^": "StaticTable_TYPE_INT,StaticTable_TYPE_STRING,StaticTable_TYPE_BOOLEAN,StaticTable_ADDRESS_LENGTH"}
+  },
+  StaticTable_getRow_closure: {
+    "^": "Closure:14;",
+    call$2: function(a, b) {
+      return C.JSInt_methods.compareTo$1(a.get$scope(), b.get$scope());
+    }
+  },
+  StaticTableRow: {
+    "^": "Object;location>,name>,address,scope<,type>,value>",
+    toString$0: function(_) {
+      return "Row name=" + H.S(this.name) + " location=" + this.location + " address=" + this.address + " type=" + this.type + " scope=" + this.scope;
+    },
+    setAddress$1: function(address) {
+      this.address = address;
+    },
+    setValue$1: function(value) {
+      this.value = value;
+    }
   }
 }],
 ]);
@@ -8017,19 +9516,39 @@ $$ = null;
 
 // Runtime type support
 J.JSInt.$isint = true;
+J.JSInt.$isComparable = true;
+J.JSInt.$asComparable = [J.JSNumber];
+J.JSInt.$isComparable = true;
+J.JSInt.$asComparable = [J.JSNumber];
+J.JSInt.$isComparable = true;
+J.JSInt.$asComparable = [J.JSNumber];
 J.JSInt.$isObject = true;
 W.Node.$isObject = true;
+J.JSDouble.$isComparable = true;
+J.JSDouble.$asComparable = [J.JSNumber];
+J.JSDouble.$isComparable = true;
+J.JSDouble.$asComparable = [J.JSNumber];
 J.JSDouble.$isObject = true;
 J.JSString.$isString = true;
+J.JSString.$isComparable = true;
+J.JSString.$asComparable = [J.JSString];
 J.JSString.$isObject = true;
+N.Level.$isComparable = true;
+N.Level.$asComparable = [N.Level];
 N.Level.$isObject = true;
+J.JSNumber.$isComparable = true;
+J.JSNumber.$asComparable = [J.JSNumber];
 J.JSNumber.$isObject = true;
 W.Element.$isObject = true;
 P.Match.$isObject = true;
+P.Duration.$isComparable = true;
+P.Duration.$asComparable = [P.Duration];
 P.Duration.$isObject = true;
 D.Token.$isObject = true;
 T.CompilerSymbol.$isObject = true;
 N.Logger.$isObject = true;
+D.StaticTableRow.$isObject = true;
+V.JumpTableRow.$isObject = true;
 B.Tree.$isObject = true;
 W.MouseEvent.$isMouseEvent = true;
 W.MouseEvent.$isObject = true;
@@ -8049,6 +9568,8 @@ P._BufferingStreamSubscription.$is_EventSink = true;
 P._BufferingStreamSubscription.$isStreamSubscription = true;
 P._BufferingStreamSubscription.$isObject = true;
 P.Object.$isObject = true;
+P.Comparable.$isComparable = true;
+P.Comparable.$isObject = true;
 P._EventSink.$is_EventSink = true;
 P._EventSink.$isObject = true;
 P.StreamSubscription.$isStreamSubscription = true;
@@ -8150,6 +9671,11 @@ J.$eq = function(receiver, a0) {
     return a0 != null && receiver === a0;
   return J.getInterceptor(receiver).$eq(receiver, a0);
 };
+J.$gt$n = function(receiver, a0) {
+  if (typeof receiver == "number" && typeof a0 == "number")
+    return receiver > a0;
+  return J.getInterceptor$n(receiver).$gt(receiver, a0);
+};
 J.$index$asx = function(receiver, a0) {
   if (receiver.constructor == Array || typeof receiver == "string" || H.isJsIndexable(receiver, receiver[init.dispatchPropertyName]))
     if (a0 >>> 0 === a0 && a0 < receiver.length)
@@ -8161,11 +9687,19 @@ J.$indexSet$ax = function(receiver, a0, a1) {
     return receiver[a0] = a1;
   return J.getInterceptor$ax(receiver).$indexSet(receiver, a0, a1);
 };
+J.$lt$n = function(receiver, a0) {
+  if (typeof receiver == "number" && typeof a0 == "number")
+    return receiver < a0;
+  return J.getInterceptor$n(receiver).$lt(receiver, a0);
+};
 J._replaceChild$2$x = function(receiver, a0, a1) {
   return J.getInterceptor$x(receiver)._replaceChild$2(receiver, a0, a1);
 };
 J.addEventListener$3$x = function(receiver, a0, a1, a2) {
   return J.getInterceptor$x(receiver).addEventListener$3(receiver, a0, a1, a2);
+};
+J.compareTo$1$ns = function(receiver, a0) {
+  return J.getInterceptor$ns(receiver).compareTo$1(receiver, a0);
 };
 J.contains$1$asx = function(receiver, a0) {
   return J.getInterceptor$asx(receiver).contains$1(receiver, a0);
@@ -8203,20 +9737,41 @@ J.get$iterator$ax = function(receiver) {
 J.get$length$asx = function(receiver) {
   return J.getInterceptor$asx(receiver).get$length(receiver);
 };
+J.get$location$x = function(receiver) {
+  return J.getInterceptor$x(receiver).get$location(receiver);
+};
 J.get$name$x = function(receiver) {
   return J.getInterceptor$x(receiver).get$name(receiver);
+};
+J.get$type$x = function(receiver) {
+  return J.getInterceptor$x(receiver).get$type(receiver);
+};
+J.get$value$x = function(receiver) {
+  return J.getInterceptor$x(receiver).get$value(receiver);
 };
 J.insertAdjacentText$2$x = function(receiver, a0, a1) {
   return J.getInterceptor$x(receiver).insertAdjacentText$2(receiver, a0, a1);
 };
+J.remove$0$ax = function(receiver) {
+  return J.getInterceptor$ax(receiver).remove$0(receiver);
+};
 J.remove$1$ax = function(receiver, a0) {
   return J.getInterceptor$ax(receiver).remove$1(receiver, a0);
+};
+J.removeAt$1$ax = function(receiver, a0) {
+  return J.getInterceptor$ax(receiver).removeAt$1(receiver, a0);
 };
 J.removeEventListener$3$x = function(receiver, a0, a1, a2) {
   return J.getInterceptor$x(receiver).removeEventListener$3(receiver, a0, a1, a2);
 };
+J.replaceAll$2$s = function(receiver, a0, a1) {
+  return J.getInterceptor$s(receiver).replaceAll$2(receiver, a0, a1);
+};
 J.replaceWith$1$x = function(receiver, a0) {
   return J.getInterceptor$x(receiver).replaceWith$1(receiver, a0);
+};
+J.toRadixString$1$n = function(receiver, a0) {
+  return J.getInterceptor$n(receiver).toRadixString$1(receiver, a0);
 };
 J.toString$0 = function(receiver) {
   return J.getInterceptor(receiver).toString$0(receiver);
@@ -8415,6 +9970,7 @@ $.prototypeForTagFunction = null;
 $.dispatchRecordsForInstanceTags = null;
 $.interceptorsForUncacheableTags = null;
 $.initNativeDispatchFlag = null;
+$.CodeGenerator_MAX_MEMORY = 256;
 $.printToZone = null;
 $._nextCallback = null;
 $._lastCallback = null;
@@ -8425,6 +9981,9 @@ $.Device__isWebKit = null;
 $.hierarchicalLoggingEnabled = false;
 $._rootLevel = C.Level_INFO_800;
 $.LogRecord__nextNumber = 0;
+$.StaticTable_TYPE_INT = "int";
+$.StaticTable_TYPE_STRING = "string";
+$.StaticTable_TYPE_BOOLEAN = "boolean";
 Isolate.$lazy($, "log", "Lexer_log", "get$Lexer_log", function() {
   return K.LoggerUtil_createLogger("Lexer");
 });
@@ -8511,6 +10070,9 @@ Isolate.$lazy($, "undefinedLiteralPropertyPattern", "TypeErrorDecoder_undefinedL
   }
 }());
 });
+Isolate.$lazy($, "log", "CodeGenerator_log", "get$CodeGenerator_log", function() {
+  return K.LoggerUtil_createLogger("CodeGenerator");
+});
 Isolate.$lazy($, "_toStringList", "IterableMixinWorkaround__toStringList", "get$IterableMixinWorkaround__toStringList", function() {
   return [];
 });
@@ -8538,6 +10100,7 @@ init.metadata = [{func: "void__LogRecord", void: true, args: [N.LogRecord]},
 ,
 {func: "bool__dynamic_dynamic", ret: J.JSBool, args: [null, null]},
 {func: "int__dynamic", ret: J.JSInt, args: [null]},
+{func: "int__Comparable_Comparable", ret: J.JSInt, args: [P.Comparable, P.Comparable]},
 {func: "bool__Object_Object", ret: J.JSBool, args: [P.Object, P.Object]},
 {func: "int__Object", ret: J.JSInt, args: [P.Object]},
 {func: "args1", args: [null]},
