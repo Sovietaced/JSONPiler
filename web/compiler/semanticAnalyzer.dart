@@ -408,9 +408,9 @@ class SemanticAnalyzer {
     List<Tree<dynamic>> clean = new List.from(right);
 
     // Remove any garbage we don't want to compare
+    clean.removeWhere((item) => item.data == "+");
     clean.removeWhere((item) => item.data == "==");
     clean.removeWhere((item) => item.data == "!=");
-    clean.removeWhere((item) => item.data == "+");
     clean.removeWhere((item) => item.data is NonTerminal);
 
     // Need two values to do type checking
@@ -418,7 +418,9 @@ class SemanticAnalyzer {
       log.info("Type checking the following values: " + clean.toString());
 
       // Reset values
+      print(clean);
       Tree<dynamic> left = clean.removeAt(0);
+      print(clean);
       right = clean;
 
       // Compare all values against the left most (first value)

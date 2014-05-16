@@ -116,9 +116,12 @@ class CodeGenerator {
     log.info("Generating code for an assignment statement");
     String id = currNode.children[0].data;
     StaticTableRow leftRow = staticTable.getRow(id, scope);
+    
+    // Chop id off list
+    currNode.children.removeAt(0);
 
     //FIXME: handle advanced statements here
-    String right = currNode.children[1].data;
+    String right = currNode.children[0].data;
 
     // Check if right hand side of assignment is an id
     if (staticTable.rowExists(right, scope)) {
@@ -133,10 +136,14 @@ class CodeGenerator {
       leftRow.setValue(right);
 
       if (leftRow.type == StaticTable.TYPE_INT) {
+        
+        right = combineIntExpression(currNode.children);
         // Load accumulator with rightside of assignment
         lda_constant(right);
         sta(leftRow.location);
+        
       } else if (leftRow.type == StaticTable.TYPE_STRING) {
+        
         String hexString = ConversionUtil.stringToHex(right);
 
         // Write the hexString to heap, get address back
@@ -148,6 +155,9 @@ class CodeGenerator {
         sta(leftRow.location);
 
       } else if (leftRow.type == StaticTable.TYPE_BOOLEAN) {
+        
+        right = combineBooleanExpression(currNode.children);
+        
         String hexString = ConversionUtil.stringToHex(right);
 
         // Write the hexString to heap, get address back
@@ -159,6 +169,36 @@ class CodeGenerator {
         sta(leftRow.location);
       }
     }
+  }
+  
+  /**
+   * Shrinks integer expressions down to one value
+   */
+  String combineIntExpression(List<Tree<dynamic>> intExpression) {
+    
+    int sum = 0;
+    for(Tree<dynamic> tree in intExpression) {
+      String data = tree.data;
+      if(staticTable.rowExists(data, scope)) {
+        StaticTableRow row = staticTable.getRow(data, scope);
+        sum = sum + int.parse(row.value);
+      } else if (data != "+") {
+        sum = sum + int.parse(data);
+      }
+    }
+    
+    return ConversionUtil.numToHex(sum);
+  }
+  
+  /**
+   * Shrinks boolean expressions down to one value
+   */
+  String combineBooleanExpression(List<Tree<dynamic>> intExpression) {
+    
+    for(Tree<dynamic> tree in intExpression) {
+      print(tree.data);
+    }
+    
   }
 
   /**
@@ -195,6 +235,71 @@ class CodeGenerator {
   void generateIfStatement(Tree<dynamic> currNode) {
     log.info("Generating code for an if statement");
 
+    Tree<dynamic> block = handleComparison(currNode);
+
+    if (block != null) {
+      // Make new entry in the jump table
+      String location = jumpTable.addRow();
+      bne(location);
+
+      int preBranch = address;
+      parseBlock(block);
+      int postBranch = address;
+
+      // Calculate jump distance
+      int distance = (postBranch - preBranch);
+      jumpTable.setDistance(location, distance);
+
+      String hexDistance = ConversionUtil.numToHex(distance);
+      backPatch(location, hexDistance);
+    }
+  }
+
+  void generateWhileStatement(Tree<dynamic> currNode) {
+
+    int preWhile = address;
+
+    Tree<dynamic> block = handleComparison(currNode);
+
+    if (block != null) {
+      // Make new entry in the jump table
+      String branchForward = jumpTable.addRow();
+      bne(branchForward);
+
+      int preBranch = address;
+      parseBlock(block);
+
+      // Reset the Z Flag so we always branch back to the while loop
+      resetZFlag();
+      String branchBackward = jumpTable.addRow();
+      bne(branchBackward);
+
+      int postWhile = address;
+
+      // Calculate jump backwards distance
+      int whileDistance = (postWhile - preWhile);
+      jumpTable.setDistance(branchBackward, whileDistance);
+
+      // Wrap around to branch backwards
+      whileDistance = MAX_MEMORY - whileDistance;
+      String backwardsDistance = ConversionUtil.numToHex(whileDistance);
+      backPatch(branchBackward, backwardsDistance);
+
+      int postBranch = address;
+
+      // Calculate jump distance
+      int distance = (postBranch - preBranch);
+      jumpTable.setDistance(branchForward, distance);
+
+      String hexDistance = ConversionUtil.numToHex(distance);
+      backPatch(branchForward, hexDistance);
+    }
+  }
+
+  /**
+   * Generates code for comparisons in if/while statements. 
+   */
+  Tree<dynamic> handleComparison(Tree<dynamic> currNode) {
     int len = currNode.children.length;
     Tree<dynamic> block = null;
     bool deadCode = false;
@@ -207,7 +312,7 @@ class CodeGenerator {
       if (boolean == "true") {
         block = currNode.children[1];
       } else {
-        deadCode = true;
+        return null;
       }
       // Complex if, ie. if (true == true)
     } else {
@@ -264,130 +369,7 @@ class CodeGenerator {
         }
       }
     }
-
-    if (!deadCode) {
-      // Make new entry in the jump table
-      String location = jumpTable.addRow();
-      bne(location);
-
-      int preBranch = address;
-      parseBlock(block);
-      int postBranch = address;
-
-      // Calculate jump distance
-      int distance = (postBranch - preBranch);
-      jumpTable.setDistance(location, distance);
-
-      String hexDistance = ConversionUtil.numToHex(distance);
-      backPatch(location, hexDistance);
-    }
-  }
-
-  void generateWhileStatement(Tree<dynamic> currNode) {
-    int len = currNode.children.length;
-    Tree<dynamic> block = null;
-    bool deadCode = false;
-
-    int preWhile = address;
-
-    // Simple if, ie. if true/false
-    if (len == 2) {
-      String boolean = currNode.children[0].data;
-
-      // "if false" is dead code that we dont have to evaluate
-      if (boolean == "true") {
-        block = currNode.children[1];
-      } else {
-        deadCode = true;
-      }
-      // Complex if, ie. if (true == true)
-    } else {
-      String left = currNode.children[0].data;
-      String right = currNode.children[2].data;
-      block = currNode.children[3];
-
-      // Check if value is an id
-      if (staticTable.rowExists(right, scope)) {
-        StaticTableRow row = staticTable.getRow(right, scope);
-
-        if (row.type == StaticTable.TYPE_BOOLEAN) {
-          String hex = ConversionUtil.booleanToHex(row.value);
-          ldx_constant(hex);
-        } else {
-          ldx_memory(row.location);
-        }
-      } else {
-        String type = ConversionUtil.determineType(right);
-        if (type == StaticTable.TYPE_BOOLEAN) {
-          String hex = ConversionUtil.booleanToHex(right);
-          ldx_constant(hex);
-        } else {
-          ldx_constant(right);
-        }
-      }
-
-      // Check if print value is an id
-      if (staticTable.rowExists(left, scope)) {
-        StaticTableRow row = staticTable.getRow(left, scope);
-
-        if (row.type == StaticTable.TYPE_BOOLEAN) {
-          String hexString = ConversionUtil.booleanToHex(row.value);
-
-          // Write the hexString to heap, get address back
-          int index = writeDataToHeap(hexString);
-
-          // Convert address to hex string and store static pointer
-          String hexIndex = ConversionUtil.numToHex(index);
-          String validAddress = ConversionUtil.toLittleEndian(hexIndex, 4);
-          cpx(validAddress);
-        } else {
-          // Load the memory location of the id into X register
-          cpx(row.location);
-        }
-      } else {
-        String type = ConversionUtil.determineType(left);
-        if (type == StaticTable.TYPE_BOOLEAN) {
-          String hex = ConversionUtil.booleanToHex(right);
-          cpx(hex);
-        } else {
-          cpx(left);
-        }
-      }
-    }
-
-    if (!deadCode) {
-      // Make new entry in the jump table
-      String branchForward = jumpTable.addRow();
-      bne(branchForward);
-
-      int preBranch = address;
-      parseBlock(block);
-      
-      // Reset the Z Flag so we always branch back to the while loop
-      resetZFlag();
-      String branchBackward = jumpTable.addRow();
-      bne(branchBackward);
-      
-      int postWhile = address;
-      
-      // Calculate jump backwards distance
-      int whileDistance = (postWhile - preWhile);
-      jumpTable.setDistance(branchBackward, whileDistance);
-      
-      // Wrap around to branch backwards
-      whileDistance = MAX_MEMORY - whileDistance;
-      String backwardsDistance = ConversionUtil.numToHex(whileDistance);
-      backPatch(branchBackward, backwardsDistance);
-
-      int postBranch = address;
-
-      // Calculate jump distance
-      int distance = (postBranch - preBranch);
-      jumpTable.setDistance(branchForward, distance);
-
-      String hexDistance = ConversionUtil.numToHex(distance);
-      backPatch(branchForward, hexDistance);
-    }
+    return block;
   }
 
   /**
@@ -519,20 +501,20 @@ class CodeGenerator {
     // No available memory found
     return null;
   }
-  
+
   void resetZFlag() {
     // Load a temp value into memory
     int tempMemory = findAvailableHeapMemory();
     setCode(tempMemory, "02");
     String validAddress = ConversionUtil.numToHex(tempMemory);
     validAddress = ConversionUtil.toLittleEndian(validAddress, 4);
-    
+
     // Load the x register and do a not equal comparison
     ldx_constant("1");
     cpx(validAddress);
-    
+
     // Reset tempMemory address
-    this.code[tempMemory] = null; 
+    this.code[tempMemory] = null;
   }
 
   /**
