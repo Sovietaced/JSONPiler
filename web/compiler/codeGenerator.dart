@@ -142,12 +142,13 @@ class CodeGenerator {
       if (leftRow.type == StaticTable.TYPE_INT) {
 
         right = combineIntExpression(currNode.children);
-        // Load accumulator with rightside of assignment
-        lda_constant(right);
+        print("combined int expression : " + right);
+        leftRow.setValue(right);
+        
         sta(leftRow.location);
 
       } else if (leftRow.type == StaticTable.TYPE_STRING) {
-
+        leftRow.setValue(right);
         String hexString = ConversionUtil.stringToHex(right);
 
         // Write the hexString to heap, get address back
@@ -161,7 +162,7 @@ class CodeGenerator {
       } else if (leftRow.type == StaticTable.TYPE_BOOLEAN) {
 
         right = combineBooleanExpression(currNode.children);
-        
+        leftRow.setValue(right);
         String hexString = ConversionUtil.stringToHex(right);
 
         // Write the hexString to heap, get address back
@@ -179,19 +180,36 @@ class CodeGenerator {
    * Shrinks integer expressions down to one value
    */
   String combineIntExpression(List<Tree<dynamic>> intExpression) {
-
-    int sum = 0;
-    for (Tree<dynamic> tree in intExpression) {
-      String data = tree.data;
-      if (staticTable.rowExists(data, scope)) {
-        StaticTableRow row = staticTable.getRow(data, scope);
-        sum = sum + int.parse(row.value);
-      } else if (data != "+") {
-        sum = sum + int.parse(data);
-      }
+    print(intExpression.length);
+    if(intExpression.length > 1) {
+      int sum = 0;
+      // Set sum to zero
+      lda_constant("0");
+      for (Tree<dynamic> tree in intExpression) {
+        String data = tree.data;
+        if (staticTable.rowExists(data, scope)) {
+          StaticTableRow row = staticTable.getRow(data, scope);
+          sum = sum + int.parse(row.value);
+          adc(row.location);
+          print("adding a row to the accumulator");
+        } else if (data != "+") {
+          sum = sum + int.parse(data);
+          int index = findAvailableHeapMemory();
+          String hex = ConversionUtil.numToHex(int.parse(data));
+          this.code[index] = data;
+          
+          String validAddress = ConversionUtil.numToHex(index);
+          validAddress = ConversionUtil.toLittleEndian(validAddress, 4);
+          print("adding a constant tot he accumulator");
+          adc(validAddress);
+        }
+      } 
+      
+      return ConversionUtil.numToHex(sum);
+    } else {
+      lda_constant(intExpression.first.data);
+      return intExpression.first.data;
     }
-
-    return ConversionUtil.numToHex(sum);
   }
 
   /**
@@ -338,7 +356,7 @@ class CodeGenerator {
   Tree<dynamic> handleComparison(Tree<dynamic> currNode) {
     int len = currNode.children.length;
     Tree<dynamic> block = null;
-    bool deadCode = false;
+    bool deode = false;
 
     // Simple if, ie. if true/false
     if (len == 2) {
@@ -488,6 +506,12 @@ class CodeGenerator {
     log.info("Branching ${numBytes} if Z flag = 0");
     insertString("D0");
     insertString(numBytes);
+  }
+  
+  void adc(String location) {
+    log.info("Adding contents of ${location} to the accumulator");
+    insertString("6D");
+    insertString(location);
   }
 
   /**
