@@ -15,6 +15,7 @@ import 'package:logging/logging.dart';
 import '../lib/tree.dart';
 import '../util/logger_util.dart';
 import '../util/exception_util.dart';
+import '../util/conversion_util.dart';
 
 class SemanticAnalyzer {
 
@@ -418,13 +419,11 @@ class SemanticAnalyzer {
       log.info("Type checking the following values: " + clean.toString());
 
       // Reset values
-      print(clean);
       Tree<dynamic> left = clean.removeAt(0);
-      print(clean);
       right = clean;
-
+      
       // Compare all values against the left most (first value)
-      String type = determineType(left.data, isAssignment);
+      String type = determineType(left.data, left.line, isAssignment);
 
       if (type == null) {
         ExceptionUtil.logAndThrow(new CompilerTypeError("Identifier " + left.data + " on line " + left.line + " undefined."), log);
@@ -445,11 +444,11 @@ class SemanticAnalyzer {
 
     for (Tree<dynamic> tree in right) {
       String value = tree.data.toString();
-      String foundType = determineType(value);
+      String foundType = determineType(value, tree.line);
 
       if (foundType != desiredType) {
         if (symbolExists(value)) {
-          ExceptionUtil.logAndThrow(new CompilerTypeError("Identifier " + getSymbol(value).id + " on line " + tree.line + " is not of expected type $desiredType."), log);
+          ExceptionUtil.logAndThrow(new CompilerTypeError("Identifier " + getSymbol(value, tree.line).id + " on line " + tree.line + " is not of expected type $desiredType."), log);
         }
         ExceptionUtil.logAndThrow(new CompilerTypeError(tree.toString() + " on line " + tree.line + " is not of expected type $desiredType."), log);
       }
@@ -462,46 +461,38 @@ class SemanticAnalyzer {
    * the value is attempted to be parsed to a number. If an exception is thrown the value
    * is either a string or a boolean.
    */
-  String determineType(String value, [bool isAssignment = false]) {
+  String determineType(String value, String line, [bool isAssignment = false]) {
 
     // Symbol, easy
     if (symbolExists(value)) {
-      CompilerSymbol symbol = getSymbol(value);
+      CompilerSymbol symbol = getSymbol(value, line);
       return symbol.type;
     } else if (isAssignment) {
       return null;
     } // Literal value
     else {
-      // Check if int
-      try {
-        num.parse(value);
-        return "int";
-        // If an exception is thrown the value is either a string or a boolean
-      } on FormatException {
-        if (value == "true" || value == "false") {
-          return "boolean";
-        } else {
-          return "string";
-        }
-      }
+      return ConversionUtil.determineType(value);
     }
   }
 
   /**
    * Gets all instances of a symbol from the symbol table.
    */
-  CompilerSymbol getSymbol(String symbol) {
+  CompilerSymbol getSymbol(String symbol, String line) {
 
     List<CompilerSymbol> matches = new List<CompilerSymbol>();
     for (CompilerSymbol s in this.symbols) {
-      if (s.id == symbol && s.scope == scope) {
-        return s;
+      if (s.id == symbol && s.scope <= scope && (s.line.toInt() <= int.parse(line))) {
+        matches.add(s);
       }
     }
-
-    // Default case
-    log.warning("Compiler can't find symbol");
-    return null;
+    
+    if(!matches.isEmpty) {
+      return matches.last;
+    } else {
+      log.warning("Compiler can't find symbol");
+      return null;
+    }
   }
 
   /**
@@ -510,7 +501,7 @@ class SemanticAnalyzer {
   bool symbolExists(String symbol) {
     List<CompilerSymbol> matches = new List<CompilerSymbol>();
     for (CompilerSymbol s in this.symbols) {
-      if (s.id == symbol && s.scope == scope) {
+      if (s.id == symbol && s.scope <= scope) {
         return true;
       }
     }

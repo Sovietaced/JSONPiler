@@ -47,8 +47,10 @@ class CodeGenerator {
 
     // Set null values in array to zero
     setNullToZero();
-
-    print(this.code.join(" "));
+    
+    for(var i=0; i < this.code.length; i = i + 8) {
+      print(this.code.sublist(i, i+8).join(" "));
+    }
     staticTable.dump();
     log.info("Code Generation finished...");
   }
@@ -116,7 +118,7 @@ class CodeGenerator {
     log.info("Generating code for an assignment statement");
     String id = currNode.children[0].data;
     StaticTableRow leftRow = staticTable.getRow(id, scope);
-    
+
     // Chop id off list
     currNode.children.removeAt(0);
 
@@ -136,14 +138,14 @@ class CodeGenerator {
       leftRow.setValue(right);
 
       if (leftRow.type == StaticTable.TYPE_INT) {
-        
+
         right = combineIntExpression(currNode.children);
         // Load accumulator with rightside of assignment
         lda_constant(right);
         sta(leftRow.location);
-        
+
       } else if (leftRow.type == StaticTable.TYPE_STRING) {
-        
+
         String hexString = ConversionUtil.stringToHex(right);
 
         // Write the hexString to heap, get address back
@@ -155,7 +157,7 @@ class CodeGenerator {
         sta(leftRow.location);
 
       } else if (leftRow.type == StaticTable.TYPE_BOOLEAN) {
-        
+
         right = combineBooleanExpression(currNode.children);
         
         String hexString = ConversionUtil.stringToHex(right);
@@ -170,35 +172,67 @@ class CodeGenerator {
       }
     }
   }
-  
+
   /**
    * Shrinks integer expressions down to one value
    */
   String combineIntExpression(List<Tree<dynamic>> intExpression) {
-    
+
     int sum = 0;
-    for(Tree<dynamic> tree in intExpression) {
+    for (Tree<dynamic> tree in intExpression) {
       String data = tree.data;
-      if(staticTable.rowExists(data, scope)) {
+      if (staticTable.rowExists(data, scope)) {
         StaticTableRow row = staticTable.getRow(data, scope);
         sum = sum + int.parse(row.value);
       } else if (data != "+") {
         sum = sum + int.parse(data);
       }
     }
-    
+
     return ConversionUtil.numToHex(sum);
   }
-  
+
   /**
    * Shrinks boolean expressions down to one value
    */
-  String combineBooleanExpression(List<Tree<dynamic>> intExpression) {
+  String combineBooleanExpression(List<Tree<dynamic>> booleanExpression) {
     
-    for(Tree<dynamic> tree in intExpression) {
-      print(tree.data);
+    booleanExpression.removeWhere((item) => item.data == "==");
+    
+    if (booleanExpression.length > 1) {
+      bool start = null;
+
+      if (booleanExpression.first.data == "true") {
+        start = true;
+      } else {
+        start = false;
+      }
+
+      for (Tree<dynamic> tree in booleanExpression) {
+        String data = tree.data;
+        
+        if(staticTable.rowExists(data, scope)) {
+          StaticTableRow row = staticTable.getRow(data, scope);
+          data = row.value;
+        }
+        
+        if (data == "true") {
+          start = start == true;
+        } else {
+          start = start == false;
+        }
+      }
+      
+      if(start == true) {
+        return "true";
+      } else {
+        return "false";
+      }
+      
+    } else {
+      return booleanExpression.first.data;
     }
-    
+
   }
 
   /**
